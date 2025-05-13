@@ -592,16 +592,22 @@ function generateId() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
-// 改进的YouTube链接验证函数，更宽松以适应移动端
+// 改进的YouTube链接验证函数
 function isValidYouTubeChannelUrl(url) {
+    // 首先移除查询参数部分，只保留基本URL
+    const baseUrl = url.split('?')[0];
+    
     // 支持多种YouTube URL格式，包括移动端
-    return /^(https?:\/\/)?(www\.|m\.)?((youtube\.com\/(c\/|channel\/|user\/|@))|youtu\.be\/|@)[\w\-\.]+/.test(url) || 
-           /^@[\w\-\.]+$/.test(url) || // 支持直接的@username格式
-           /youtube\.com\/@[\w\-\.]+/.test(url); // 支持不带www的格式
+    return /^(https?:\/\/)?(www\.|m\.)?((youtube\.com\/(c\/|channel\/|user\/|@))|youtu\.be\/|@)[\w\-\.]+/.test(baseUrl) || 
+           /^@[\w\-\.]+$/.test(baseUrl) || // 支持直接的@username格式
+           /youtube\.com\/@[\w\-\.]+/.test(baseUrl); // 支持不带www的格式
 }
 
-// 改进的频道标识符提取函数，增强对移动端URL格式的兼容性
+// 改进的频道标识符提取函数
 function extractChannelIdentifier(url) {
+    // 首先移除所有查询参数
+    url = url.split('?')[0];
+    
     // 处理 /channel/ID 格式
     let matches = url.match(/\/channel\/([^\/\?]+)/);
     if (matches) return matches[1];
@@ -614,26 +620,18 @@ function extractChannelIdentifier(url) {
     matches = url.match(/\/user\/([^\/\?]+)/);
     if (matches) return matches[1];
     
-    // 处理 @USERNAME 格式 - 改进对移动端URL的处理
-    matches = url.match(/\/@([^\/\?]+)/);
+    // 处理 @USERNAME 格式 - 改进版
+    matches = url.match(/\/@([^\/\?\s]+)/);
     if (matches) return '@' + matches[1];
     
-    // 处理移动端可能的m.youtube.com格式
-    matches = url.match(/m\.youtube\.com\/@([^\/\?]+)/);
-    if (matches) return '@' + matches[1];
-    
-    // 处理youtube.com/@username格式 (不带www)
-    matches = url.match(/youtube\.com\/@([^\/\?]+)/);
+    // 处理youtube.com/@username格式 (不带www) - 改进版
+    matches = url.match(/youtube\.com\/@([^\/\?\s]+)/);
     if (matches) return '@' + matches[1];
     
     // 如果URL直接是@username格式
     if (url.startsWith('@')) {
         return url;
     }
-    
-    // 尝试从任何包含@的URL中提取用户名
-    matches = url.match(/@([^\/\?\s]+)/);
-    if (matches) return '@' + matches[1];
     
     return null;
 }
