@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>女神异闻录风格导航</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --p5-red: #E60012;
+      --p5-red-light: #FF4554;
+      --p5-black: #000000;
+      --p5-dark-gray: #1A1A1A;
+      --p5-white: #FFFFFF;
+      --p5-yellow: #FFF100;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background-color: var(--p5-black);
+      color: var(--p5-white);
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      position: relative;
+    }
+    
+    /* 背景装饰 */
+    .bg-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.1;
+      background-image: 
+        linear-gradient(45deg, var(--p5-red) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--p5-red) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--p5-red) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--p5-red) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+    
+    .bg-lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    
+    .bg-line {
+      position: absolute;
+      background-color: var(--p5-red);
+      opacity: 0.2;
+    }
+    
+    .bg-line-1 {
+      width: 100%;
+      height: 2px;
+      top: 15%;
+      transform: skewY(2deg);
+    }
+    
+    .bg-line-2 {
+      width: 2px;
+      height: 100%;
+      left: 30%;
+      transform: skewX(2deg);
+    }
+    
+    .bg-line-3 {
+      width: 100%;
+      height: 3px;
+      top: 75%;
+      transform: skewY(-1deg);
+    }
+    
+    /* 头部区域 */
+    header {
+      padding: 40px 20px 20px;
+      position: relative;
+    }
+    
+    .logo-container {
+      position: relative;
+      margin-bottom: 30px;
+    }
+    
+    .logo {
+      font-family: 'Oswald', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--p5-red);
+      letter-spacing: 2px;
+      transform: skew(-5deg);
+      text-transform: uppercase;
+      position: relative;
+      display: inline-block;
+      padding-right: 40px;
+    }
+    
+    .logo::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 120%;
+      height: 3px;
+      background-color: var(--p5-white);
+    }
+    
+    .logo-accent {
+      position: absolute;
+      top: -15px;
+      right: 0;
+      width: 30px;
+      height: 30px;
+      background-color: var(--p5-yellow);
+      transform: rotate(45deg);
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      margin-left: 50px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .subtitle::before {
+      content: '';
+      position: absolute;
+      left: -30px;
+      top: 50%;
+      width: 20px;
+      height: 2px;
+      background-color: var(--p5-red);
+    }
+    
+    /* 主导航区域 */
+    .main-container {
+      display: flex;
+      min-height: calc(100vh - 200px);
+      position: relative;
+    }
+    
+    .nav-container {
+      width: 300px;
+      padding: 20px;
+      position: relative;
+    }
+    
+    .nav-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--p5-dark-gray);
+      transform: skew(-3deg);
+      z-index: -1;
+    }
+    
+    .nav-list {
+      list-style-type: none;
+      padding: 20px 0;
+    }
+    
+    .nav-item {
+      margin-bottom: 25px;
+      position: relative;
+      transform-origin: left center;
+      transition: transform 0.3s;
+    }
+    
+    .nav-item:hover {
+      transform: translateX(10px);
+    }
+    
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 50%;
+      width: 15px;
+      height: 2px;
+      background-color: var(--p5-red);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .nav-item:hover::before {
+      opacity: 1;
+    }
+    
+    .nav-link {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.5rem;
+      color: var(--p5-white);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      padding: 5px 0;
+      position: relative;
+      transition: color 0.3s;
+    }
+    
+    .nav-link:hover {
+      color: var(--p5-red-light);
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background-color: var(--p5-white);
+      transform: scaleX(0.3);
+      transform-origin: left center;
+      transition: transform 0.3s, background-color 0.3s;
+    }
+    
+    .nav-link:hover::after {
+      transform: scaleX(1);
+      background-color: var(--p5-red-light);
+    }
+    
+    /* 内容区域 */
+    .content-container {
+      flex: 1;
+      padding: 20px;
+      position: relative;
+    }
+    
+    .content-header {
+      position: relative;
+      margin-bottom: 40px;
+    }
+    
+    .content-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--p5-white);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .content-title::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--p5-red);
+    }
+    
+    .content-accent {
+      position: absolute;
+      top: 50%;
+      right: -40px;
+      width: 30px;
+      height: 2px;
+      background-color: var(--p5-yellow);
+    }
+    
+    /* 项目卡片区域 */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+    
+    .project-card {
+      background-color: var(--p5-dark-gray);
+      position: relative;
+      overflow: hidden;
+      height: 200px;
+      transition: transform 0.3s;
+    }
+    
+    .project-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background-color: var(--p5-red);
+      transform-origin: left center;
+      transform: scaleX(0.7);
+      transition: transform 0.3s;
+    }
+    
+    .project-card:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .project-content {
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .project-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.5rem;
+      color: var(--p5-white);
+      margin-bottom: 10px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .project-desc {
+      font-size: 0.9rem;
+      color: #cccccc;
+      margin-bottom: 20px;
+    }
+    
+    .project-link {
+      align-self: flex-start;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      color: var(--p5-white);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 8px 15px;
+      background-color: transparent;
+      border: 1px solid var(--p5-red);
+      position: relative;
+      overflow: hidden;
+      transition: background-color 0.3s;
+    }
+    
+    .project-link:hover {
+      background-color: var(--p5-red);
+    }
+    
+    .project-link::after {
+      content: '→';
+      margin-left: 5px;
+      transition: transform 0.3s;
+      display: inline-block;
+    }
+    
+    .project-link:hover::after {
+      transform: translateX(5px);
+    }
+    
+    .project-accent {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 20px;
+      height: 20px;
+      border-right: 2px solid var(--p5-red);
+      border-bottom: 2px solid var(--p5-red);
+    }
+    
+    /* 页脚 */
+    footer {
+      padding: 30px 20px;
+      text-align: center;
+      position: relative;
+      margin-top: 50px;
+    }
+    
+    .footer-line {
+      position: absolute;
+      top: 0;
+      left: 10%;
+      width: 80%;
+      height: 1px;
+      background-color: var(--p5-red);
+    }
+    
+    .footer-text {
+      font-size: 0.9rem;
+      color: #888888;
+    }
+    
+    /* 页脚链接样式 */
+    .footer-text a {
+      color: var(--p5-red-light);
+      text-decoration: none;
+      position: relative;
+      font-weight: 600;
+      padding: 0 3px;
+      transition: all 0.3s ease;
+    }
+    
+    .footer-text a::before {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background-color: var(--p5-red);
+      transform: scaleX(0.7);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    
+    .footer-text a:hover {
+      color: var(--p5-yellow);
+    }
+    
+    .footer-text a:hover::before {
+      transform: scaleX(1);
+      background-color: var(--p5-yellow);
+    }
+    
+    .footer-text a::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      right: -4px;
+      width: 6px;
+      height: 6px;
+      background-color: var(--p5-red);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .footer-text a:hover::after {
+      opacity: 1;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+      
+      .nav-container {
+        width: 100%;
+        margin-bottom: 30px;
+      }
+      
+      .nav-bg {
+        transform: skew(0);
+      }
+      
+      .projects-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 背景装饰 -->
+  <div class="bg-pattern"></div>
+  <div class="bg-lines">
+    <div class="bg-line bg-line-1"></div>
+    <div class="bg-line bg-line-2"></div>
+    <div class="bg-line bg-line-3"></div>
+  </div>
+  
+  <!-- 头部区域 -->
+  <header>
+    <div class="logo-container">
+      <h1 class="logo">NAVIGATION</h1>
+      <div class="logo-accent"></div>
+    </div>
+    <p class="subtitle">个人项目导航</p>
+  </header>
+  
+  <!-- 主要内容区域 -->
+  <main class="main-container">
+    <!-- 导航菜单 -->
+    <nav class="nav-container">
+      <div class="nav-bg"></div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="#" class="nav-link">首页</a></li>
+        <li class="nav-item"><a href="#" class="nav-link">项目</a></li>
+        <li class="nav-item"><a href="#" class="nav-link">关于</a></li>
+        <li class="nav-item"><a href="#" class="nav-link">联系</a></li>
+      </ul>
+    </nav>
+    
+    <!-- 内容区域 -->
+    <div class="content-container">
+      <div class="content-header">
+        <h2 class="content-title">我的项目</h2>
+        <div class="content-accent"></div>
+      </div>
+      
+      <!-- 项目网格 -->
+      <div class="projects-grid">
+        <!-- 项目卡片1 -->
+        <div class="project-card">
+          <div class="project-content">
+            <div>
+              <h3 class="project-title">Youtube赛道分析</h3>
+              <p class="project-desc">帮助YouTube创作者<b>快速发现爆款的工具</b>
+                <br>
+                
+              </p>
+            </div>
+            <a href="油管赛道调研/chuhai.html" class="project-link">查看</a>
+            <div class="project-accent"></div>
+          </div>
+        </div>
+        
+        <!-- 项目卡片2 -->
+        <div class="project-card">
+          <div class="project-content">
+            <div>
+              <h3 class="project-title">视频帧截取工具</h3>
+              <p class="project-desc"><b>快速拆解爆款视频,支持下载视频帧</b></p>
+            </div>
+            <a href="视频帧拆解/提取工具.html" class="project-link">查看</a>
+            <div class="project-accent"></div>
+          </div>
+        </div>
+        
+        <!-- 项目卡片3 -->
+        <div class="project-card">
+          <div class="project-content">
+            <div>
+              <h3 class="project-title">项目三</h3>
+              <p class="project-desc">这是我的第三个项目，主要功能是...</p>
+            </div>
+            <a href="#" class="project-link">查看</a>
+            <div class="project-accent"></div>
+          </div>
+        </div>
+        
+        <!-- 项目卡片4 -->
+        <div class="project-card">
+          <div class="project-content">
+            <div>
+              <h3 class="project-title">项目四</h3>
+              <p class="project-desc">这是我的第四个项目，主要功能是...</p>
+            </div>
+            <a href="#" class="project-link">查看</a>
+            <div class="project-accent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- 页脚 -->
+  <footer>
+    <div class="footer-line"></div>
+    <p class="footer-text">© 2025 <a href="https://iiuzjzy3ccx.feishu.cn/wiki/DknjwvGzJi9SVCkHnZDciOG6nxc">有矢的工具箱</a> </p>
+  </footer>
+  
+  <!-- JavaScript增强动画效果 -->
+  <script>
+    // 添加随机几何装饰元素
+    document.addEventListener('DOMContentLoaded', function() {
+      const body = document.body;
+      
+      // 创建20个随机装饰元素
+      for (let i = 0; i < 20; i++) {
+        const decorElement = document.createElement('div');
+        
+        // 随机样式
+        const size = Math.random() * 20 + 10;
+        const posX = Math.random() * window.innerWidth;
+        const posY = Math.random() * window.innerHeight;
+        const opacity = Math.random() * 0.1 + 0.05;
+        const rotation = Math.random() * 45;
+        
+        // 设置样式
+        decorElement.style.position = 'absolute';
+        decorElement.style.width = `${size}px`;
+        decorElement.style.height = `${size}px`;
+        decorElement.style.backgroundColor = Math.random() > 0.7 ? '#E60012' : '#FFFFFF';
+        decorElement.style.opacity = opacity;
+        decorElement.style.left = `${posX}px`;
+        decorElement.style.top = `${posY}px`;
+        decorElement.style.transform = `rotate(${rotation}deg)`;
+        decorElement.style.zIndex = '-1';
+        
+        // 添加到页面
+        body.appendChild(decorElement);
+      }
+    });
+  </script>
+</body>
+</html>
