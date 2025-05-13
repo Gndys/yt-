@@ -1234,3 +1234,19 @@ function addChannel() {
     // 更新年份筛选器
     populateYearFilter();
 }
+
+// 在fetchChannelData函数中添加
+console.log("开始获取频道数据:", channelId);
+fetch(apiUrl)
+  .then(response => {
+    console.log("API响应状态:", response.status);
+    return response.json();
+  })
+  .then(data => {
+    console.log("获取的数据:", data);
+    // 其余代码...
+  })
+  .catch(error => {
+    console.error("获取数据时出错:", error);
+  });
+
