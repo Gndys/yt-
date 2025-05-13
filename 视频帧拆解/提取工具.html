@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频帧提取工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>视频帧提取工具</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon"><i class="fas fa-file-video"></i></div>
+            <p>拖拽视频文件到这里或点击上传</p>
+            <p style="font-size: 14px; color: var(--text-secondary);">支持的格式: MP4, AVI, MOV, MKV, WebM</p>
+            <input type="file" id="videoFile" accept="video/*" style="display: none;">
+            <button class="btn" id="browseButton">浏览文件</button>
+        </div>
+        
+        <div id="videoSection" class="hidden">
+            <div class="section">
+                <h2>视频预览</h2>
+                <div class="video-container">
+                    <video id="videoPlayer" controls></video>
+                    <div class="controls">
+                        <button class="btn" id="captureButton">截取当前帧</button>
+                        <span style="margin-left: 15px;">当前时间: <span id="currentTime">0:00</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>时间点提取</h2>
+                <div>
+                    <input type="text" class="time-input" id="timeInput" placeholder="00:00:00">
+                    <button class="btn" id="extractButton">提取此时间点</button>
+                    <button class="btn btn-secondary" id="addPresetButton">保存为预设</button>
+                </div>
+                <p style="font-size: 14px; color: var(--text-secondary);">时间格式: 小时:分钟:秒 (例如 01:23:45) 或秒数 (例如 85)</p>
+                
+                <div class="presets-container" id="presetsContainer">
+                    <!-- 预设将在这里显示 -->
+                </div>
+                
+                <div>
+                    <button class="btn" id="extractAllPresetsButton">提取所有预设时间点</button>
+                    <button class="btn btn-secondary" id="clearPresetsButton">清空预设</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>场景检测</h2>
+                <p>自动检测视频中的场景变化并提取关键帧</p>
+                
+                <div class="scene-detection-options">
+                    <div style="margin-top: 10px;">
+                        <label>检测灵敏度: 
+                            <select id="sensitivitySelect">
+                                <option value="low">低 (只检测明显场景变化)</option>
+                                <option value="medium" selected>中等</option>
+                                <option value="high">高 (检测细微场景变化)</option>
+                                <option value="very-high">极高 (检测最细微变化)</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <label>
+                            最小场景时长(秒): 
+                            <input type="number" id="minSceneDuration" value="1" min="0.5" step="0.5" style="width: 60px;">
+                        </label>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <label>
+                            采样间隔(秒): 
+                            <input type="number" id="samplingInterval" value="0.5" min="0.1" max="2" step="0.1" style="width: 60px;">
+                        </label>
+                        <span style="font-size: 12px; color: var(--text-secondary);">(较小的值可提高检测精度但会增加处理时间)</span>
+                    </div>
+                    
+                    <div class="advanced-toggle" id="advancedToggle">显示高级选项</div>
+                    
+                    <div class="advanced-options hidden" id="advancedOptions">
+                        <div style="margin-top: 10px;">
+                            <label>
+                                检测区域: 
+                                <select id="detectionRegion">
+                                    <option value="full" selected>全帧</option>
+                                    <option value="center">中心区域</option>
+                                    <option value="edges">边缘区域</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label>
+                                <input type="checkbox" id="enableHistogramMethod" checked> 使用直方图比较
+                            </label>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label>
+                                <input type="checkbox" id="enablePixelMethod" checked> 使用像素比较
+                            </label>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label>
+                                <input type="checkbox" id="enableDebugInfo"> 显示调试信息
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="debugInfo" class="debug-info"></div>
+                    
+                    <div style="margin-top: 15px;">
+                        <button class="btn" id="detectScenesButton">检测场景并提取关键帧</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>提取的帧</h2>
+                <div>
+                    <button class="btn btn-success" id="downloadAllButton">下载所有帧</button>
+                    <button class="btn btn-danger" id="clearAllButton">清空所有帧</button>
+                </div>
+                
+                <div id="loadingFrames" class="loading hidden">
+                    <div class="progress-bar">
+                        <div class="progress" id="extractProgress"></div>
+                    </div>
+                    <p>正在处理... <span id="progressText">0%</span></p>
+                </div>
+                
+                <div class="frames-container" id="framesContainer">
+                    <!-- 提取的帧将在这里显示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let video = null;
+        let frames = [];
+        let presets = [];
+        let processingOperation = false; // 防止闪屏的操作标志
+        
+        // DOM元素
+        const uploadArea = document.getElementById('uploadArea');
+        const videoFile = document.getElementById('videoFile');
+        const browseButton = document.getElementById('browseButton');
+        const videoSection = document.getElementById('videoSection');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const captureButton = document.getElementById('captureButton');
+        const timeInput = document.getElementById('timeInput');
+        const extractButton = document.getElementById('extractButton');
+        const addPresetButton = document.getElementById('addPresetButton');
+        const presetsContainer = document.getElementById('presetsContainer');
+        const extractAllPresetsButton = document.getElementById('extractAllPresetsButton');
+        const clearPresetsButton = document.getElementById('clearPresetsButton');
+        const framesContainer = document.getElementById('framesContainer');
+        const downloadAllButton = document.getElementById('downloadAllButton');
+        const clearAllButton = document.getElementById('clearAllButton');
+        const loadingFrames = document.getElementById('loadingFrames');
+        const extractProgress = document.getElementById('extractProgress');
+        const progressText = document.getElementById('progressText');
+        const sensitivitySelect = document.getElementById('sensitivitySelect');
+        const minSceneDuration = document.getElementById('minSceneDuration');
+        const samplingInterval = document.getElementById('samplingInterval');
+        const detectionRegion = document.getElementById('detectionRegion');
+        const enableHistogramMethod = document.getElementById('enableHistogramMethod');
+        const enablePixelMethod = document.getElementById('enablePixelMethod');
+        const enableDebugInfo = document.getElementById('enableDebugInfo');
+        const debugInfo = document.getElementById('debugInfo');
+        const detectScenesButton = document.getElementById('detectScenesButton');
+        const advancedToggle = document.getElementById('advancedToggle');
+        const advancedOptions = document.getElementById('advancedOptions');
+        
+        // 初始化
+        function init() {
+            // 从本地存储加载预设
+            loadPresets();
+            
+            // 事件监听器
+            browseButton.addEventListener('click', () => videoFile.click());
+            videoFile.addEventListener('change', handleFileSelect);
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            
+            videoPlayer.addEventListener('timeupdate', updateCurrentTime);
+            captureButton.addEventListener('click', captureCurrentFrame);
+            
+            extractButton.addEventListener('click', () => extractFrameAtTime(timeInput.value));
+            addPresetButton.addEventListener('click', addPreset);
+            extractAllPresetsButton.addEventListener('click', extractAllPresets);
+            clearPresetsButton.addEventListener('click', clearPresets);
+            
+            downloadAllButton.addEventListener('click', downloadAllFrames);
+            clearAllButton.addEventListener('click', clearAllFrames);
+            
+            detectScenesButton.addEventListener('click', detectScenes);
+            
+            advancedToggle.addEventListener('click', toggleAdvancedOptions);
+            enableDebugInfo.addEventListener('change', toggleDebugInfo);
+            
+            // 渲染预设
+            renderPresets();
+        }
+        
+        // 切换高级选项显示
+        function toggleAdvancedOptions() {
+            advancedOptions.classList.toggle('hidden');
+            advancedToggle.textContent = advancedOptions.classList.contains('hidden') ? 
+                '显示高级选项' : '隐藏高级选项';
+        }
+        
+        // 切换调试信息显示
+        function toggleDebugInfo() {
+            debugInfo.style.display = enableDebugInfo.checked ? 'block' : 'none';
+        }
+        
+        // 处理文件选择
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                loadVideo(file);
+            }
+        }
+        
+        // 处理拖拽
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('video/')) {
+                loadVideo(file);
+            } else {
+                alert('请上传视频文件');
+            }
+        }
+        
+        // 加载视频
+        function loadVideo(file) {
+            const videoURL = URL.createObjectURL(file);
+            videoPlayer.src = videoURL;
+            video = file;
+            
+            // 显示视频部分
+            videoSection.classList.remove('hidden');
+            
+            // 平滑滚动到视频部分
+            setTimeout(() => {
+                videoSection.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+        
+        // 更新当前时间显示
+        function updateCurrentTime() {
+            const time = videoPlayer.currentTime;
+            currentTimeDisplay.textContent = formatTime(time);
+        }
+        
+        // 格式化时间
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // 解析时间输入
+        function parseTimeInput(timeStr) {
+            // 如果只是数字，直接作为秒数
+            if (/^\d+(\.\d+)?$/.test(timeStr)) {
+                return parseFloat(timeStr);
+            }
+            
+            // 否则解析为 HH:MM:SS 格式
+            const parts = timeStr.split(':').map(part => parseInt(part, 10));
+            
+            if (parts.length === 3) {
+                // HH:MM:SS
+                return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            } else if (parts.length === 2) {
+                // MM:SS
+                return parts[0] * 60 + parts[1];
+            } else {
+                return 0;
+            }
+        }
+        
+        // 截取当前帧
+        function captureCurrentFrame() {
+            if (!videoPlayer.src) {
+                alert('请先上传视频');
+                return;
+            }
+            
+            if (processingOperation) return; // 防止闪屏
+            processingOperation = true;
+            
+            const time = videoPlayer.currentTime;
+            extractFrameAtTime(time);
+        }
+        
+        // 在指定时间提取帧
+        function extractFrameAtTime(timeInput) {
+            if (!videoPlayer.src) {
+                alert('请先上传视频');
+                return;
+            }
+            
+            if (processingOperation) return; // 防止闪屏
+            processingOperation = true;
+            
+            const time = typeof timeInput === 'string' ? parseTimeInput(timeInput) : timeInput;
+            
+            // 保存当前播放位置
+            const currentTime = videoPlayer.currentTime;
+            
+            // 暂停视频
+            videoPlayer.pause();
+            
+            // 设置到指定时间
+            videoPlayer.currentTime = time;
+            
+            // 等待视频寻找到指定时间
+            videoPlayer.onseeked = function() {
+                // 创建Canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = videoPlayer.videoWidth;
+                canvas.height = videoPlayer.videoHeight;
+                
+                // 绘制视频帧
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+                
+                // 获取帧数据
+                const dataURL = canvas.toDataURL('image/png');
+                
+                // 添加到帧列表
+                addFrame(dataURL, time);
+                
+                // 恢复播放位置
+                videoPlayer.currentTime = currentTime;
+                
+                // 清除事件处理器
+                videoPlayer.onseeked = null;
+                
+                // 重置操作标志
+                processingOperation = false;
+            };
+        }
+        
+        // 添加帧
+        function addFrame(dataURL, time) {
+            const frameId = Date.now();
+            frames.push({ id: frameId, dataURL, time });
+            
+            renderFrames();
+        }
+        
+        // 渲染所有帧
+        function renderFrames() {
+            framesContainer.innerHTML = '';
+            
+            frames.forEach(frame => {
+                const frameElement = document.createElement('div');
+                frameElement.className = 'frame';
+                frameElement.dataset.id = frame.id;
+                
+                const img = document.createElement('img');
+                img.src = frame.dataURL;
+                img.loading = "lazy"; // 懒加载优化
+                
+                const info = document.createElement('div');
+                info.className = 'frame-info';
+                info.textContent = `时间: ${formatTime(frame.time)}`;
+                
+                const actions = document.createElement('div');
+                actions.className = 'frame-actions';
+                
+                const downloadButton = document.createElement('button');
+                downloadButton.innerHTML = '<i class="fas fa-download"></i> 下载';
+                downloadButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    downloadFrame(frame);
+                });
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i> 删除';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteFrame(frame.id);
+                });
+                
+                actions.appendChild(downloadButton);
+                actions.appendChild(deleteButton);
+                
+                frameElement.appendChild(img);
+                frameElement.appendChild(info);
+                frameElement.appendChild(actions);
+                
+                framesContainer.appendChild(frameElement);
+            });
+        }
+        
+        // 下载单个帧
+        function downloadFrame(frame) {
+            const a = document.createElement('a');
+            a.href = frame.dataURL;
+            a.download = `frame_${formatTime(frame.time).replace(/:/g, '-')}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        
+        // 删除帧
+        function deleteFrame(id) {
+            frames = frames.filter(frame => frame.id !== id);
+            renderFrames();
+        }
+        
+        // 下载所有帧
+        function downloadAllFrames() {
+            if (frames.length === 0) {
+                alert('没有可下载的帧');
+                return;
+            }
+            
+            if (processingOperation) return; // 防止闪屏
+            processingOperation = true;
+            
+            // 显示加载状态
+            loadingFrames.classList.remove('hidden');
+            extractProgress.style.width = '0%';
+            progressText.textContent = '准备中...';
+            
+            // 创建一个zip文件
+            import('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js')
+                .then(JSZip => {
+                    const zip = new JSZip.default();
+                    
+                    // 添加每一帧到zip
+                    frames.forEach((frame, index) => {
+                        // 更新进度
+                        const progress = ((index + 1) / frames.length) * 100;
+                        extractProgress.style.width = `${progress}%`;
+                        progressText.textContent = `${Math.round(progress)}%`;
+                        
+                        // 从dataURL中提取base64数据
+                        const base64Data = frame.dataURL.split(',')[1];
+                        zip.file(`frame_${formatTime(frame.time).replace(/:/g, '-')}.png`, base64Data, {base64: true});
+                    });
+                    
+                    // 生成zip并下载
+                    zip.generateAsync({type: 'blob'})
+                        .then(blob => {
+                            const a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = 'video_frames.zip';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            
+                            // 隐藏加载状态
+                            loadingFrames.classList.add('hidden');
+                            processingOperation = false;
+                        });
+                })
+                .catch(err => {
+                    console.error('加载JSZip库失败', err);
+                    alert('下载功能加载失败，请检查网络连接');
+                    loadingFrames.classList.add('hidden');
+                    processingOperation = false;
+                });
+        }
+        
+        // 清空所有帧
+        function clearAllFrames() {
+            if (frames.length === 0) return;
+            
+            if (confirm('确定要清空所有提取的帧吗？')) {
+                frames = [];
+                renderFrames();
+            }
+        }
+        
+        // 添加预设
+        function addPreset() {
+            const timeStr = timeInput.value.trim();
+            if (!timeStr) {
+                alert('请输入时间点');
+                return;
+            }
+            
+            // 检查是否已存在
+            if (presets.includes(timeStr)) {
+                alert('该时间点已存在于预设中');
+                return;
+            }
+            
+            presets.push(timeStr);
+            savePresets();
+            renderPresets();
+            
+            // 清空输入
+            timeInput.value = '';
+        }
+        
+        // 渲染预设
+        function renderPresets() {
+            presetsContainer.innerHTML = '';
+            
+            if (presets.length === 0) {
+                const emptyMsg = document.createElement('p');
+                emptyMsg.textContent = '没有保存的预设时间点';
+                emptyMsg.style.color = 'var(--text-secondary)';
+                presetsContainer.appendChild(emptyMsg);
+                return;
+            }
+            
+            presets.forEach(preset => {
+                const presetElement = document.createElement('div');
+                presetElement.className = 'preset';
+                
+                const timeText = document.createElement('span');
+                timeText.textContent = preset;
+                timeText.addEventListener('click', () => {
+                    extractFrameAtTime(preset);
+                });
+                
+                const deleteButton = document.createElement('span');
+                deleteButton.className = 'preset-delete';
+                deleteButton.innerHTML = '<i class="fas fa-times"></i>';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deletePreset(preset);
+                });
+                
+                presetElement.appendChild(timeText);
+                presetElement.appendChild(deleteButton);
+                
+                presetsContainer.appendChild(presetElement);
+            });
+        }
+        
+        // 删除预设
+        function deletePreset(preset) {
+            presets = presets.filter(p => p !== preset);
+            savePresets();
+            renderPresets();
+        }
+        
+        // 提取所有预设时间点
+        function extractAllPresets() {
+            if (!videoPlayer.src) {
+                alert('请先上传视频');
+                return;
+            }
+            
+            if (presets.length === 0) {
+                alert('没有保存的预设时间点');
+                return;
+            }
+            
+            if (processingOperation) return; // 防止闪屏
+            processingOperation = true;
+            
+            // 显示进度条
+            loadingFrames.classList.remove('hidden');
+            
+            // 保存当前播放位置
+            const currentTime = videoPlayer.currentTime;
+            videoPlayer.pause();
+            
+            // 按顺序处理每个预设
+            let index = 0;
+            
+            function processNextPreset() {
+                if (index >= presets.length) {
+                    // 完成所有预设处理
+                    finishExtraction();
+                    return;
+                }
+                
+                // 更新进度
+                const progress = (index / presets.length) * 100;
+                extractProgress.style.width = `${progress}%`;
+                progressText.textContent = `${Math.round(progress)}%`;
+                
+                const time = parseTimeInput(presets[index]);
+                videoPlayer.currentTime = time;
+                
+                videoPlayer.onseeked = function() {
+                    // 创建Canvas
+                    const canvas = document.createElement('canvas');
+                    canvas.width = videoPlayer.videoWidth;
+                    canvas.height = videoPlayer.videoHeight;
+                    
+                    // 绘制视频帧
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+                    
+                    // 获取帧数据
+                    const dataURL = canvas.toDataURL('image/png');
+                    
+                    // 添加到帧列表
+                    addFrame(dataURL, time);
+                    
+                    // 处理下一个预设
+                    index++;
+                    processNextPreset();
+                };
+            }
+            
+            function finishExtraction() {
+                // 恢复播放位置
+                videoPlayer.currentTime = currentTime;
+                videoPlayer.onseeked = null;
+                
+                // 隐藏进度条
+                loadingFrames.classList.add('hidden');
+                
+                // 重置进度
+                extractProgress.style.width = '0%';
+                progressText.textContent = '0%';
+                
+                // 重置操作标志
+                processingOperation = false;
+            }
+            
+            // 开始处理
+            processNextPreset();
+        }
+        
+        // 清空预设
+        function clearPresets() {
+            if (presets.length === 0) return;
+            
+            if (confirm('确定要清空所有预设时间点吗？')) {
+                presets = [];
+                savePresets();
+                renderPresets();
+            }
+        }
+        
+        // 保存预设到本地存储
+        function savePresets() {
+            localStorage.setItem('videoFramePresets', JSON.stringify(presets));
+        }
+        
+        // 从本地存储加载预设
+        function loadPresets() {
+            const savedPresets = localStorage.getItem('videoFramePresets');
+            if (savedPresets) {
+                presets = JSON.parse(savedPresets);
+            }
+        }
+        
+        // 添加调试信息
+        function addDebugInfo(message) {
+            if (!enableDebugInfo.checked) return;
+            
+            const msgElement = document.createElement('div');
+            msgElement.textContent = message;
+            debugInfo.appendChild(msgElement);
+            
+            // 自动滚动到底部
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+        }
+        
+        // 计算图像直方图
+        function calculateHistogram(imageData, bins = 16) {
+            const data = imageData.data;
+            const histR = new Array(bins).fill(0);
+            const histG = new Array(bins).fill(0);
+            const histB = new Array(bins).fill(0);
+            
+            // 计算每个颜色通道的直方图
+            for (let i = 0; i < data.length; i += 4) {
+                // 将0-255的值映射到0-(bins-1)的桶中
+                const r = Math.floor(data[i] * bins / 256);
+                const g = Math.floor(data[i + 1] * bins / 256);
+                const b = Math.floor(data[i + 2] * bins / 256);
+                
+                histR[r]++;
+                histG[g]++;
+                histB[b]++;
+            }
+            
+            // 归一化直方图
+            const pixelCount = (data.length / 4);
+            for (let i = 0; i < bins; i++) {
+                histR[i] /= pixelCount;
+                histG[i] /= pixelCount;
+                histB[i] /= pixelCount;
+            }
+            
+            return { r: histR, g: histG, b: histB };
+        }
+        
+        // 计算两个直方图之间的差异 (巴氏距离)
+        function histogramDifference(hist1, hist2) {
+            let diffR = 0, diffG = 0, diffB = 0;
+            
+            for (let i = 0; i < hist1.r.length; i++) {
+                // 巴氏距离计算
+                diffR += Math.sqrt(hist1.r[i] * hist2.r[i]);
+                diffG += Math.sqrt(hist1.g[i] * hist2.g[i]);
+                diffB += Math.sqrt(hist1.b[i] * hist2.b[i]);
+            }
+            
+            // 转换为差异值 (0-1范围，0表示完全相同)
+            diffR = 1 - diffR;
+            diffG = 1 - diffG;
+            diffB = 1 - diffB;
+            
+            // 返回三个通道的平均差异
+            return (diffR + diffG + diffB) / 3;
+        }
+        
+        // 获取图像的特定区域
+        function getImageRegion(ctx, width, height, region) {
+            switch (region) {
+                case 'center':
+                    // 获取中心区域 (1/4大小)
+                    const centerX = width / 4;
+                    const centerY = height / 4;
+                    const centerWidth = width / 2;
+                    const centerHeight = height / 2;
+                    return ctx.getImageData(centerX, centerY, centerWidth, centerHeight);
+                    
+                case 'edges':
+                    // 获取四个边缘的样本并合并
+                    const edgeSize = Math.min(width, height) / 10;
+                    
+                    // 上边缘
+                    const topEdge = ctx.getImageData(0, 0, width, edgeSize);
+                    // 右边缘
+                    const rightEdge = ctx.getImageData(width - edgeSize, 0, edgeSize, height);
+                    // 下边缘
+                    const bottomEdge = ctx.getImageData(0, height - edgeSize, width, edgeSize);
+                    // 左边缘
+                    const leftEdge = ctx.getImageData(0, 0, edgeSize, height);
+                    
+                    // 创建一个合并的ImageData (简化处理，只使用top边缘)
+                    return topEdge;
+                    
+                default: // 'full'
+                    // 获取整个图像
+                    return ctx.getImageData(0, 0, width, height);
+            }
+        }
+        
+        // 场景检测
+        function detectScenes() {
+            if (!videoPlayer.src) {
+                alert('请先上传视频');
+                return;
+            }
+            
+            if (processingOperation) return; // 防止闪屏
+            processingOperation = true;
+            
+            // 显示进度条
+            loadingFrames.classList.remove('hidden');
+            
+            // 清空调试信息
+            debugInfo.innerHTML = '';
+            
+            // 保存当前播放位置
+            const currentTime = videoPlayer.currentTime;
+            videoPlayer.pause();
+            
+            // 场景检测参数
+            const sensitivity = sensitivitySelect.value;
+            const minDuration = parseFloat(minSceneDuration.value);
+            const sampleInterval = parseFloat(samplingInterval.value);
+            const region = detectionRegion ? detectionRegion.value : 'full';
+            const useHistogram = enableHistogramMethod ? enableHistogramMethod.checked : true;
+            const usePixel = enablePixelMethod ? enablePixelMethod.checked : true;
+            
+            // 设置阈值 (根据灵敏度)
+            let thresholdHistogram, thresholdPixel;
+            switch (sensitivity) {
+                case 'low': 
+                    thresholdHistogram = 0.25; 
+                    thresholdPixel = 0.25;
+                    break;
+                case 'high': 
+                    thresholdHistogram = 0.08; 
+                    thresholdPixel = 0.08;
+                    break;
+                case 'very-high': 
+                    thresholdHistogram = 0.05; 
+                    thresholdPixel = 0.05;
+                    break;
+                default: // medium
+                    thresholdHistogram = 0.15; 
+                    thresholdPixel = 0.15;
+            }
+            
+            addDebugInfo(`开始场景检测: 灵敏度=${sensitivity}, 阈值(直方图)=${thresholdHistogram.toFixed(2)}, 阈值(像素)=${thresholdPixel.toFixed(2)}`);
+            addDebugInfo(`最小场景时长=${minDuration}秒, 采样间隔=${sampleInterval}秒, 检测区域=${region}`);
+            
+            // 场景检测算法
+            const videoLength = videoPlayer.duration;
+            let lastSceneTime = 0;
+            let lastFrameData = null;
+            let lastHistogram = null;
+            let detectedScenes = [];
+            let currentSampleTime = 0;
+            let sceneCount = 0;
+            
+            // 处理下一个采样点
+            function processNextSample() {
+                if (currentSampleTime >= videoLength) {
+                    // 完成所有采样
+                    finishSceneDetection();
+                    return;
+                }
+                
+                // 更新进度
+                const progress = (currentSampleTime / videoLength) * 100;
+                extractProgress.style.width = `${progress}%`;
+                progressText.textContent = `${Math.round(progress)}%`;
+                
+                // 设置视频时间
+                videoPlayer.currentTime = currentSampleTime;
+                
+                videoPlayer.onseeked = function() {
+                    // 创建Canvas
+                    const canvas = document.createElement('canvas');
+                    canvas.width = videoPlayer.videoWidth;
+                    canvas.height = videoPlayer.videoHeight;
+                    
+                    // 绘制视频帧
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+                    
+                    // 获取帧数据进行分析 (根据选择的区域)
+                    const frameData = getImageRegion(ctx, canvas.width, canvas.height, region);
+                    
+                    // 如果有上一帧，比较差异
+                    if (lastFrameData) {
+                        let isNewScene = false;
+                        let diffHistogram = 0;
+                        let diffPixel = 0;
+                        
+                        // 使用直方图方法
+                        if (useHistogram) {
+                            const currentHistogram = calculateHistogram(frameData);
+                            if (lastHistogram) {
+                                diffHistogram = histogramDifference(lastHistogram, currentHistogram);
+                                addDebugInfo(`时间=${formatTime(currentSampleTime)}, 直方图差异=${diffHistogram.toFixed(4)}`);
+                                
+                                if (diffHistogram > thresholdHistogram) {
+                                    isNewScene = true;
+                                }
+                            }
+                            lastHistogram = currentHistogram;
+                        }
+                        
+                        // 使用像素比较方法
+                        if (usePixel) {
+                            diffPixel = calculatePixelDifference(lastFrameData.data, frameData.data);
+                            addDebugInfo(`时间=${formatTime(currentSampleTime)}, 像素差异=${diffPixel.toFixed(4)}`);
+                            
+                            if (diffPixel > thresholdPixel) {
+                                isNewScene = true;
+                            }
+                        }
+                        
+                        // 如果差异大于阈值，且与上一个场景间隔足够，则认为是新场景
+                        if (isNewScene && (currentSampleTime - lastSceneTime) >= minDuration) {
+                            detectedScenes.push(currentSampleTime);
+                            lastSceneTime = currentSampleTime;
+                            sceneCount++;
+                            
+                            addDebugInfo(`检测到新场景! 时间=${formatTime(currentSampleTime)}`);
+                            
+                            // 获取帧数据
+                            const dataURL = canvas.toDataURL('image/png');
+                            
+                            // 添加到帧列表
+                            addFrame(dataURL, currentSampleTime);
+                        }
+                    } else {
+                        // 第一帧总是添加
+                        const dataURL = canvas.toDataURL('image/png');
+                        addFrame(dataURL, currentSampleTime);
+                        detectedScenes.push(currentSampleTime);
+                        lastSceneTime = currentSampleTime;
+                        sceneCount++;
+                        addDebugInfo(`添加第一帧: 时间=${formatTime(currentSampleTime)}`);
+                    }
+                    
+                    // 保存当前帧数据
+                    lastFrameData = frameData;
+                    
+                    // 处理下一个采样点
+                    currentSampleTime += sampleInterval;
+                    processNextSample();
+                };
+            }
+            
+            // 计算像素差异 (改进版)
+            function calculatePixelDifference(frame1, frame2) {
+                // 采样步长 (为了提高性能)
+                const samplingStep = Math.max(1, Math.floor(frame1.length / 400000));
+                
+                let diffSum = 0;
+                let samplesCount = 0;
+                
+                for (let i = 0; i < frame1.length; i += samplingStep * 4) {
+                    if (i + 2 >= frame1.length) break;
+                    
+                    const r1 = frame1[i];
+                    const g1 = frame1[i + 1];
+                    const b1 = frame1[i + 2];
+                    
+                    const r2 = frame2[i];
+                    const g2 = frame2[i + 1];
+                    const b2 = frame2[i + 2];
+                    
+                    // 计算RGB差异 (归一化到0-1范围)
+                    const rDiff = Math.abs(r1 - r2) / 255;
+                    const gDiff = Math.abs(g1 - g2) / 255;
+                    const bDiff = Math.abs(b1 - b2) / 255;
+                    
+                    // 使用感知权重
+                    const pixelDiff = (0.299 * rDiff + 0.587 * gDiff + 0.114 * bDiff);
+                    diffSum += pixelDiff;
+                    samplesCount++;
+                }
+                
+                // 返回平均差异
+                return diffSum / samplesCount;
+            }
+            
+            function finishSceneDetection() {
+                // 恢复播放位置
+                videoPlayer.currentTime = currentTime;
+                videoPlayer.onseeked = null;
+                
+                // 隐藏进度条
+                loadingFrames.classList.add('hidden');
+                
+                // 重置进度
+                extractProgress.style.width = '0%';
+                progressText.textContent = '0%';
+                
+                // 显示结果
+                addDebugInfo(`场景检测完成: 共检测到 ${sceneCount} 个场景`);
+                alert(`检测到 ${sceneCount} 个场景变化`);
+                
+                // 重置操作标志
+                processingOperation = false;
+            }
+            
+            // 开始处理
+            processNextSample();
+        }
+        
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>
