@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTubeCompetitor - 专业YouTube对标账号分析工具</title>
+    <link rel="stylesheet" href="home.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-container">
+                <div class="logo">
+                    <h2>YouTubeCompetitor</h2>
+                </div>
+                <div class="nav-menu">
+                    <a href="#features">功能特点</a>
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle">工具 <i class="fas fa-chevron-down"></i></a>
+                        <div class="dropdown-menu">
+                            <a href="index.html" class="dropdown-item">获取对标账号</a>
+                            <a href="/hastag-find/video-to-hashtag.html" class="dropdown-item">视频标签提取</a>
+                            <a href="/channel-to-tag/channel-to-tag.html" class="dropdown-item">频道标签提取</a>
+                            <a href="/hastag-to-video/hastag-to-video.html" class="dropdown-item">标签找视频</a>
+                            <a href="/YouTube Creator Analytics/youtube-creator-analytics.html" class="dropdown-item">竞争对手频道分析</a>
+                        </div>
+                    </div>
+                    <a href="#how-it-works">使用流程</a>
+                    <a href="#testimonials">用户评价</a>
+                    <button class="cta-button">立即开始</button>
+                </div>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 其余HTML内容保持不变 -->
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>精准找到YouTube对标账号</h1>
+                <p class="hero-subtitle">利用数据分析技术，发掘真正的同行竞争对手。基于真实YouTube数据，分析Hashtag关联，找出最有价值的对标频道，助力内容创作者精准定位市场。</p>
+                <div class="hero-buttons">
+                    <button class="primary-button">开始分析</button>
+                    <button class="secondary-button">
+                        <i class="fas fa-play"></i>
+                        观看演示
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">5,000+</span>
+                        <span class="stat-text">活跃用户</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">100万+</span>
+                        <span class="stat-text">已分析视频</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">98%</span>
+                        <span class="stat-text">用户满意度</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>专业YouTube对标分析工具</h2>
+                <p>基于YouTube API的强大数据分析功能，助您快速找到真正的竞争对手</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>对标账号分析</h3>
+                    <p>输入三个竞争对手频道，找出与它们真正相关的其他优质频道</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-hashtag"></i>
+                    </div>
+                    <h3>Hashtag挖掘</h3>
+                    <p>自动提取热门视频的Hashtag，分析最具价值的标签组合</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <h3>热门内容识别</h3>
+                    <p>自动识别同类型最热门的视频内容，挖掘市场热点</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <h3>数据导出</h3>
+                    <p>分析结果可一键导出为Excel表格，方便离线研究和团队共享</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>数据可视化</h3>
+                    <p>直观展示对标账号与热门内容的关联性，帮助决策</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <h3>多API支持</h3>
+                    <p>支持配置多个YouTube API密钥，自动切换，无需担心配额限制</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>三步找到最佳对标账号</h2>
+                <p>简单高效的工作流程，让您快速获取竞争情报</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>输入对标账号</h3>
+                        <p>输入三个您认为是竞争对手的YouTube频道ID或链接，系统将分析它们的热门内容</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>AI智能分析</h3>
+                        <p>系统自动获取这些频道最火的视频，提取Hashtag，并找到相关热门视频及其所属频道</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>获取分析结果</h3>
+                        <p>查看分析报告并下载详细数据表格，包含潜在对标账号、热门Hashtag和相关视频数据</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2>用户反馈</h2>
+                <p>看看其他YouTube创作者使用我们的工具后的感受</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"YouTubeCompetitor帮我找到了几个之前完全没注意到的竞争对手频道。通过分析他们的内容，我调整了自己的创作方向，一个月内订阅量增长了25%！"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="author-info">
+                            <h4>科技博主</h4>
+                            <span>10万+订阅者</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"我们是一家MCN机构，使用YouTubeCompetitor来帮助签约创作者发掘市场机会。这个工具的Hashtag分析功能特别棒，帮我们找到了很多细分领域的优质频道。"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="author-info">
+                            <h4>内容机构负责人</h4>
+                            <span>管理50+创作者</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>准备好发现您的真正对手了吗？</h2>
+                <p>加入成千上万的YouTuber，利用数据驱动的分析提升您的频道竞争力</p>
+                <div class="cta-stats">
+                    <span class="cta-stat">已有5,000+创作者使用我们的工具提升内容策略</span>
+                </div>
+                <button class="primary-button large">立即开始分析</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>YouTubeCompetitor</h3>
+                    <p>专业的YouTube对标账号分析工具</p>
+                </div>
+                <div class="footer-section">
+                    <h4>产品</h4>
+                    <ul>
+                        <li><a href="#">功能介绍</a></li>
+                        <li><a href="#">价格套餐</a></li>
+                        <li><a href="#">API文档</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>帮助</h4>
+                    <ul>
+                        <li><a href="#">帮助中心</a></li>
+                        <li><a href="#">联系我们</a></li>
+                        <li><a href="#">使用教程</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>公司</h4>
+                    <ul>
+                        <li><a href="#">关于我们</a></li>
+                        <li><a href="#">博客</a></li>
+                        <li><a href="#">合作伙伴</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 YouTubeCompetitor. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 先引入youtube-api-manager.js，再引入home.js -->
+    <script src="../youtube-api-manager.js"></script>
+    <script src="home.js"></script>
+</body>
+</html>

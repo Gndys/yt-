@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hashtag视频搜索 - 专业YouTube标签挖掘工具</title>
+    <link rel="stylesheet" href="hastag-find.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-container">
+                <div class="logo">
+                    <h2>YouTubeCompetitor</h2>
+                </div>
+                <div class="nav-menu">
+                    <a href="#features">功能特点</a>
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle">工具 <i class="fas fa-chevron-down"></i></a>
+                        <div class="dropdown-menu">
+                            <a href="..index.html" class="dropdown-item">获取对标账号</a>
+                            <a href="video-to-hashtag.html" class="dropdown-item">视频标签提取</a>
+                            <a href="../channel-to-tag/channel-to-tag.html" class="dropdown-item">频道标签提取</a>
+                            <a href="../hastag-to-video/hastag-to-video.html" class="dropdown-item">标签找视频</a>
+                            <a href="../YouTube Creator Analytics/youtube-creator-analytics.html" class="dropdown-item">竞争对手频道分析</a>
+                        </div>
+                    </div>
+                    <a href="#how-it-works">使用流程</a>
+                    <a href="#testimonials">用户评价</a>
+                    <a href="#faq">常见问题</a>
+                    <button class="cta-button">立即开始</button>
+                </div>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>通过Hashtag发现爆款视频</h1>
+                <p class="hero-subtitle">输入任意标签，一键获取相关热门视频及频道数据。掌握市场趋势，发现爆款内容，助您快速找到创作灵感。</p>
+                <div class="hero-buttons">
+                    <button class="primary-button" id="start-search-btn">立即搜索</button>
+                    <button class="secondary-button">
+                        <i class="fas fa-play"></i>
+                        观看教程
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">5,000+</span>
+                        <span class="stat-text">活跃用户</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">500万+</span>
+                        <span class="stat-text">已分析视频</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">98%</span>
+                        <span class="stat-text">用户满意度</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Tool Section -->
+    <section id="search-tool" class="search-tool">
+        <div class="container">
+            <div class="section-header">
+                <h2>Hashtag视频搜索工具</h2>
+                <p>输入任意YouTube标签，发现相关热门视频和频道</p>
+            </div>
+            
+            <div class="search-container">
+                <!-- API Key Management -->
+                <div class="api-settings">
+                    <button id="manage-api-keys" class="secondary-button">
+                        <i class="fas fa-key"></i>
+                        管理API密钥
+                    </button>
+                    <div class="api-status">
+                        已配置 <span id="api-key-count">0</span> 个API密钥
+                    </div>
+                </div>
+                
+                <div class="search-tabs">
+                    <button class="tab-btn active" data-tab="single">单个标签搜索</button>
+                    <button class="tab-btn" data-tab="batch">批量标签搜索</button>
+                </div>
+                
+                <div class="tab-content" id="single-search">
+                    <div class="input-group">
+                        <label for="hashtag-input">输入Hashtag</label>
+                        <div class="input-wrapper">
+                            <span class="hashtag-prefix">#</span>
+                            <input type="text" id="hashtag-input" placeholder="输入标签，无需#号 (例如: trending, music)" class="hashtag-input">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="batch-search" style="display: none;">
+                    <div class="input-group">
+                        <label for="hashtags-batch">批量输入Hashtag (每行一个)</label>
+                        <textarea id="hashtags-batch" rows="5" placeholder="例如:&#10;trending&#10;music&#10;gaming&#10;fashion"></textarea>
+                    </div>
+                </div>
+                
+                <div class="search-options">
+                    <h3>搜索选项</h3>
+                    <div class="options-grid">
+                        <div class="option-group">
+                            <label for="results-count">每个标签获取视频数量</label>
+                            <select id="results-count">
+                                <option value="10">10个视频</option>
+                                <option value="25" selected>25个视频</option>
+                                <option value="50">50个视频</option>
+                            </select>
+                        </div>
+                        
+                        <div class="option-group">
+                            <label for="sort-by">排序方式</label>
+                            <select id="sort-by">
+                                <option value="viewCount" selected>观看量</option>
+                                <option value="date">发布日期</option>
+                                <option value="rating">评分</option>
+                            </select>
+                        </div>
+                        
+                        <div class="option-group">
+                            <label for="published-after">发布日期范围</label>
+                            <div class="date-range">
+                                <input type="date" id="published-after" class="date-input">
+                                <span>至</span>
+                                <input type="date" id="published-before" class="date-input">
+                            </div>
+                        </div>
+                        
+                        <div class="option-group">
+                            <label for="include-channel">包含频道数据</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="include-channel" checked>
+                                <label for="include-channel"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="search-hashtags-btn" class="primary-button">
+                    <i class="fas fa-search"></i>
+                    开始搜索
+                </button>
+            </div>
+            
+            <!-- Search Results Section -->
+            <div class="search-results" style="display: none;">
+                <div class="results-header">
+                    <h3>搜索结果</h3>
+                    <div class="results-actions">
+                        <button id="export-csv" class="secondary-button">
+                            <i class="fas fa-file-csv"></i>
+                            导出CSV
+                        </button>
+                        <button id="export-pdf" class="secondary-button">
+                            <i class="fas fa-file-pdf"></i>
+                            导出PDF
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="results-stats">
+                    <div class="result-stat">
+                        <i class="fas fa-hashtag"></i>
+                        <span id="hashtag-count">0</span> 个标签
+                    </div>
+                    <div class="result-stat">
+                        <i class="fas fa-video"></i>
+                        <span id="video-count">0</span> 个视频
+                    </div>
+                    <div class="result-stat">
+                        <i class="fas fa-users"></i>
+                        <span id="channel-count">0</span> 个频道
+                    </div>
+                    <div class="result-stat">
+                        <i class="fas fa-eye"></i>
+                        <span id="total-views">0</span> 总观看量
+                    </div>
+                </div>
+                
+                <div class="results-tabs">
+                    <button class="result-tab active" data-result="videos">视频数据</button>
+                    <button class="result-tab" data-result="channels">频道数据</button>
+                </div>
+                
+                <div class="result-content" id="videos-result">
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <label>按标签筛选:</label>
+                            <select id="filter-hashtag">
+                                <option value="all">所有标签</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>最低观看量:</label>
+                            <input type="number" id="min-views" placeholder="最低观看量">
+                        </div>
+                        <button id="apply-filters" class="secondary-button">应用筛选</button>
+                    </div>
+                    
+                    <div class="videos-grid">
+                        <!-- 视频卡片会通过JS动态生成 -->
+                    </div>
+                    
+                    <div class="loading-more" style="display: none;">
+                        <div class="loader"></div>
+                        <p>加载更多结果...</p>
+                    </div>
+                </div>
+                
+                <div class="result-content" id="channels-result" style="display: none;">
+                    <div class="channels-grid">
+                        <!-- 频道卡片会通过JS动态生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Loading Status -->
+            <div class="search-status" style="display: none;">
+                <div class="loader"></div>
+                <p class="status-message">正在搜索中，请稍候...</p>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+                <p class="progress-text">步骤 1/3: 正在获取标签相关视频</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>如何使用Hashtag视频搜索工具</h2>
+                <p>三个简单步骤，助您发现爆款视频创意</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>输入Hashtag标签</h3>
+                        <p>输入任意YouTube标签，可以是单个标签或批量输入多个标签，无需添加#号</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>设置搜索选项</h3>
+                        <p>选择视频数量、排序方式和发布日期范围，根据您的需求精确定位内容</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>获取分析结果</h3>
+                        <p>查看相关热门视频和频道数据，分析市场趋势，并可一键导出数据进行深入研究</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="faq-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>常见问题解答</h2>
+                <p>关于Hashtag视频搜索工具的常见疑问</p>
+            </div>
+            
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>如何获取YouTube API密钥？</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>要获取YouTube API密钥，请按照以下步骤操作：</p>
+                        <ol>
+                            <li>访问 <a href="https://console.developers.google.com/" target="_blank">Google Cloud Console</a></li>
+                            <li>创建一个新项目或选择现有项目</li>
+                            <li>在左侧菜单中选择"API和服务" > "库"</li>
+                            <li>搜索并启用"YouTube Data API v3"</li>
+                            <li>点击"创建凭据"按钮，然后选择"API密钥"</li>
+                            <li>复制生成的API密钥并添加到本工具</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>为什么我需要提供自己的API密钥？</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>YouTube API有每日配额限制，为了确保您能获得最佳的搜索结果，我们需要您提供自己的API密钥。这样做还可以保护您的隐私和数据安全。每个API密钥每天可以进行约10,000个单位的操作，足够个人使用。</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>如何最有效地使用标签搜索功能？</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>为了获得最佳结果，我们建议：</p>
+                        <ul>
+                            <li>使用具体而相关的标签，避免太宽泛的词语</li>
+                            <li>尝试使用多种相关标签组合进行比较</li>
+                            <li>设置较新的发布日期范围以获取最新趋势</li>
+                            <li>先搜索大量视频，然后使用筛选功能缩小范围</li>
+                            <li>分析表现最好的视频所属的频道，了解其内容策略</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>我可以下载和保存搜索结果吗？</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>是的，您可以通过两种方式导出和保存搜索结果：</p>
+                        <ul>
+                            <li><strong>CSV格式</strong>：包含所有视频和频道数据，适合在Excel或Google表格中进行进一步分析</li>
+                            <li><strong>PDF格式</strong>：包含格式化的视频和频道数据，适合打印或分享给团队成员</li>
+                        </ul>
+                        <p>导出的数据包括视频标题、观看量、点赞数、评论数、发布日期以及频道详细信息。</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>是否可以搜索特定国家或语言的内容？</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>目前，搜索结果基于YouTube的全球数据。虽然没有直接的国家或语言筛选选项，但您可以通过以下方式获得特定区域的内容：</p>
+                        <ul>
+                            <li>使用特定语言的标签（如中文标签、英文标签等）</li>
+                            <li>在标签中添加国家或地区名称（如"中国旅游"、"美国生活"等）</li>
+                            <li>搜索后，查看频道详情中的"国家/地区"信息进行筛选</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>准备好发掘爆款视频内容了吗？</h2>
+                <p>加入成千上万的YouTube创作者，使用我们的Hashtag视频搜索工具发现热门内容</p>
+                <div class="cta-stats">
+                    <span class="cta-stat">每日搜索超过10,000个标签</span>
+                </div>
+                <button class="primary-button large" id="cta-search-btn">立即开始搜索</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>YouTubeCompetitor</h3>
+                    <p>专业的YouTube对标账号分析工具</p>
+                </div>
+                <div class="footer-section">
+                    <h4>产品</h4>
+                    <ul>
+                        <li><a href="#">功能介绍</a></li>
+                        <li><a href="#">价格套餐</a></li>
+                        <li><a href="#">API文档</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>帮助</h4>
+                    <ul>
+                        <li><a href="#">帮助中心</a></li>
+                        <li><a href="#">联系我们</a></li>
+                        <li><a href="#">使用教程</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>公司</h4>
+                    <ul>
+                        <li><a href="#">关于我们</a></li>
+                        <li><a href="#">博客</a></li>
+                        <li><a href="#">合作伙伴</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 YouTubeCompetitor. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="hastag-to-video.js"></script>
+</body>
+</html>
