@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 自然语言报表助手</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: 1200px; margin: 0 auto; padding: 20px;
+    background: #f5f7fa; color: #333;
+  }
+  .header { 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px;
+    text-align: center;
+  }
+  .card { 
+    background: white; padding: 25px; border-radius: 12px; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;
+  }
+  .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab { 
+    padding: 12px 20px; border: none; border-radius: 8px;
+    background: #e9ecef; cursor: pointer; transition: all 0.3s;
+    font-size: 14px;
+  }
+  .tab.active { background: #007bff; color: white; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  
+  .upload-zone { 
+    border: 2px dashed #007bff; border-radius: 12px; padding: 30px;
+    text-align: center; cursor: pointer; transition: all 0.3s;
+    background: #f8f9ff; margin-bottom: 20px;
+  }
+  .upload-zone:hover { border-color: #0056b3; background: #e6f0ff; }
+  .upload-zone.dragover { border-color: #28a745; background: #e8f5e9; }
+  
+  input[type="password"], input[type="text"], textarea, select {
+    width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; margin: 10px 0;
+  }
+  button { 
+    background: #007bff; color: white; border: none; padding: 12px 20px;
+    border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s;
+    margin: 5px;
+  }
+  button:hover { background: #0056b3; }
+  button:disabled { background: #6c757d; cursor: not-allowed; }
+  
+  .data-table { 
+    max-height: 300px; overflow: auto; border: 1px solid #ddd; 
+    border-radius: 8px; margin: 15px 0;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: left; }
+  th { background: #f8f9fa; font-weight: 600; position: sticky; top: 0; }
+  tr:hover { background: #f8f9fa; }
+  
+  .query-section { 
+    background: #f8f9ff; padding: 20px; border-radius: 8px; 
+    border-left: 4px solid #007bff; margin: 20px 0;
+  }
+  .result-section { 
+    background: #f0f8f0; padding: 20px; border-radius: 8px; 
+    border-left: 4px solid #28a745; margin: 20px 0;
+  }
+  .error-section { 
+    background: #fff5f5; padding: 20px; border-radius: 8px; 
+    border-left: 4px solid #dc3545; margin: 20px 0;
+  }
+  
+  .chart-container { 
+    width: 100%; height: 400px; margin: 20px 0; 
+    border: 1px solid #eee; border-radius: 8px;
+  }
+  
+  .example-queries { 
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+    gap: 10px; margin: 15px 0;
+  }
+  .example-query { 
+    background: #e3f2fd; padding: 12px; border-radius: 6px; cursor: pointer;
+    transition: all 0.3s; font-size: 13px; border: 1px solid #bbdefb;
+  }
+  .example-query:hover { background: #bbdefb; }
+  
+  .stats-grid { 
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+    gap: 15px; margin: 20px 0;
+  }
+  .stat-card { 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; padding: 20px; border-radius: 8px; text-align: center;
+  }
+  .stat-number { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+  .stat-label { font-size: 14px; opacity: 0.9; }
+  
+  .table-info { 
+    background: #fff3cd; padding: 15px; border-radius: 8px; 
+    border: 1px solid #ffeaa7; margin: 15px 0;
+  }
+  .column-list { 
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;
+  }
+  .column-tag { 
+    background: #007bff; color: white; padding: 4px 8px; 
+    border-radius: 4px; font-size: 12px;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 自然语言报表助手</h1>
+    <p>用自然语言提问，自动生成数据报表和图表</p>
+  </div>
+
+  <!-- API Key 配置 -->
+  <div class="card">
+    <h3>🔑 DeepSeek API 配置</h3>
+    <input type="password" id="apiKey" placeholder="请输入 DeepSeek API Key (sk-...)" />
+    <button onclick="saveApiKey()">保存密钥</button>
+    <span id="keyStatus" style="margin-left: 10px;"></span>
+  </div>
+
+  <!-- 标签页 -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('data')">📁 数据管理</button>
+    <button class="tab" onclick="switchTab('query')">🔍 智能查询</button>
+    <button class="tab" onclick="switchTab('history')">📋 查询历史</button>
+    <button class="tab" onclick="switchTab('examples')">💡 示例模板</button>
+  </div>
+
+  <!-- 数据管理页面 -->
+  <div id="data" class="tab-content active">
+    <div class="card">
+      <h3>📤 上传数据文件</h3>
+      <div class="upload-zone" id="uploadZone">
+        <p>📄 拖拽 CSV 文件到此处或点击选择</p>
+        <p style="color: #666; font-size: 14px;">支持标准 CSV 格式，自动识别列名</p>
+        <input type="file" id="fileInput" multiple accept=".csv" style="display: none;" />
+      </div>
+      
+      <div id="dataPreview"></div>
+    </div>
+  </div>
+
+  <!-- 智能查询页面 -->
+  <div id="query" class="tab-content">
+    <div class="card">
+      <h3>🔍 自然语言查询</h3>
+      
+      <div id="tableInfo"></div>
+      
+      <textarea id="queryInput" placeholder="请用自然语言描述你想要的报表，例如：
+• 显示上个月各渠道的销售额
+• 按产品类别统计收入，用柱状图展示
+• 找出转化率最高的前5个城市
+• 对比不同时间段的用户增长趋势" rows="4"></textarea>
+      
+      <div>
+        <button onclick="executeQuery()" id="queryBtn">🚀 生成报表</button>
+        <button onclick="clearResults()" style="background: #6c757d;">🗑️ 清空结果</button>
+      </div>
+
+      <div class="example-queries">
+        <div class="example-query" onclick="fillQuery('显示各渠道的总销售额，按金额从高到低排序')">
+          📈 渠道销售排行
+        </div>
+        <div class="example-query" onclick="fillQuery('统计每个月的订单数量变化趋势')">
+          📅 月度订单趋势
+        </div>
+        <div class="example-query" onclick="fillQuery('找出转化率超过5%的产品')">
+          🎯 高转化产品
+        </div>
+        <div class="example-query" onclick="fillQuery('按地区分组计算平均客单价')">
+          🌍 地区客单价分析
+        </div>
+      </div>
+      
+      <div id="queryResults"></div>
+    </div>
+  </div>
+
+  <!-- 查询历史页面 -->
+  <div id="history" class="tab-content">
+    <div class="card">
+      <h3>📋 查询历史</h3>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- 示例模板页面 -->
+  <div id="examples" class="tab-content">
+    <div class="card">
+      <h3>💡 查询示例模板</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        
+        <div class="card" style="background: #f8f9ff; border: 1px solid #e1e8ff;">
+          <h4>📊 销售分析类</h4>
+          <div class="example-query" onclick="fillQuery('显示各产品类别的销售额占比')">产品销售占比分析</div>
+          <div class="example-query" onclick="fillQuery('对比本月与上月的销售业绩')">月度销售对比</div>
+          <div class="example-query" onclick="fillQuery('找出销售额前10的客户')">TOP客户排行</div>
+        </div>
+
+        <div class="card" style="background: #f0f8f0; border: 1px solid #d4edda;">
+          <h4>👥 用户分析类</h4>
+          <div class="example-query" onclick="fillQuery('统计不同年龄段的用户分布')">用户年龄分布</div>
+          <div class="example-query" onclick="fillQuery('分析用户留存率变化趋势')">用户留存分析</div>
+          <div class="example-query" onclick="fillQuery('按注册渠道统计用户数量')">渠道用户统计</div>
+        </div>
+
+        <div class="card" style="background: #fff5f0; border: 1px solid #ffe4d6;">
+          <h4>💰 财务分析类</h4>
+          <div class="example-query" onclick="fillQuery('计算每个季度的收入增长率')">季度收入增长</div>
+          <div class="example-query" onclick="fillQuery('显示成本结构分析')">成本结构分析</div>
+          <div class="example-query" onclick="fillQuery('对比不同业务线的盈利能力')">业务线盈利对比</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 全局变量
+    let apiKey = localStorage.getItem('deepseek_key') || '';
+    let currentData = null;
+    let queryHistory = JSON.parse(localStorage.getItem('query_history') || '[]');
+
+    // 页面初始化
+    window.onload = function() {
+      loadApiKey();
+      setupEventListeners();
+      loadHistory();
+    };
+
+    function loadApiKey() {
+      if (apiKey) {
+        document.getElementById('apiKey').value = apiKey;
+        document.getElementById('keyStatus').innerHTML = '✅ 已保存';
+        document.getElementById('keyStatus').style.color = 'green';
+      }
+    }
+
+    function saveApiKey() {
+      apiKey = document.getElementById('apiKey').value.trim();
+      if (apiKey.startsWith('sk-')) {
+        localStorage.setItem('deepseek_key', apiKey);
+        document.getElementById('keyStatus').innerHTML = '✅ 保存成功';
+        document.getElementById('keyStatus').style.color = 'green';
+      } else {
+        alert('请输入有效的 API Key (以 sk- 开头)');
+      }
+    }
+
+    function setupEventListeners() {
+      const uploadZone = document.getElementById('uploadZone');
+      const fileInput = document.getElementById('fileInput');
+
+      uploadZone.onclick = () => fileInput.click();
+      fileInput.onchange = handleFileSelect;
+
+      uploadZone.ondragover = (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+      };
+      uploadZone.ondragleave = () => uploadZone.classList.remove('dragover');
+      uploadZone.ondrop = (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        handleFileSelect({ target: { files: e.dataTransfer.files } });
+      };
+
+      document.getElementById('queryInput').onkeypress = (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) executeQuery();
+      };
+    }
+
+    async function handleFileSelect(event) {
+      const files = Array.from(event.target.files);
+      for (const file of files) {
+        if (file.name.endsWith('.csv')) {
+          await processCSVFile(file);
+        } else {
+          alert(`不支持的文件格式: ${file.name}`);
+        }
+      }
+    }
+
+    async function processCSVFile(file) {
+      const text = await file.text();
+      
+      Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          currentData = {
+            fileName: file.name,
+            columns: results.meta.fields,
+            rows: results.data,
+            uploadTime: new Date().toLocaleString()
+          };
+          
+          displayDataPreview();
+          updateTableInfo();
+          showMessage('success', `✅ 数据文件 "${file.name}" 加载成功！包含 ${results.data.length} 行数据，${results.meta.fields.length} 个字段。`);
+        },
+        error: function(error) {
+          showMessage('error', `❌ 文件解析失败: ${error.message}`);
+        }
+      });
+    }
+
+    function displayDataPreview() {
+      if (!currentData) return;
+      
+      const preview = document.getElementById('dataPreview');
+      const sampleRows = currentData.rows.slice(0, 10);
+      
+      preview.innerHTML = `
+        <h4>📋 数据预览 - ${currentData.fileName}</h4>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">${currentData.rows.length}</div>
+            <div class="stat-label">总行数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${currentData.columns.length}</div>
+            <div class="stat-label">字段数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${currentData.uploadTime}</div>
+            <div class="stat-label">上传时间</div>
+          </div>
+        </div>
+        
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>${currentData.columns.map(col => `<th>${col}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${sampleRows.map(row => 
+                `<tr>${currentData.columns.map(col => `<td>${row[col] || ''}</td>`).join('')}</tr>`
+              ).join('')}
+            </tbody>
+          </table>
+        </div>
+        ${currentData.rows.length > 10 ? `<p style="color: #666; font-size: 14px;">显示前 10 行数据，共 ${currentData.rows.length} 行</p>` : ''}
+      `;
+    }
+
+    function updateTableInfo() {
+      if (!currentData) {
+        document.getElementById('tableInfo').innerHTML = `
+          <div class="table-info">
+            <p>⚠️ 请先上传 CSV 数据文件</p>
+          </div>
+        `;
+        return;
+      }
+
+      document.getElementById('tableInfo').innerHTML = `
+        <div class="table-info">
+          <h4>📊 当前数据表：${currentData.fileName}</h4>
+          <p><strong>数据规模：</strong>${currentData.rows.length} 行 × ${currentData.columns.length} 列</p>
+          <p><strong>可用字段：</strong></p>
+          <div class="column-list">
+            ${currentData.columns.map(col => `<span class="column-tag">${col}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    async function executeQuery() {
+      const query = document.getElementById('queryInput').value.trim();
+      if (!query) return;
+      if (!apiKey) {
+        alert('请先配置 DeepSeek API Key');
+        return;
+      }
+      if (!currentData) {
+        alert('请先上传数据文件');
+        return;
+      }
+
+      const queryBtn = document.getElementById('queryBtn');
+      queryBtn.disabled = true;
+      queryBtn.textContent = '🤔 分析中...';
+
+      try {
+        showMessage('info', `🔍 正在分析查询: "${query}"`);
+        
+        // 调用 DeepSeek API 生成查询逻辑
+        const analysis = await analyzeQuery(query);
+        
+        // 执行数据处理
+        const result = executeDataQuery(analysis);
+        
+        // 显示结果
+        displayQueryResult(query, analysis, result);
+        
+        // 保存到历史
+        saveToHistory(query, analysis, result);
+        
+      } catch (error) {
+        showMessage('error', `❌ 查询失败: ${error.message}`);
+      } finally {
+        queryBtn.disabled = false;
+        queryBtn.textContent = '🚀 生成报表';
+      }
+    }
+
+    async function analyzeQuery(query) {
+      const prompt = `你是一个数据分析助手。用户有一个包含以下字段的数据表：
+
+字段列表：${currentData.columns.join(', ')}
+
+数据示例（前3行）：
+${currentData.rows.slice(0, 3).map(row => 
+currentData.columns.map(col => `${col}: ${row[col]}`).join(', ')
+).join('\n')}
+
+用户查询：${query}
+
+请分析用户的查询意图，返回一个JSON格式的分析结果，包含：
+{
+"intent": "查询意图描述",
+"operations": [
+  {
+    "type": "filter|group|sort|aggregate|calculate",
+    "field": "字段名",
+    "condition": "条件",
+    "function": "sum|count|avg|max|min等"
+  }
+],
+"chartType": "bar|line|pie|table",
+"title": "报表标题"
+}
+
+只返回JSON，不要其他文字。`;
+
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.1,
+          max_tokens: 1000
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API 调用失败: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0].message.content;
+      
+      try {
+        return JSON.parse(content);
+      } catch (e) {
+        // 如果JSON解析失败，尝试提取JSON部分
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        throw new Error('无法解析AI返回的分析结果');
+      }
+    }
+
+    function executeDataQuery(analysis) {
+      let processedData = [...currentData.rows];
+      let summary = {};
+
+      // 根据分析结果处理数据
+      if (analysis.operations && Array.isArray(analysis.operations)) {
+        for (const op of analysis.operations) {
+          switch (op.type) {
+            case 'filter':
+              if (op.condition) {
+                processedData = processedData.filter(row => {
+                  const value = row[op.field];
+                  // 简单的条件匹配
+                  if (op.condition.includes('>')) {
+                    const threshold = parseFloat(op.condition.split('>')[1]);
+                    return parseFloat(value) > threshold;
+                  } else if (op.condition.includes('<')) {
+                    const threshold = parseFloat(op.condition.split('<')[1]);
+                    return parseFloat(value) < threshold;
+                  } else if (op.condition.includes('=')) {
+                    const target = op.condition.split('=')[1].trim();
+                    return value == target;
+                  }
+                  return true;
+                });
+              }
+              break;
+              
+            case 'group':
+              const grouped = {};
+              processedData.forEach(row => {
+                const key = row[op.field] || '未分类';
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(row);
+              });
+              
+              processedData = Object.keys(grouped).map(key => {
+                const group = grouped[key];
+                const result = { [op.field]: key, count: group.length };
+                
+                // 如果有聚合函数
+                if (op.function && op.aggregateField) {
+                  const values = group.map(r => parseFloat(r[op.aggregateField]) || 0);
+                  switch (op.function) {
+                    case 'sum':
+                      result[op.aggregateField + '_sum'] = values.reduce((a, b) => a + b, 0);
+                      break;
+                    case 'avg':
+                      result[op.aggregateField + '_avg'] = values.reduce((a, b) => a + b, 0) / values.length;
+                      break;
+                    case 'max':
+                      result[op.aggregateField + '_max'] = Math.max(...values);
+                      break;
+                    case 'min':
+                      result[op.aggregateField + '_min'] = Math.min(...values);
+                      break;
+                  }
+                }
+                return result;
+              });
+              break;
+              
+            case 'sort':
+              processedData.sort((a, b) => {
+                const aVal = parseFloat(a[op.field]) || a[op.field];
+                const bVal = parseFloat(b[op.field]) || b[op.field];
+                return op.order === 'desc' ? bVal - aVal : aVal - bVal;
+              });
+              break;
+              
+            case 'aggregate':
+              if (op.function && op.field) {
+                const values = processedData.map(r => parseFloat(r[op.field]) || 0);
+                switch (op.function) {
+                  case 'sum':
+                    summary[op.field + '_sum'] = values.reduce((a, b) => a + b, 0);
+                    break;
+                  case 'avg':
+                    summary[op.field + '_avg'] = values.reduce((a, b) => a + b, 0) / values.length;
+                    break;
+                  case 'max':
+                    summary[op.field + '_max'] = Math.max(...values);
+                    break;
+                  case 'min':
+                    summary[op.field + '_min'] = Math.min(...values);
+                    break;
+                }
+              }
+              break;
+          }
+        }
+      }
+
+      // 限制结果数量
+      if (processedData.length > 100) {
+        processedData = processedData.slice(0, 100);
+        summary.truncated = true;
+      }
+
+      return {
+        data: processedData,
+        summary: summary,
+        totalRows: processedData.length
+      };
+    }
+
+    function displayQueryResult(query, analysis, result) {
+      const resultsDiv = document.getElementById('queryResults');
+      
+      resultsDiv.innerHTML = `
+        <div class="result-section">
+          <h4>📊 ${analysis.title || '查询结果'}</h4>
+          <p><strong>查询：</strong>${query}</p>
+          <p><strong>分析意图：</strong>${analysis.intent}</p>
+          <p><strong>结果数量：</strong>${result.totalRows} 条记录</p>
+          
+          ${result.data.length > 0 ? `
+            <div class="data-table">
+              <table>
+                <thead>
+                  <tr>${Object.keys(result.data[0]).map(col => `<th>${col}</th>`).join('')}</tr>
+                </thead>
+                <tbody>
+                  ${result.data.slice(0, 20).map(row => 
+                    `<tr>${Object.keys(row).map(col => `<td>${row[col]}</td>`).join('')}</tr>`
+                  ).join('')}
+                </tbody>
+              </table>
+            </div>
+            ${result.data.length > 20 ? '<p style="color: #666;">显示前20条结果</p>' : ''}
+          ` : '<p>没有找到匹配的数据</p>'}
+          
+          <div id="chart_${Date.now()}" class="chart-container"></div>
+        </div>
+      `;
+
+      // 生成图表
+      if (result.data.length > 0 && analysis.chartType && analysis.chartType !== 'table') {
+        generateChart(result.data, analysis);
+      }
+    }
+
+    function generateChart(data, analysis) {
+      const chartContainer = document.querySelector('.chart-container:last-child');
+      const chart = echarts.init(chartContainer);
+      
+      let option = {};
+      const keys = Object.keys(data[0]);
+      
+      switch (analysis.chartType) {
+        case 'bar':
+          option = {
+            title: { text: analysis.title },
+            tooltip: { trigger: 'axis' },
+            xAxis: { 
+              type: 'category', 
+              data: data.map(item => item[keys[0]]),
+              axisLabel: { interval: 0, rotate: data.length > 10 ? 45 : 0 }
+            },
+            yAxis: { type: 'value' },
+            series: [{
+              type: 'bar',
+              data: data.map(item => parseFloat(item[keys[1]]) || 0),
+              itemStyle: { color: '#007bff' }
+            }]
+          };
+          break;
+          
+        case 'line':
+          option = {
+            title: { text: analysis.title },
+            tooltip: { trigger: 'axis' },
+            xAxis: { 
+              type: 'category', 
+              data: data.map(item => item[keys[0]]),
+              axisLabel: { interval: 0, rotate: data.length > 10 ? 45 : 0 }
+            },
+            yAxis: { type: 'value' },
+            series: [{
+              type: 'line',
+              data: data.map(item => parseFloat(item[keys[1]]) || 0),
+              smooth: true,
+              lineStyle: { color: '#007bff' }
+            }]
+          };
+          break;
+          
+        case 'pie':
+          option = {
+            title: { text: analysis.title },
+            tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+            legend: {
+              orient: 'vertical',
+              right: 10,
+              top: 'center',
+              data: data.map(item => item[keys[0]])
+            },
+            series: [{
+              name: analysis.title,
+              type: 'pie',
+              radius: '55%',
+              center: ['40%', '50%'],
+              data: data.map(item => ({
+                name: item[keys[0]],
+                value: parseFloat(item[keys[1]]) || 0
+              })),
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              }
+            }]
+          };
+          break;
+      }
+      
+      chart.setOption(option);
+      
+      // 窗口大小变化时重新调整图表大小
+      window.addEventListener('resize', () => {
+        chart.resize();
+      });
+    }
+
+    function saveToHistory(query, analysis, result) {
+      const historyItem = {
+        id: Date.now(),
+        query: query,
+        analysis: analysis,
+        resultCount: result.totalRows,
+        timestamp: new Date().toLocaleString()
+      };
+      
+      queryHistory.unshift(historyItem);
+      if (queryHistory.length > 50) queryHistory = queryHistory.slice(0, 50);
+      
+      localStorage.setItem('query_history', JSON.stringify(queryHistory));
+      loadHistory();
+    }
+
+    function loadHistory() {
+      const historyDiv = document.getElementById('historyList');
+      if (queryHistory.length === 0) {
+        historyDiv.innerHTML = '<p>暂无查询历史</p>';
+        return;
+      }
+      
+      historyDiv.innerHTML = queryHistory.map(item => `
+        <div class="card" style="background: #f8f9fa; margin: 10px 0;">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div style="flex: 1;">
+              <h5 style="margin: 0 0 10px 0; color: #007bff;">${item.analysis.title || '查询结果'}</h5>
+              <p style="margin: 5px 0; font-size: 14px;"><strong>查询：</strong>${item.query}</p>
+              <p style="margin: 5px 0; color: #666; font-size: 13px;">
+                <span>${item.timestamp}</span> · 
+                <span>结果数量：${item.resultCount}</span>
+              </p>
+            </div>
+            <div>
+              <button onclick="rerunQuery('${item.id}')" style="background: #28a745;">重新执行</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function rerunQuery(id) {
+      const item = queryHistory.find(h => h.id == id);
+      if (item) {
+        document.getElementById('queryInput').value = item.query;
+        switchTab('query');
+        executeQuery();
+      }
+    }
+
+    function fillQuery(query) {
+      document.getElementById('queryInput').value = query;
+    }
+
+    function clearResults() {
+      document.getElementById('queryResults').innerHTML = '';
+    }
+
+    function switchTab(tabId) {
+      // 隐藏所有标签页内容
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // 取消所有标签的激活状态
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // 激活选中的标签页
+      document.getElementById(tabId).classList.add('active');
+      
+      // 激活对应的标签
+      document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+    }
+
+    function showMessage(type, message) {
+      const resultsDiv = document.getElementById('queryResults');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `${type}-section`;
+      messageDiv.innerHTML = message;
+      
+      resultsDiv.prepend(messageDiv);
+      
+      // 5秒后自动移除信息提示（除非是结果）
+      if (type === 'info' || type === 'error') {
+        setTimeout(() => {
+          messageDiv.remove();
+        }, 5000);
+      }
+    }
+  </script>
+</body>
+</html>

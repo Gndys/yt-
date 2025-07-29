@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>爆款雷达 - 跨境电商智能体</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="radar" class="w-8 h-8"></i>
+                    <h1 class="text-2xl font-bold">爆款雷达</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm opacity-90">智能跨境电商选品助手</span>
+                    <button id="settingsBtn" class="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Control Panel -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-6 flex items-center">
+                <i data-lucide="control-panel" class="w-5 h-5 mr-2"></i>
+                控制面板
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Platform Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">目标平台</label>
+                    <select id="platformSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="amazon">Amazon US</option>
+                        <option value="amazon-de">Amazon DE</option>
+                        <option value="walmart">Walmart</option>
+                        <option value="ebay">eBay</option>
+                    </select>
+                </div>
+
+                <!-- Category Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">商品类目</label>
+                    <select id="categorySelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="electronics">电子产品</option>
+                        <option value="home">家居用品</option>
+                        <option value="beauty">美妆护肤</option>
+                        <option value="sports">运动户外</option>
+                        <option value="clothing">服装配饰</option>
+                    </select>
+                </div>
+
+                <!-- Profit Threshold -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">最低毛利率 (%)</label>
+                    <input id="profitThreshold" type="number" value="25" min="10" max="80" 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-4 mt-6">
+                <button id="scanBtn" class="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i data-lucide="search" class="w-5 h-5 mr-2"></i>
+                    开始扫描爆款
+                </button>
+                <button id="refreshBtn" class="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <i data-lucide="refresh-cw" class="w-5 h-5 mr-2"></i>
+                    刷新数据
+                </button>
+                <button id="exportBtn" class="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                    <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+                    导出报告
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Panel -->
+        <div id="statusPanel" class="bg-white rounded-xl shadow-lg p-6 mb-8 hidden">
+            <div class="flex items-center justify-center space-x-4">
+                <div class="loading-spinner"></div>
+                <span id="statusText" class="text-lg">正在扫描爆款商品...</span>
+            </div>
+            <div class="mt-4">
+                <div class="bg-gray-200 rounded-full h-2">
+                    <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Grid -->
+        <div id="resultsContainer" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Dynamic content will be inserted here -->
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Trend Chart -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i data-lucide="trending-up" class="w-5 h-5 mr-2"></i>
+                    趋势分析
+                </h3>
+                <canvas id="trendChart" width="400" height="200"></canvas>
+            </div>
+
+            <!-- Profit Distribution -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i data-lucide="pie-chart" class="w-5 h-5 mr-2"></i>
+                    利润分布
+                </h3>
+                <canvas id="profitChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl max-w-md w-full p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">设置</h3>
+                    <button id="closeSettings" class="p-1 hover:bg-gray-100 rounded">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Keepa API Key</label>
+                        <input id="keepaKey" type="password" placeholder="输入你的 Keepa API Key" 
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">扫描深度</label>
+                        <select id="scanDepth" class="w-full p-3 border border-gray-300 rounded-lg">
+                            <option value="100">快速 (100 商品)</option>
+                            <option value="500">标准 (500 商品)</option>
+                            <option value="1000">深度 (1000 商品)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="autoRefresh" type="checkbox" class="mr-2">
+                        <label for="autoRefresh" class="text-sm text-gray-700">自动刷新数据 (每小时)</label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button id="cancelSettings" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
+                    <button id="saveSettings" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Mock data for demonstration
+        const mockProducts = [
+            {
+                asin: "B0CXYZ1234",
+                title: "Portable Wireless Bluetooth Speaker",
+                price: 29.99,
+                trendScore: 85,
+                margin: 28.5,
+                sales: 1250,
+                reviews: 4.5,
+                image: "https://via.placeholder.com/200x200/667eea/ffffff?text=Speaker"
+            },
+            {
+                asin: "B09ABC5678",
+                title: "LED Desk Lamp with USB Charging",
+                price: 19.99,
+                trendScore: 79,
+                margin: 32.1,
+                sales: 890,
+                reviews: 4.3,
+                image: "https://via.placeholder.com/200x200/764ba2/ffffff?text=Lamp"
+            },
+            {
+                asin: "B0BDEF9012",
+                title: "Silicone Phone Case Set",
+                price: 12.99,
+                trendScore: 72,
+                margin: 45.2,
+                sales: 2100,
+                reviews: 4.2,
+                image: "https://via.placeholder.com/200x200/48bb78/ffffff?text=Case"
+            }
+        ];
+
+        // DOM Elements
+        const scanBtn = document.getElementById('scanBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const statusPanel = document.getElementById('statusPanel');
+        const statusText = document.getElementById('statusText');
+        const progressBar = document.getElementById('progressBar');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettings = document.getElementById('closeSettings');
+
+        // Event Listeners
+        scanBtn.addEventListener('click', startScan);
+        refreshBtn.addEventListener('click', refreshData);
+        exportBtn.addEventListener('click', exportReport);
+        settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+        closeSettings.addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+        // Main Functions
+        function startScan() {
+            statusPanel.classList.remove('hidden');
+            resultsContainer.innerHTML = '';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        statusPanel.classList.add('hidden');
+                        displayResults();
+                    }, 1000);
+                }
+                progressBar.style.width = progress + '%';
+                statusText.textContent = `正在扫描爆款商品... ${Math.round(progress)}%`;
+            }, 500);
+        }
+
+        function displayResults() {
+            resultsContainer.innerHTML = '';
+            mockProducts.forEach(product => {
+                const card = createProductCard(product);
+                resultsContainer.appendChild(card);
+            });
+            updateCharts();
+        }
+
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl shadow-lg p-6 card-hover';
+            
+            card.innerHTML = `
+                <div class="flex items-start space-x-4">
+                    <img src="${product.image}" alt="${product.title}" class="w-16 h-16 rounded-lg object-cover">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2">${product.title}</h3>
+                        <p class="text-sm text-gray-600 mb-2">ASIN: ${product.asin}</p>
+                        <div class="flex items-center space-x-2 mb-3">
+                            <span class="text-lg font-bold text-green-600">$${product.price}</span>
+                            <div class="flex items-center text-yellow-500">
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                                <span class="text-sm ml-1">${product.reviews}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 grid grid-cols-3 gap-3">
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-blue-600">${product.trendScore}</div>
+                        <div class="text-xs text-gray-500">趋势分</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-green-600">${product.margin}%</div>
+                        <div class="text-xs text-gray-500">毛利率</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-purple-600">${product.sales}</div>
+                        <div class="text-xs text-gray-500">月销量</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 flex space-x-2">
+                    <button class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                        生成Listing
+                    </button>
+                    <button class="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors text-sm">
+                        查看详情
+                    </button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function refreshData() {
+            refreshBtn.innerHTML = '<div class="loading-spinner w-5 h-5 mr-2"></div>刷新中...';
+            setTimeout(() => {
+                refreshBtn.innerHTML = '<i data-lucide="refresh-cw" class="w-5 h-5 mr-2"></i>刷新数据';
+                lucide.createIcons();
+                displayResults();
+            }, 2000);
+        }
+
+        function exportReport() {
+            const csvContent = "ASIN,Title,Price,Trend Score,Margin,Sales\n" +
+                mockProducts.map(p => `${p.asin},"${p.title}",${p.price},${p.trendScore},${p.margin},${p.sales}`).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'boom-products-report.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function updateCharts() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                    datasets: [{
+                        label: '搜索热度',
+                        data: [65, 70, 80, 75, 85, 90, 95],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Profit Chart
+            const profitCtx = document.getElementById('profitChart').getContext('2d');
+            new Chart(profitCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['高利润 (>40%)', '中利润 (25-40%)', '低利润 (<25%)'],
+                    datasets: [{
+                        data: [30, 50, 20],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

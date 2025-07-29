@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业数据审计智能助手</title>
+    <link rel="stylesheet" href="demo-js.css">
+    <!-- 添加Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航 -->
+        <header class="app-header">
+            <div class="app-logo">
+                <img src="https://via.placeholder.com/40x40/2a6fc9/ffffff?text=DA" alt="数据审计助手">
+                <h1 class="app-title">企业数据审计平台</h1>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <!-- 欢迎区域 -->
+            <section class="welcome-section">
+                <h1>智能数据审计解决方案</h1>
+                <p>专业的企业级数据审计工具，提供高效、精准的数据分析与比对服务，助力企业决策与合规管理</p>
+            </section>
+
+            <!-- 功能卡片区域 -->
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3>多格式文件解析</h3>
+                    <p>支持Excel、CSV、PDF、Word、JSON等多种文件格式，无需转换即可分析</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <h3>智能数据比对</h3>
+                    <p>自动识别相同字段和数据结构，进行精准比对，发现数据差异</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>异常检测</h3>
+                    <p>发现数据不一致、缺失、重复、格式错误等问题，确保数据质量</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>详细报告</h3>
+                    <p>提供清晰的分析结果和可视化报告，支持导出多种格式</p>
+                </div>
+            </div>
+
+            <!-- 使用指南 -->
+            <section class="usage-guide">
+                <h2>使用流程</h2>
+                <div class="steps-container">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-title">打开聊天窗口</div>
+                        <div class="step-description">点击右下角的聊天按钮，开始与数据审计助手交互</div>
+                    </div>
+                    
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-title">上传数据文件</div>
+                        <div class="step-description">点击上传按钮，选择您需要分析的多个数据文件</div>
+                    </div>
+                    
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-title">等待分析结果</div>
+                        <div class="step-description">系统将自动分析您的数据，并提供详细的审计报告</div>
+                    </div>
+                    
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-title">查看详细报告</div>
+                        <div class="step-description">获取数据审计结果，发现潜在问题并采取行动</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 上传区域提示 -->
+            <section class="upload-section">
+                <h3>立即开始数据审计</h3>
+                <p>点击右下角的聊天按钮，上传您的数据文件开始分析</p>
+                <div class="supported-formats">
+                    <span class="format-tag">Excel (.xlsx/.xls)</span>
+                    <span class="format-tag">CSV (.csv)</span>
+                    <span class="format-tag">PDF (.pdf)</span>
+                    <span class="format-tag">Word (.doc/.docx)</span>
+                    <span class="format-tag">JSON (.json)</span>
+                    <span class="format-tag">文本 (.txt)</span>
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="app-footer">
+            <div class="company-info">© 2025 企业数据审计平台 | 专业的数据分析与审计解决方案</div>
+        </footer>
+    </div>
+
+    <!-- 文件上传暂存区 -->
+    <div id="fileUploadQueue" class="file-upload-queue">
+        <div class="queue-header">
+            <h3>文件上传队列</h3>
+            <div class="queue-actions">
+                <button id="uploadAllBtn" class="upload-all-btn"><i class="fas fa-cloud-upload-alt"></i> 上传全部</button>
+                <button id="closeQueueBtn" class="close-queue-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div id="queuedFiles" class="queued-files">
+            <!-- 队列中的文件将在这里显示 -->
+        </div>
+    </div>
+
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.10/libs/cn/index.js"></script>
+    <script>
+      // 全局变量，用于存储待上传的文件
+      const pendingFiles = [];
+      let cozeClient = null;
+
+      // 初始化Coze SDK
+      function initCozeSDK() {
+        cozeClient = new CozeWebSDK.WebChatClient({
+          // 机器人相关配置
+          config: {
+            // 【必填】机器人的 Bot ID
+            //bot_id: '7531325232280797234',
+            bot_id: '7531318847014895657',
+            //7531318847014895657
+            // 启用文件上传功能
+            enable_file_upload: true,
+          },
+          // 定制化聊天窗口UI组件，可选
+          componentProps: {
+            title: '数据审计助手',
+            description: '上传文件进行数据分析',
+            placeholder: '请输入您的问题或直接上传文件...',
+            // 文件上传相关配置
+            fileInput: {
+              // 允许上传的文件类型
+              accept: '.xlsx,.xls,.csv,.pdf,.doc,.docx,.json,.txt',
+              // 支持多文件选择
+              multiple: true,
+              // 最大文件大小（单位：字节），这里设置为10MB
+              maxSize: 10 * 1024 * 1024,
+              // 文件上传按钮的提示文本
+              buttonText: '选择数据文件',
+              // 文件上传错误提示
+              errorText: {
+                overSize: '文件大小超过限制（最大10MB）',
+                typeError: '不支持的文件类型，请上传Excel、CSV、PDF等数据文件'
+              }
+            },
+            // 自定义按钮样式
+            buttonStyle: {
+              backgroundColor: '#2a6fc9',
+              color: '#ffffff'
+            }
+          },
+          // 身份验证配置
+          auth: {
+            type: 'token',
+            // 【必填】用于身份验证的个人令牌
+            token: 'pat_iWOvYJtRkfw13OpNjKT2Rs9BMIyhzhMUNtg8dzAk1dMPqVKR2TRg1sDdW3hXwxD2',
+            
+            // onRefreshToken回调函数用于在令牌过期时获取新令牌
+            onRefreshToken: function () {
+              console.warn("Token is being refreshed. For production, fetch a new token from your backend server.");
+              return 'pat_iWOvYJtRkfw13OpNjKT2Rs9BMIyhzhMUNtg8dzAk1dMPqVKR2TRg1sDdW3hXwxD2'; // 使用相同的令牌
+            }
+          },
+          // 添加事件监听
+          // 添加事件监听
+events: {
+  // 监听文件选择事件
+  onFileSelect: function(files) {
+    console.log('Files selected:', files.length);
+    
+    // 将选择的文件添加到待上传队列
+    for (let i = 0; i < files.length; i++) {
+      addFileToQueue(files[i]);
+    }
+    
+    // 显示文件上传队列面板
+    showFileQueue();
+    
+    // 显示提示信息
+    showNotification(`已添加 ${files.length} 个文件到上传队列，点击"上传全部"开始分析`, 'info');
+    
+    // 返回false阻止自动上传
+    return false;
+  },
+  
+  // 监听文件上传开始事件
+  onFileUploadStart: function(file) {
+    console.log('File upload started:', file.name);
+    updateFileStatus(file, 'uploading');
+    showNotification('正在上传文件: ' + file.name, 'info');
+  },
+  
+  // 监听文件上传成功事件
+  onFileUploadSuccess: function(file, response) {
+    console.log('File upload succeeded:', file.name, response);
+    updateFileStatus(file, 'success');
+    showNotification('文件上传成功: ' + file.name, 'success');
+    removeFileFromQueue(file);
+  },
+  
+  // 监听文件上传失败事件
+  onFileUploadFailed: function(file, error) {
+    console.error('File upload failed:', file.name, error);
+    updateFileStatus(file, 'error', error);
+    showNotification('文件上传失败: ' + file.name + ' - ' + error, 'error');
+  },
+  
+  // SDK准备就绪
+  onReady: function() {
+    console.log('Coze SDK is ready');
+    showNotification('数据审计助手已准备就绪，可以开始选择文件', 'success');
+  }
+}
+
+        });
+      }
+
+      // 添加文件到上传队列
+      // 添加文件到上传队列
+function addFileToQueue(file) {
+  // 检查文件是否已在队列中
+  const existingFile = pendingFiles.find(f => f.name === file.name && f.size === file.size);
+  if (existingFile) {
+    showNotification(`文件 ${file.name} 已在上传队列中`, 'info');
+    return;
+  }
+
+  // 验证文件类型和大小
+  const allowedTypes = ['.xlsx', '.xls', '.csv', '.pdf', '.doc', '.docx', '.json', '.txt'];
+  const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+  
+  if (!allowedTypes.includes(fileExtension)) {
+    showNotification(`不支持的文件类型: ${file.name}`, 'error');
+    return;
+  }
+  
+  if (file.size > 10 * 1024 * 1024) { // 10MB限制
+    showNotification(`文件过大: ${file.name} (最大10MB)`, 'error');
+    return;
+  }
+
+  // 将文件添加到队列（不上传）
+  pendingFiles.push(file);
+  
+  // 创建文件项UI
+  const fileItem = document.createElement('div');
+  fileItem.className = 'queue-file-item';
+  fileItem.dataset.fileName = file.name;
+  
+  // 获取文件类型图标
+  let fileIcon = getFileIcon(file.name);
+  
+  // 格式化文件大小
+  const fileSize = formatFileSize(file.size);
+  
+  fileItem.innerHTML = `
+    <div class="file-icon"><i class="fas ${fileIcon}"></i></div>
+    <div class="file-info">
+      <div class="file-name" title="${file.name}">${file.name}</div>
+      <div class="file-size">${fileSize}</div>
+    </div>
+    <div class="file-status waiting">等待上传</div>
+    <div class="file-actions">
+      <button class="remove-file-btn" data-file="${file.name}">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  `;
+  
+  // 添加到队列UI
+  document.getElementById('queuedFiles').appendChild(fileItem);
+  
+  // 添加移除按钮事件
+  const removeBtn = fileItem.querySelector('.remove-file-btn');
+  removeBtn.addEventListener('click', function() {
+    removeFileFromQueueByName(this.dataset.file);
+  });
+  
+  console.log('File added to queue (not uploaded):', file.name);
+}
+
+
+      // 从队列中移除文件
+      function removeFileFromQueue(file) {
+        const fileIndex = pendingFiles.findIndex(f => f.name === file.name && f.size === file.size);
+        if (fileIndex !== -1) {
+          pendingFiles.splice(fileIndex, 1);
+          
+          // 更新UI
+          const fileItem = document.querySelector(`.queue-file-item[data-file-name="${file.name}"]`);
+          if (fileItem) {
+            fileItem.remove();
+          }
+          
+          // 如果队列为空，隐藏队列面板
+          if (pendingFiles.length === 0) {
+            hideFileQueue();
+          }
+        }
+      }
+
+      // 更新文件状态
+      function updateFileStatus(file, status, message = '') {
+        const fileItem = document.querySelector(`.queue-file-item[data-file-name="${file.name}"]`);
+        if (fileItem) {
+          const statusEl = fileItem.querySelector('.file-status');
+          if (statusEl) {
+            if (status === 'uploading') {
+              statusEl.textContent = '上传中...';
+              statusEl.className = 'file-status uploading';
+            } else if (status === 'success') {
+              statusEl.textContent = '上传成功';
+              statusEl.className = 'file-status success';
+            } else if (status === 'error') {
+              statusEl.textContent = message || '上传失败';
+              statusEl.className = 'file-status error';
+            }
+          }
+        }
+      }
+
+      // 显示文件队列面板
+      function showFileQueue() {
+        const queueEl = document.getElementById('fileUploadQueue');
+        queueEl.classList.add('visible');
+      }
+
+      // 隐藏文件队列面板
+      function hideFileQueue() {
+        const queueEl = document.getElementById('fileUploadQueue');
+        queueEl.classList.remove('visible');
+      }
+
+      // 上传所有队列中的文件
+      // 上传所有队列中的文件
+async function uploadAllFiles() {
+  if (pendingFiles.length === 0) {
+    showNotification('没有待上传的文件', 'info');
+    return;
+  }
+
+  showNotification(`开始上传 ${pendingFiles.length} 个文件...`, 'info');
+  
+  // 创建文件副本，避免在上传过程中修改原数组
+  const filesToUpload = [...pendingFiles];
+  
+  try {
+    // 逐个上传文件
+    for (const file of filesToUpload) {
+      console.log('Uploading file:', file.name);
+      updateFileStatus(file, 'uploading');
+      
+      // 使用Coze SDK上传文件
+      if (cozeClient && typeof cozeClient.uploadFile === 'function') {
+        await cozeClient.uploadFile(file);
+      } else {
+        console.error('CozeClient uploadFile method not available');
+        updateFileStatus(file, 'error', 'SDK方法不可用');
+      }
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    showNotification('上传过程中出现错误: ' + error.message, 'error');
+  }
+}
+
+
+      // 格式化文件大小
+      function formatFileSize(bytes) {
+        if (bytes < 1024) {
+          return bytes + ' B';
+        } else if (bytes < 1024 * 1024) {
+          return (bytes / 1024).toFixed(2) + ' KB';
+        } else {
+          return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+      }
+
+      // 增强的通知功能
+      function showNotification(message, type = 'info') {
+        // 如果已经存在通知，则移除
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+          existingNotification.remove();
+        }
+
+        // 创建通知元素
+        const notification = document.createElement('div');
+        notification.className = 'notification ' + type;
+        
+        // 添加图标
+        let iconClass = 'fas fa-info-circle';
+        if (type === 'success') {
+          iconClass = 'fas fa-check-circle';
+        } else if (type === 'error') {
+          iconClass = 'fas fa-exclamation-circle';
+        }
+        
+        // 构建通知内容
+        notification.innerHTML = `
+          <div class="notification-icon"><i class="${iconClass}"></i></div>
+          <div class="notification-message">${message}</div>
+          <div class="notification-close"><i class="fas fa-times"></i></div>
+        `;
+
+        // 添加到页面
+        document.body.appendChild(notification);
+
+        // 添加关闭按钮事件
+        const closeBtn = notification.querySelector('.notification-close');
+        closeBtn.addEventListener('click', () => {
+          notification.style.opacity = '0';
+          notification.style.transform = 'translateY(20px)';
+          notification.style.transition = 'opacity 0.3s, transform 0.3s';
+          setTimeout(() => notification.remove(), 300);
+        });
+
+        // 5秒后自动消失
+        setTimeout(() => {
+          notification.style.opacity = '0';
+          notification.style.transform = 'translateY(20px)';
+          notification.style.transition = 'opacity 0.3s, transform 0.3s';
+          setTimeout(() => notification.remove(), 300);
+        }, 5000);
+      }
+
+      // 初始化页面
+      document.addEventListener('DOMContentLoaded', function() {
+        // 初始化Coze SDK
+        initCozeSDK();
+        
+        // 添加上传全部按钮事件
+        document.getElementById('uploadAllBtn').addEventListener('click', uploadAllFiles);
+        
+        // 添加关闭队列按钮事件
+        document.getElementById('closeQueueBtn').addEventListener('click', hideFileQueue);
+      });
+      // 获取文件图标
+function getFileIcon(fileName) {
+  const extension = fileName.split('.').pop().toLowerCase();
+  const iconMap = {
+    'xlsx': 'fa-file-excel',
+    'xls': 'fa-file-excel',
+    'csv': 'fa-file-csv',
+    'pdf': 'fa-file-pdf',
+    'doc': 'fa-file-word',
+    'docx': 'fa-file-word',
+    'json': 'fa-file-code',
+    'txt': 'fa-file-alt'
+  };
+  return iconMap[extension] || 'fa-file';
+}
+
+// 根据文件名从队列中移除文件
+function removeFileFromQueueByName(fileName) {
+  const fileIndex = pendingFiles.findIndex(f => f.name === fileName);
+  if (fileIndex !== -1) {
+    pendingFiles.splice(fileIndex, 1);
+    
+    // 移除UI元素
+    const fileItem = document.querySelector(`.queue-file-item[data-file-name="${fileName}"]`);
+    if (fileItem) {
+      fileItem.remove();
+    }
+    
+    // 如果队列为空，隐藏队列面板
+    if (pendingFiles.length === 0) {
+      hideFileQueue();
+    }
+    
+    showNotification(`已从队列中移除文件: ${fileName}`, 'info');
+  }
+}
+
+    </script>
+
+    <style>
+      /* 文件上传队列样式 */
+      .file-upload-queue {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        width: 400px;
+        max-height: 400px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      .file-upload-queue.visible {
+        display: flex;
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .queue-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background-color: #2a6fc9;
+        color: white;
+      }
+
+      .queue-header h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .queue-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .upload-all-btn {
+        background-color: #ffffff;
+        color: #2a6fc9;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .close-queue-btn {
+        background-color: transparent;
+        color: white;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+      }
+
+      .close-queue-btn:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .queued-files {
+        padding: 8px;
+        overflow-y: auto;
+        max-height: 320px;
+      }
+
+      .queue-file-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        margin-bottom: 8px;
+      }
+
+      .file-icon {
+        font-size: 20px;
+        color: #2a6fc9;
+        margin-right: 12px;
+        width: 24px;
+        text-align: center;
+      }
+
+      .file-info {
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .file-name {
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+      }
+
+      .file-size {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .file-status {
+        font-size: 12px;
+        margin: 0 10px;
+        color: #666;
+      }
+
+      .file-status.uploading {
+        color: #2a6fc9;
+      }
+
+      .file-status.success {
+        color: #4caf50;
+      }
+
+      .file-status.error {
+        color: #f44336;
+      }
+
+      .file-actions {
+        display: flex;
+      }
+
+      .remove-file-btn {
+        background-color: transparent;
+        color: #f44336;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+      }
+
+      .remove-file-btn:hover {
+        background-color: rgba(244, 67, 54, 0.1);
+      }
+
+      /* 通知样式增强 */
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1001;
+        max-width: 400px;
+        animation: slideIn 0.3s ease;
+      }
+
+      .notification-icon {
+        margin-right: 12px;
+        font-size: 18px;
+      }
+
+      .notification.info .notification-icon {
+        color: #2196f3;
+      }
+
+      .notification.success .notification-icon {
+        color: #4caf50;
+      }
+
+      .notification.error .notification-icon {
+        color: #f44336;
+      }
+
+      .notification-message {
+        flex: 1;
+        font-size: 14px;
+      }
+
+      .notification-close {
+        margin-left: 12px;
+        cursor: pointer;
+        color: #999;
+      }
+
+      .notification-close:hover {
+        color: #666;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+    </style>
+
+</body>
+</html>
