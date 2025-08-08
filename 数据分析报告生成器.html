@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI数据分析报告生成器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .file-upload {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .file-upload.dragover {
+            border-color: #667eea;
+            background: #ebf4ff;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            display: block;
+            max-height: 300px;
+            overflow: auto;
+            white-space: nowrap;
+        }
+
+        .preview-table th, .preview-table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .preview-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .report {
+            display: none;
+        }
+
+        .report h3 {
+            color: #2d3748;
+            margin: 25px 0 15px 0;
+            font-size: 1.3rem;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+
+        .report-content {
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .chart-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI数据分析报告生成器</h1>
+            <p>上传您的数据表格，让AI为您生成专业的分析报告</p>
+        </div>
+
+        <!-- API配置 -->
+        <div class="card">
+            <h2>📡 API配置</h2>
+            <div class="grid">
+                <div class="form-group">
+                    <label for="baseUrl">Base URL</label>
+                    <input type="text" id="baseUrl" placeholder="https://api.openai.com/v1" value="https://api.openai.com/v1">
+                </div>
+                <div class="form-group">
+                    <label for="apiKey">API Key</label>
+                    <input type="password" id="apiKey" placeholder="sk-...">
+                </div>
+                <div class="form-group">
+                    <label for="modelId">模型ID</label>
+                    <input type="text" id="modelId" placeholder="gpt-3.5-turbo" value="gpt-3.5-turbo">
+                </div>
+            </div>
+            <button class="btn" onclick="testAPI()">🔍 测试连接</button>
+            <div id="apiStatus" class="status"></div>
+        </div>
+
+        <!-- 文件上传 -->
+        <div class="card">
+            <h2>📊 数据上传</h2>
+            <div class="file-upload" id="fileUpload" onclick="document.getElementById('fileInput').click()">
+                <div>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7,10 12,15 17,10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <p>点击上传或拖拽文件到此处</p>
+                    <p style="color: #718096; font-size: 14px;">支持 CSV、Excel (.xlsx, .xls) 格式</p>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
+        </div>
+
+        <!-- 数据预览 -->
+        <div class="card" id="previewCard" style="display: none;">
+            <h2>👀 数据预览</h2>
+            <div id="dataPreview"></div>
+            <button class="btn" onclick="generateReport()" id="generateBtn">🚀 生成分析报告</button>
+        </div>
+
+        <!-- 加载状态 -->
+        <div class="card loading" id="loadingCard">
+            <div class="loading-spinner"></div>
+            <p>AI正在分析您的数据，请稍候...</p>
+        </div>
+
+        <!-- 报告展示 -->
+        <div class="card report" id="reportCard">
+            <h2>📈 分析报告</h2>
+            <div style="margin-bottom: 20px;">
+                <button class="btn" onclick="exportToPDF()">📄 导出PDF</button>
+                <button class="btn" onclick="generateNewReport()">🔄 重新生成</button>
+            </div>
+            <div id="reportContent" class="report-content"></div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedData = null;
+        let currentFileName = '';
+
+        // 文件拖拽处理
+        const fileUpload = document.getElementById('fileUpload');
+        
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('dragover');
+        });
+
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('dragover');
+        });
+
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // 测试API连接
+        async function testAPI() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const modelId = document.getElementById('modelId').value;
+            const status = document.getElementById('apiStatus');
+
+            if (!baseUrl || !apiKey || !modelId) {
+                showStatus(status, 'error', '请填写完整的API配置信息');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: modelId,
+                        messages: [{ role: 'user', content: 'Hello' }],
+                        max_tokens: 10
+                    })
+                });
+
+                if (response.ok) {
+                    showStatus(status, 'success', 'API连接测试成功！');
+                } else {
+                    showStatus(status, 'error', `API连接失败: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                showStatus(status, 'error', `连接错误: ${error.message}`);
+            }
+        }
+
+        // 显示状态信息
+        function showStatus(element, type, message) {
+            element.className = `status ${type}`;
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // 处理文件上传
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        // 处理文件
+        function handleFile(file) {
+            currentFileName = file.name;
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+
+            if (!['csv', 'xlsx', 'xls'].includes(fileExtension)) {
+                alert('请上传CSV或Excel格式的文件');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data;
+                    if (fileExtension === 'csv') {
+                        data = parseCSV(e.target.result);
+                    } else {
+                        const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        data = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    }
+                    
+                    uploadedData = data;
+                    displayPreview(data);
+                } catch (error) {
+                    alert('文件解析失败，请检查文件格式');
+                    console.error(error);
+                }
+            };
+
+            if (fileExtension === 'csv') {
+                reader.readAsText(file);
+            } else {
+                reader.readAsBinaryString(file);
+            }
+        }
+
+        // 解析CSV
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            return lines.map(line => {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim());
+                return result;
+            }).filter(row => row.some(cell => cell !== ''));
+        }
+
+        // 显示数据预览
+        function displayPreview(data) {
+            const previewCard = document.getElementById('previewCard');
+            const previewDiv = document.getElementById('dataPreview');
+            
+            if (data.length === 0) {
+                previewDiv.innerHTML = '<p>没有数据可预览</p>';
+                return;
+            }
+
+            const maxRows = Math.min(10, data.length);
+            let html = `<p>文件名: <strong>${currentFileName}</strong> | 总行数: <strong>${data.length}</strong> | 预览前${maxRows}行</p>`;
+            html += '<table class="preview-table">';
+            
+            for (let i = 0; i < maxRows; i++) {
+                html += '<tr>';
+                const maxCols = Math.min(10, data[i].length);
+                for (let j = 0; j < maxCols; j++) {
+                    const tag = i === 0 ? 'th' : 'td';
+                    html += `<${tag}>${data[i][j] || ''}</${tag}>`;
+                }
+                html += '</tr>';
+            }
+            html += '</table>';
+            
+            previewDiv.innerHTML = html;
+            previewCard.style.display = 'block';
+        }
+
+        // 生成报告
+        async function generateReport() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const modelId = document.getElementById('modelId').value;
+
+            if (!baseUrl || !apiKey || !modelId) {
+                alert('请先配置API信息');
+                return;
+            }
+
+            if (!uploadedData) {
+                alert('请先上传数据文件');
+                return;
+            }
+
+            // 显示加载状态
+            document.getElementById('loadingCard').style.display = 'block';
+            document.getElementById('generateBtn').disabled = true;
+
+            try {
+                // 准备数据
+                const dataText = uploadedData.map(row => row.join('\t')).join('\n');
+                
+                const prompt = `你是一位资深的商业数据分析师。你的任务是基于我提供的销售数据表格，为我生成一份全面、深入的销售分析报告。报告需要清晰地揭示销售表现、关键驱动因素和潜在的商业机会。
+
+数据内容：
+${dataText}
+
+请严格按照以下结构生成报告，并为每个部分添加明确的标题：
+
+## 📊 总体销售业绩分析
+- 计算并展示总销售额、平均客户销售额
+- 分析销售额最高的客户和最低的客户，并列出具体数值
+- 分析销售额随时间的变化趋势（如果数据包含时间信息）
+
+## 🏆 核心客户分析
+- 识别出销售额排名前10的客户
+- 用表格形式展示这10位客户的客户名称、销售金额及其占总销售额的百分比
+- 分析这些核心客户的共同特点
+
+## 📈 客户分层与帕累托分析
+- 对所有客户进行ABC分层
+- 进行帕累托分析（80/20法则），计算大约多少比例的客户贡献了80%的销售额
+- 描述客户销售额的分布情况
+
+## 💡 关键洞察与策略建议
+- 总结关键发现：用2-3点概括最重要的分析结果
+- 提出策略建议：基于以上分析，针对客户维护、新客户开拓、销售资源分配等方面，提出3-5条具体、可行的建议
+
+## 📋 数据摘要
+- 将关键的指标汇总成一个简洁的摘要表格
+
+报告应使用中文撰写，语言风格应专业、客观。关键数据和结论需要突出显示。`;
+
+                const response = await fetch(`${baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: modelId,
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 4000,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const reportText = result.choices[0].message.content;
+
+                // 显示报告
+                displayReport(reportText);
+
+            } catch (error) {
+                alert(`生成报告失败: ${error.message}`);
+                console.error(error);
+            } finally {
+                document.getElementById('loadingCard').style.display = 'none';
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+
+// 根据数据生成多种可视化图表
+function generateVisualizations(data) {
+    const container = document.createElement('div');
+    container.className = 'chart-container';
+    container.innerHTML = '<h3>📊 数据可视化</h3>';
+    const ctx1 = document.createElement('canvas');
+    const ctx2 = document.createElement('canvas');
+    container.appendChild(ctx1);
+    container.appendChild(ctx2);
+
+    if (data && data.length > 1) {
+        const headers = data[0];
+        for (let colIndex = 1; colIndex < headers.length; colIndex++) {
+            const labels = [];
+            const values = [];
+            for (let i = 1; i < Math.min(data.length, 21); i++) {
+                labels.push(data[i][0]);
+                values.push(parseFloat(data[i][colIndex]) || 0);
+            }
+
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: headers[colIndex],
+                        data: values,
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: `${headers[0]} vs ${headers[colIndex]}` } }
+                }
+            });
+
+            new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: headers[colIndex],
+                        data: values,
+                        borderColor: 'rgba(118, 75, 162, 0.9)',
+                        fill: false,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: `${headers[0]} vs ${headers[colIndex]}` } }
+                }
+            });
+            break;
+        }
+    }
+    return container;
+}
+
+        // 显示报告
+        function displayReport(reportText) {
+            const reportCard = document.getElementById('reportCard');
+            const reportContent = document.getElementById('reportContent');
+            
+            // 使用marked库将markdown转换为HTML
+            if (!window.marked) {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+                script.onload = () => renderMarkdown(reportText);
+                document.head.appendChild(script);
+            } else {
+                renderMarkdown(reportText);
+            }
+
+            function renderMarkdown(mdText) {
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true
+                });
+                const html = marked.parse(mdText);
+                reportContent.innerHTML = html;
+                enhanceTables();
+            }
+
+            // 表格样式增强
+            function enhanceTables() {
+                const tables = reportContent.querySelectorAll('table');
+                tables.forEach(table => {
+                    table.classList.add('preview-table');
+                });
+            }
+
+            // 尝试提取表格或关键数据生成简单可视化
+            try {
+                const chartContainer = document.createElement('div');
+                chartContainer.className = 'chart-container';
+                chartContainer.innerHTML = '<canvas id="reportChart"></canvas>';
+                reportContent.appendChild(chartContainer);
+
+                // 简单示例：从报告文本中匹配“客户名称 - 数值”形式生成条形图
+                const dataLines = reportText.split('\n').filter(line => line.includes('%') || /\d+(\.\d+)?/.test(line));
+                const labels = [];
+                const values = [];
+                dataLines.forEach(line => {
+                    const match = line.match(/([\u4e00-\u9fa5A-Za-z0-9_]+)[\s|：:]+([\d,.]+)/);
+                    if (match) {
+                        labels.push(match[1]);
+                        values.push(parseFloat(match[2].replace(/,/g, '')));
+                    }
+                });
+                if (labels.length && values.length) {
+                    new Chart(document.getElementById('reportChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: labels.slice(0, 10),
+                            datasets: [{
+                                label: '数值',
+                                data: values.slice(0, 10),
+                                backgroundColor: 'rgba(102, 126, 234, 0.6)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: '关键数据可视化' }
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('生成图表失败', err);
+            }
+
+
+            // 将基于原始数据的可视化插入报告
+            if (uploadedData) {
+                const viz = generateVisualizations(uploadedData);
+                reportContent.appendChild(viz);
+            }
+
+            reportCard.style.display = 'block';
+            // 滚动到报告位置
+            reportCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 导出PDF
+        async function exportToPDF() {
+            const reportContent = document.getElementById('reportContent');
+            if (!reportContent) return;
+
+            try {
+                // 创建临时容器用于PDF生成
+                const tempDiv = document.createElement('div');
+                tempDiv.style.width = '210mm';
+                tempDiv.style.padding = '20mm';
+                tempDiv.style.fontFamily = 'Arial, sans-serif';
+                tempDiv.style.fontSize = '12px';
+                tempDiv.style.lineHeight = '1.6';
+                tempDiv.style.color = '#333';
+                tempDiv.style.backgroundColor = 'white';
+                tempDiv.innerHTML = `
+                    <h1 style="text-align: center; color: #667eea; margin-bottom: 30px;">📊 数据分析报告</h1>
+                    <p style="text-align: center; color: #666; margin-bottom: 40px;">生成时间: ${new Date().toLocaleString()}</p>
+                    ${reportContent.innerHTML}
+                `;
+                
+                document.body.appendChild(tempDiv);
+
+                // 使用html2canvas生成图片
+                const canvas = await html2canvas(tempDiv, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true
+                });
+
+                // 创建PDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const imgWidth = 210;
+                const pageHeight = 297;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                pdf.save(`数据分析报告_${new Date().toISOString().split('T')[0]}.pdf`);
+                
+                // 清理临时元素
+                document.body.removeChild(tempDiv);
+                
+            } catch (error) {
+                alert('PDF导出失败: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // 重新生成报告
+        function generateNewReport() {
+            if (confirm('确定要重新生成报告吗？')) {
+                generateReport();
+            }
+        }
+    </script>
+</body>
+</html>
