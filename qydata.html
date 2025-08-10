@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI数据分析报告生成器 - 专业的商业数据分析工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="qydata.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i> DataMaster
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">功能特点</a>
+                <a href="#how-it-works" class="nav-link">使用方法</a>
+                <a href="#start" class="nav-link highlight">开始使用</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="animate-fade-in">AI 驱动的数据分析报告生成器</h1>
+                <p class="animate-fade-in">上传您的数据表格，让 AI 在几秒钟内为您生成专业的商业分析报告。无需编程知识，人人可用。</p>
+                <div class="hero-buttons animate-fade-in">
+                    <a href="#start" class="btn btn-primary">立即开始</a>
+                    <a href="#features" class="btn btn-outline">了解更多</a>
+                </div>
+            </div>
+            <div class="hero-image animate-fade-in">
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80" alt="数据分析图表">
+            </div>
+        </div>
+        <div class="wave-divider">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100">
+                <path fill="#ffffff" fill-opacity="1" d="M0,64L60,53.3C120,43,240,21,360,32C480,43,600,85,720,90.7C840,96,960,64,1080,48C1200,32,1320,32,1380,32L1440,32L1440,100L1380,100C1320,100,1200,100,1080,100C960,100,840,100,720,100C600,100,480,100,360,100C240,100,120,100,60,100L0,100Z"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- 特性介绍 -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>强大功能，轻松使用</h2>
+                <p>我们的AI数据分析工具为您提供专业级的分析能力，无需专业技能</p>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <h3>多格式支持</h3>
+                    <p>支持CSV、Excel文件格式，多工作表自动识别，轻松处理复杂数据</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>AI智能分析</h3>
+                    <p>利用先进AI模型，对数据进行深度分析，揭示关键洞察和商业价值</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3>可视化图表</h3>
+                    <p>自动生成美观的数据可视化图表，让您的数据故事更直观清晰</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <h3>一键导出</h3>
+                    <p>报告支持一键导出为PDF格式，方便存档和分享给团队成员</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 使用步骤 -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="wave-divider flip">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100">
+                <path fill="#f9fafb" fill-opacity="1" d="M0,64L60,53.3C120,43,240,21,360,32C480,43,600,85,720,90.7C840,96,960,64,1080,48C1200,32,1320,32,1380,32L1440,32L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z"></path>
+            </svg>
+        </div>
+        <div class="container">
+            <div class="section-header">
+                <h2>简单三步，获取专业分析</h2>
+                <p>无需繁琐操作，几分钟内完成从数据到分析报告的全过程</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>配置 API</h3>
+                        <p>输入您的AI模型API信息，一次配置长期使用</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>上传数据</h3>
+                        <p>拖拽或选择您的Excel/CSV文件，自动预览数据内容</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>生成报告</h3>
+                        <p>点击生成按钮，AI自动分析并生成专业报告与图表</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wave-divider">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100">
+                <path fill="#ffffff" fill-opacity="1" d="M0,64L60,53.3C120,43,240,21,360,32C480,43,600,85,720,90.7C840,96,960,64,1080,48C1200,32,1320,32,1380,32L1440,32L1440,100L1380,100C1320,100,1200,100,1080,100C960,100,840,100,720,100C600,100,480,100,360,100C240,100,120,100,60,100L0,100Z"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- 主要功能区域 -->
+    <section id="start" class="main-content">
+        <div class="container">
+            <div class="section-header">
+                <h2>开始您的数据分析之旅</h2>
+                <p>在下方配置并上传您的数据，体验AI分析的强大能力</p>
+            </div>
+
+            <!-- API配置 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-plug"></i>
+                    <h2>API 配置</h2>
+                </div>
+                <div class="card-body">
+                    <div class="grid">
+                        <div class="form-group">
+                            <label for="baseUrl">Base URL</label>
+                            <div class="input-icon">
+                                <i class="fas fa-link"></i>
+                                <input type="text" id="baseUrl" placeholder="https://api.apicore.ai/v1" value="https://api.apicore.ai/v1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="apiKey">API Key</label>
+                            <div class="input-icon">
+                                <i class="fas fa-key"></i>
+                                <input type="password" id="apiKey" placeholder="sk-...">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="modelId">模型 ID</label>
+                            <div class="input-icon">
+                                <i class="fas fa-microchip"></i>
+                                <input type="text" id="modelId" placeholder="gemini-2.5-flash-all" value="gemini-2.5-flash-all">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="testAPI()"><i class="fas fa-plug"></i> 测试连接</button>
+                    <div id="apiStatus" class="status"></div>
+                </div>
+            </div>
+
+            <!-- 文件上传 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-file-upload"></i>
+                    <h2>数据上传</h2>
+                </div>
+                <div class="card-body">
+                    <div class="file-upload" id="fileUpload" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>点击上传或拖拽文件到此处</p>
+                            <p class="upload-hint">支持 CSV、Excel (.xlsx, .xls) 格式</p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+
+            <!-- 数据预览 -->
+            <div class="card" id="previewCard" style="display: none;">
+                <div class="card-header">
+                    <i class="fas fa-table"></i>
+                    <h2>数据预览</h2>
+                </div>
+                <div class="card-body">
+                    <!-- 工作表选择器 -->
+                    <div id="sheetSelector" class="sheet-selector" style="display: none;">
+                        <h3><i class="fas fa-folder"></i> 选择工作表:</h3>
+                        <div id="sheetList" class="sheet-list"></div>
+                    </div>
+                    <div id="dataPreview"></div>
+                    <button class="btn btn-primary" onclick="generateReport()" id="generateBtn">
+                        <i class="fas fa-magic"></i> 生成分析报告
+                    </button>
+                </div>
+            </div>
+
+            <!-- 加载状态 -->
+            <div class="card loading" id="loadingCard">
+                <div class="card-body text-center">
+                    <div class="loading-spinner"></div>
+                    <p><i class="fas fa-brain"></i> AI正在深度分析您的数据，请稍候...</p>
+                    <p class="loading-hint">复杂数据可能需要更长时间</p>
+                </div>
+            </div>
+
+            <!-- 报告展示 -->
+            <div class="card report" id="reportCard">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h2>分析报告</h2>
+                </div>
+                <div class="card-body">
+                    <div class="action-buttons">
+                        <button class="btn" onclick="exportToPDF()">
+                            <i class="fas fa-file-pdf"></i> 导出PDF
+                        </button>
+                        <button class="btn" onclick="generateNewReport()">
+                            <i class="fas fa-sync-alt"></i> 重新生成
+                        </button>
+                    </div>
+                    <div id="reportContent" class="report-content"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 客户评价 -->
+    <section class="testimonials">
+        <div class="wave-divider flip">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100">
+                <path fill="#ffffff" fill-opacity="1" d="M0,64L60,53.3C120,43,240,21,360,32C480,43,600,85,720,90.7C840,96,960,64,1080,48C1200,32,1320,32,1380,32L1440,32L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z"></path>
+            </svg>
+        </div>
+        <div class="container">
+            <div class="section-header">
+                <h2>客户的声音</h2>
+                <p>看看其他用户如何评价我们的数据分析工具</p>
+            </div>
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"这款工具让我们的销售分析效率提高了5倍，节省了大量人工分析时间，分析结果也更加准确。"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="用户头像">
+                        <div>
+                            <h4>张明</h4>
+                            <p>销售总监 · 科技公司</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"AI生成的报告质量超出预期，专业度不亚于人工分析师的水平，而且几分钟内就能完成。"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="用户头像">
+                        <div>
+                            <h4>李娜</h4>
+                            <p>数据分析师 · 金融行业</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"我们团队每周都要分析大量销售数据，这个工具让我们节省了90%的报告准备时间。"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://randomuser.me/api/portraits/men/67.jpg" alt="用户头像">
+                        <div>
+                            <h4>王强</h4>
+                            <p>市场经理 · 零售行业</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>DataMaster</h3>
+                    <p>AI驱动的数据分析工具</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-col">
+                        <h4>产品</h4>
+                        <ul>
+                            <li><a href="#">功能介绍</a></li>
+                            <li><a href="#">定价方案</a></li>
+                            <li><a href="#">使用案例</a></li>
+                            <li><a href="#">数据安全</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>资源</h4>
+                        <ul>
+                            <li><a href="#">帮助文档</a></li>
+                            <li><a href="#">API文档</a></li>
+                            <li><a href="#">常见问题</a></li>
+                            <li><a href="#">视频教程</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>联系我们</h4>
+                        <ul>
+                            <li><a href="#"><i class="fas fa-envelope"></i> support@datamaster.com</a></li>
+                            <li><a href="#"><i class="fas fa-phone"></i> 400-123-4567</a></li>
+                            <li><a href="#"><i class="fas fa-map-marker-alt"></i> 北京市海淀区</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 DataMaster AI分析工具. 保留所有权利.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-weixin"></i></a>
+                    <a href="#"><i class="fab fa-weibo"></i></a>
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="qydata.js"></script>
+</body>
+</html>
