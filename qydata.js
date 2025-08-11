@@ -466,6 +466,12 @@ options: {
         console.warn('生成图表失败', err);
     }
 
+    // 添加告示栏
+    const notice = document.createElement('div');
+    notice.className = 'custom-notice';
+    notice.innerHTML = '💡 更多表格定制，请访问 <a> 这里</a>';
+    reportContent.appendChild(notice);
+
     reportCard.style.display = 'block';
     // 滚动到报告位置
     reportCard.scrollIntoView({ behavior: 'smooth' });
