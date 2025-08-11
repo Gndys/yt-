@@ -712,6 +712,28 @@ body {
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
+/* 自定义告示栏样式 */
+.custom-notice {
+    margin-top: 2rem;
+    padding: 1rem 1.5rem;
+    background-color: #fff8e1;
+    border: 1px solid #ffecb3;
+    border-radius: var(--radius-md);
+    color: #795548;
+    font-size: 1rem;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+.custom-notice span {
+    color: var(--primary-color);
+    font-weight: 600;
+    cursor: default;
+}
+.custom-notice:hover {
+    box-shadow: var(--shadow-md);
+}
+
 /* 客户评价 */
 .testimonials {
     padding: 5rem 0;
