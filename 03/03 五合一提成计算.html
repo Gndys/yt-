@@ -1,0 +1,1251 @@
+<!-- Modified Version: 活动档位规则精简：仅满档给4.5%，未达档0；去除线性区间 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <title>五合一提成与折扣计算工具（活动规则精简版：满档4.5%）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg:#f5f7fa;
+      --primary:#2563eb;
+      --primary-hover:#1d4ed8;
+      --border:#d1d9e6;
+      --radius:10px;
+      --danger:#dc2626;
+      --ok:#16a34a;
+      --warn:#d97706;
+      --panel:#ffffff;
+      --muted:#64748b;
+      --purple:#7c3aed;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial,sans-serif;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      color:#1f2937;
+      min-height:100vh;
+      padding:24px;
+    }
+    h1 { margin:0 0 4px; font-size:24px; font-weight:600; color:#fff; }
+    .subtitle { color:#e0e7ff; margin-bottom:16px; font-size:14px; }
+    .top-actions { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 18px; }
+    .top-actions button {
+      background:linear-gradient(90deg,#2563eb,#4f46e5);
+      color:#fff;
+      border:none;
+      padding:10px 18px;
+      font-size:13px;
+      border-radius:26px;
+      cursor:pointer;
+      box-shadow:0 4px 14px -4px rgba(37,99,235,.55);
+      display:flex;
+      align-items:center;
+      gap:6px;
+      position:relative;
+    }
+    .top-actions button:hover { transform:translateY(-2px); }
+    .top-actions button:disabled { opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
+    .recalc-note { font-size:11px; color:#e0e7ff; line-height:1.5; max-width:560px; }
+    .shell {
+      background:var(--panel);
+      border-radius:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.15);
+      padding:26px 30px 40px;
+      max-width:1600px;
+      margin:0 auto 60px;
+    }
+    .section-title { margin:30px 0 12px; font-size:18px; display:flex; align-items:center; gap:8px; font-weight:600; }
+    .flex { display:flex; gap:18px; flex-wrap:wrap; }
+    .uploader {
+      border:2px dashed #93a5be;
+      padding:26px;
+      border-radius:14px;
+      background:#f8fafc;
+      flex:1 1 340px;
+      min-width:300px;
+      position:relative;
+    }
+    .uploader.drag { border-color:var(--primary); background:#eef5ff; }
+    .uploader input { display:none; }
+    .uploader button {
+      background:var(--primary);
+      color:#fff;
+      border:none;
+      padding:10px 20px;
+      font-size:14px;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    .uploader button:hover { background:var(--primary-hover); }
+    .badge {
+      display:inline-block;
+      padding:2px 8px;
+      font-size:11px;
+      background:#eef2ff;
+      border:1px solid #c7d2fe;
+      border-radius:20px;
+      margin-left:6px;
+      color:#4338ca;
+    }
+    .module-buttons {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+      gap:14px;
+      margin-top:10px;
+    }
+    .module-buttons button {
+      position:relative;
+      border:1px solid #cbd5e1;
+      background:#ffffff;
+      border-radius:12px;
+      padding:14px 16px 16px;
+      text-align:left;
+      cursor:pointer;
+      transition:.18s;
+      font-size:14px;
+      line-height:1.3;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-height:108px;
+    }
+    .module-buttons button:disabled { cursor:not-allowed; opacity:.55; background:#f1f5f9; }
+    .module-buttons button:hover:not(:disabled) {
+      transform:translateY(-3px);
+      box-shadow:0 6px 18px rgba(0,0,0,.12);
+      border-color:var(--primary);
+    }
+    .module-buttons button.done { border-color:var(--ok); background:#f0fdf4; }
+    .module-buttons button.done .status-dot { background:var(--ok); }
+    .module-buttons button.running { border-color:var(--primary); background:#eff6ff; }
+    .module-buttons button.running .status-dot {
+      background:var(--primary);
+      animation:pulse 1s linear infinite;
+    }
+    .status-dot {
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:#94a3b8;
+      box-shadow:0 0 0 2px #fff;
+    }
+    @keyframes pulse {
+      0% { transform:scale(.85); opacity:.6; }
+      50% { transform:scale(1); opacity:1; }
+      100% { transform:scale(.85); opacity:.6; }
+    }
+    .module-head { display:flex; align-items:center; gap:10px; }
+    .mod-name { font-weight:600; font-size:15px; }
+    .mod-desc { font-size:11px; color:var(--muted); line-height:1.4; flex:1; }
+    .mod-action { margin-top:auto; display:flex; gap:6px; align-items:center; font-size:12px; font-weight:500; color:var(--primary); }
+    .log-panel {
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:12px;
+      padding:14px 18px 20px;
+      max-height:300px;
+      overflow:auto;
+      font-size:12px;
+      line-height:1.5;
+      white-space:pre-wrap;
+    }
+    .log-panel b { color:#111827; }
+    .log-entry { margin-bottom:4px; }
+    .log-entry.warn { color:var(--warn); }
+    .log-entry.error { color:var(--danger); }
+    .log-entry.ok { color:var(--ok); }
+    .table-wrap {
+      margin-top:30px;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+    }
+    .table-head-tools {
+      background:#f1f5f9;
+      padding:10px 14px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .table-head-tools select, .table-head-tools input {
+      padding:6px 10px;
+      border:1px solid #cbd5e1;
+      border-radius:8px;
+      font-size:12px;
+    }
+    .table-head-tools button.small {
+      padding:6px 12px;
+      font-size:12px;
+      border-radius:8px;
+      border:1px solid var(--primary);
+      background:#fff;
+      cursor:pointer;
+      color:var(--primary);
+    }
+    .table-head-tools button.small:hover { background:var(--primary); color:#fff; }
+    table {
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:12px;
+    }
+    thead { background:#1e293b; color:#fff; }
+    th,td {
+      padding:6px 8px;
+      border-bottom:1px solid #e2e8f0;
+      text-align:left;
+      vertical-align:top;
+    }
+    th.sticky { position:sticky; top:0; z-index:2; }
+    tbody tr:nth-child(even) { background:#f8fafc; }
+    tbody tr.return-row { background:#fff1f2 !important; }
+    tbody tr:hover { background:#eef2ff; }
+    .cell-warn { background:#fef9c3; }
+    .cell-high { background:#e0f2fe; }
+    .footer-bar {
+      margin-top:40px;
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:16px;
+      align-items:center;
+    }
+    .export-btn {
+      background:linear-gradient(90deg,#2563eb,#4f46e5);
+      color:#fff;
+      padding:12px 24px;
+      border:none;
+      border-radius:30px;
+      font-size:14px;
+      font-weight:500;
+      cursor:pointer;
+      box-shadow:0 6px 18px -4px rgba(79,70,229,.45);
+    }
+    .export-btn:disabled { opacity:.5; cursor:not-allowed; background:#94a3b8; box-shadow:none; }
+    .export-btn:hover:not(:disabled) { transform:translateY(-2px); }
+    .stats { font-size:12px; color:var(--muted); }
+    .pill {
+      display:inline-block;
+      background:#eef2ff;
+      padding:2px 8px;
+      border-radius:14px;
+      font-size:11px;
+      margin-right:6px;
+      margin-bottom:4px;
+      color:#3949ab;
+    }
+    .grid-col-select { max-width:240px; }
+    .hint { font-size:12px; color:var(--muted); margin-top:4px; }
+    .lock-icon { font-size:18px; opacity:.5; }
+    .preproc-detect { font-size:12px; margin-top:10px; line-height:1.5; }
+    .preproc-detect.ok { color:var(--ok); }
+    .preproc-detect.warn { color:var(--warn); }
+    .flash-updated { animation:flashUpdated 1.2s ease-in-out 1; }
+    @keyframes flashUpdated {
+      0% { background:#fff3cd; }
+      60% { background:#ffffff; }
+      100% { background:inherit; }
+    }
+    @media (max-width:900px){
+      .module-buttons { grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
+      th,td { padding:5px 6px; }
+      .shell { padding:20px 18px 34px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-actions">
+    <button id="btnRecalcActual" disabled title="(回款收款金额 - 支付带单提成点位) ÷ 销售数量 ÷ 系统定价">
+      🔄 计算卖出的实际折扣
+    </button>
+    <div class="recalc-note">
+      活动规则已精简：70% / 75% 档仅满档给 4.5% 提成；未达档 0。<br/>
+      卖出的实际折扣计算公式： (回款收款金额 - 支付带单提成点位) / 销售数量 / 系统定价 （保留4位）。<br/>
+      如已计算提成再重算折扣，不会回溯，请视情况重置。
+    </div>
+  </div>
+
+  <h1>五合一提成与折扣计算工具（活动规则精简版：满档4.5%）</h1>
+  <div class="subtitle">支持上传 / 分步计算 / activity_package 跳过 / 卖出折扣重算 / 活动档位简化：只满档给 4.5%</div>
+
+  <div class="shell">
+    <div class="flex">
+      <div class="uploader" id="uploader">
+        <h3 style="margin:0 0 10px;font-size:16px;">数据上传</h3>
+        <p style="font-size:12px;line-height:1.5;color:var(--muted);">
+          选择 Excel(.xlsx) 或 CSV 文件。默认读取第一个工作表。<br>
+          上传后自动解析并标准化字段，并检测 activity_package 预处理标记。
+        </p>
+        <div style="margin:12px 0 16px;">
+          <button id="pickFileBtn">选择文件</button>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv"/>
+          <span id="fileName" style="font-size:12px;margin-left:10px;color:var(--muted);"></span>
+        </div>
+        <div id="preprocessHint" class="preproc-detect"></div>
+        <div style="font-size:11px;color:#475569;">
+          如无反应，请检查控制台是否有 XLSX 库加载失败。
+        </div>
+      </div>
+
+      <div style="flex:2 1 460px;min-width:340px;">
+        <h3 class="section-title">步骤控制 <span class="badge">点击顺序执行</span></h3>
+        <div class="module-buttons">
+          <button id="btnSpecial" data-module="special" disabled>
+            <div class="module-head">
+              <div class="status-dot" id="dot-special"></div>
+              <div class="mod-name">① 特价机</div>
+            </div>
+            <div class="mod-desc">特价机元/台 / % / 超底价；支持 activity_package 跳过。</div>
+            <div class="mod-action">执行计算 →</div>
+          </button>
+          <button id="btnBoiler" data-module="boiler" disabled>
+            <div class="module-head">
+              <div class="status-dot" id="dot-boiler"></div>
+              <div class="mod-name">② 壁挂炉</div>
+            </div>
+            <div class="mod-desc">按 80% / 78% 销售折扣规则阶梯提成。</div>
+            <div class="mod-action">执行计算 →</div>
+          </button>
+          <button id="btnActivity" data-module="activity" disabled>
+            <div class="module-head">
+              <div class="status-dot" id="dot-activity"></div>
+              <div class="mod-name">③ 七月活动</div>
+            </div>
+            <div class="mod-desc">精简：档位=70%或75%，实际折扣达档→4.5%，未达→0。</div>
+            <div class="mod-action">执行计算 →</div>
+          </button>
+          <button id="btnSmoke" data-module="smoke" disabled>
+            <div class="module-head">
+              <div class="status-dot" id="dot-smoke"></div>
+              <div class="mod-name">④ 烟灶</div>
+            </div>
+            <div class="mod-desc">按大类阈值给 10% 提成。</div>
+            <div class="mod-action">执行计算 →</div>
+          </button>
+          <button id="btnDiscount" data-module="discount" disabled>
+            <div class="module-head">
+              <div class="status-dot" id="dot-discount"></div>
+              <div class="mod-name">⑤ 折扣机 <span class="lock-icon">🔒</span></div>
+            </div>
+            <div class="mod-desc">前四模块均为0 且 0.755<折扣<0.80 时计算。</div>
+            <div class="mod-action">执行计算 →</div>
+          </button>
+        </div>
+        <div class="hint" id="unlockHint">折扣机提成尚未解锁：请先顺序完成前四个模块。</div>
+      </div>
+    </div>
+
+    <h3 class="section-title">日志输出 / 进度</h3>
+    <div class="log-panel" id="logPanel" aria-live="polite"></div>
+
+    <div class="table-wrap" id="tableWrap" style="display:none;">
+      <div class="table-head-tools">
+        <label style="font-size:12px;">
+          搜索：
+          <input type="text" id="searchInput" placeholder="按单号 / 型号 / 店名" />
+        </label>
+        <label style="font-size:12px;">
+          显示列：
+          <select id="columnPreset" class="grid-col-select">
+            <option value="basic">基础 + 分类</option>
+            <option value="price">价格折扣</option>
+            <option value="commission">全部提成</option>
+            <option value="final">最终汇总</option>
+            <option value="all">全部字段</option>
+          </select>
+        </label>
+        <button class="small" id="refreshBtn">刷新显示</button>
+          <button class="small" id="resetBtn">清空数据</button>
+        <span style="font-size:11px;color:var(--muted);" id="rowCountLabel"></span>
+      </div>
+      <div style="width:100%;overflow:auto;max-height:520px;">
+        <table id="dataTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div>
+        <div class="stats" id="statsInfo">尚未上传数据。</div>
+        <div id="pillArea" style="margin-top:6px;"></div>
+      </div>
+      <button class="export-btn" id="exportBtn" disabled>导出 Excel</button>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      rawRows: [],
+      rows: [],
+      logs: [],
+      mapping: {},
+      modulesDone: {
+        special:false,
+        boiler:false,
+        activity:false,
+        smoke:false,
+        discount:false
+      },
+      running: null,
+      // 更新版本号：activity 规则精简
+      ruleVersion: "2025.09.23.fix5+activity_simplify_full45",
+      baseFields: {},
+      lastRenderColumns: [],
+      hasCalcStatusField:false,
+      hasPriorityField:false
+    };
+
+    const FIELD_MAP = {
+      "日期":"日期",
+      "单据编号":"单据编号",
+      "用户姓名":"用户姓名",
+      "规格型号":"规格型号",
+      "销售数量":"销售数量",
+      "价税合计":"价税合计",
+      "系统定价":"系统定价",
+      "物料名称":"物料名称",
+      "物料类别":"物料类别",
+      "促销员":"促销员",
+      "客户店名":"客户店名",
+      "单据类型":"单据类型",
+      "回款收款金额":"回款收款金额",
+      "支付带单提成点位":"支付带单提成点位",
+      "卖出的实际折扣":"卖出的实际折扣",
+      "佳尼特特价":"佳尼特特价",
+      "壁挂炉销售折扣":"壁挂炉销售折扣",
+      "壁挂炉提成":"壁挂炉提成原始",
+      "特价机提成计算方案":"特价机提成计算方案",
+      "特价机公司最低折扣":"特价机公司最低折扣",
+      "七月部分活动折扣率":"七月部分活动折扣率",
+      "七月部分活动提成":"七月部分活动提成",
+      "七月部分活动加提":"七月部分活动加提",
+      "七月部分活动活动要求":"七月部分活动活动要求",
+      "大类型":"大类型",
+      "机型":"机型",
+      "提成计算状态":"提成计算状态",
+      "计算优先级":"计算优先级"
+    };
+
+    const COLUMN_PRESETS = {
+      basic: ["日期","单据编号","规格型号","促销员","客户店名","大类型","机型","销售数量","提成计算状态","计算优先级"],
+      price: ["日期","单据编号","规格型号","系统定价","价税合计","最终折扣率","卖出的实际折扣"],
+      commission: [
+        "单据编号","规格型号",
+        "特价机提成","特价机提成说明","特价机提成计算方案",
+        "壁挂炉提成原始","壁挂炉提成","壁挂炉提成说明",
+        "七月活动提成","七月活动提成说明",
+        "七月活动加提","七月活动加提说明",
+        "烟灶提成","烟灶提成说明",
+        "折扣机提成","折扣机提成说明",
+        "折扣前小计","折扣前小计说明",
+        "最终总提成","最终总提成说明",
+        "提成计算状态"
+      ],
+      final: ["日期","单据编号","规格型号","大类型","销售数量","最终折扣率","最终总提成","提成计算状态"],
+      all: "ALL"
+    };
+
+    const COL_LABELS = {
+      "日期":"日期",
+      "单据编号":"单据编号",
+      "用户姓名":"用户姓名",
+      "规格型号":"规格型号",
+      "促销员":"促销员",
+      "客户店名":"客户店名",
+      "大类型":"大类型",
+      "机型":"机型",
+      "销售数量":"销售数量",
+      "系统定价":"系统定价",
+      "价税合计":"价税合计",
+      "回款收款金额":"回款收款金额",
+      "单据类型":"单据类型",
+      "物料名称":"物料名称",
+      "物料类别":"物料类别",
+      "支付带单提成点位":"支付带单提成点位",
+      "最终折扣率":"最终折扣率",
+      "卖出的实际折扣":"卖出的实际折扣",
+      "佳尼特特价":"佳尼特特价",
+      "特价机公司最低折扣":"特价机公司最低折扣",
+      "壁挂炉销售折扣":"壁挂炉销售折扣",
+      "壁挂炉提成原始":"壁挂炉提成(来源)",
+      "壁挂炉提成":"壁挂炉提成(计算)",
+      "壁挂炉提成说明":"壁挂炉提成说明",
+      "特价机提成计算方案":"特价机提成计算方案(来源)",
+      "特价机提成说明":"特价机提成说明",
+      "特价机提成":"特价机提成",
+      "七月部分活动折扣率":"七月部分活动折扣率",
+      "七月部分活动提成":"七月部分活动提成(来源)",
+      "七月部分活动加提":"七月部分活动加提(来源)",
+      "七月部分活动活动要求":"七月部分活动活动要求",
+      "七月活动提成":"七月活动提成",
+      "七月活动提成说明":"七月活动提成说明",
+      "七月活动加提":"七月活动加提",
+      "七月活动加提说明":"七月活动加提说明",
+      "烟灶提成":"烟灶提成",
+      "烟灶提成说明":"烟灶提成说明",
+      "折扣机提成":"折扣机提成",
+      "折扣机提成说明":"折扣机提成说明",
+      "折扣前小计":"折扣前小计",
+      "折扣前小计说明":"折扣前小计说明",
+      "最终总提成":"最终总提成",
+      "最终总提成说明":"最终总提成说明",
+      "是否退货":"是否退货",
+      "提成计算状态":"提成计算状态",
+      "计算优先级":"计算优先级"
+    };
+    function getColLabel(col){ return COL_LABELS[col] || col; }
+
+    function log(msg, level="info"){
+      const time = new Date().toLocaleTimeString();
+      state.logs.push({time,msg,level});
+      const panel = document.getElementById("logPanel");
+      if(!panel) return;
+      const div = document.createElement("div");
+      div.className = `log-entry ${level === "warn" ? "warn": level === "error" ? "error" : level==="ok"?"ok":""}`;
+      div.textContent = `[${time}] ${msg}`;
+      panel.appendChild(div);
+      panel.scrollTop = panel.scrollHeight;
+    }
+    function normalizeNumber(v){
+      if (v===null || v===undefined || v==="") return null;
+      if (typeof v === "number") return v;
+      const x = parseFloat(String(v).replace(/,/g,"").trim());
+      return isNaN(x)? null : x;
+    }
+    function normalizeString(v){
+      if (v===null || v===undefined) return "";
+      return String(v).trim();
+    }
+    function fmtCurrency(n){
+      const v = normalizeNumber(n);
+      if (v===null) return "空";
+      return v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+    function fmtPercent(r){
+      const v = normalizeNumber(r);
+      if (v===null) return "空";
+      return (v*100).toFixed(2) + "%";
+    }
+    function deriveFinalDiscount(row){
+      const amt = normalizeNumber(row["价税合计"]);
+      const list = normalizeNumber(row["系统定价"]);
+      if (list && list>0 && amt!=null) {
+        const r = amt/list;
+        row["最终折扣率"] = parseFloat(r.toFixed(4));
+      } else {
+        row["最终折扣率"] = null;
+      }
+    }
+    function markReturn(row){
+      const q = normalizeNumber(row["销售数量"]);
+      const t = normalizeString(row["单据类型"]);
+      row["是否退货"] = false;
+      if (q < 0) row["是否退货"] = true;
+      else if (t.includes("退货")) row["是否退货"] = true;
+    }
+    function ensureNumeric(val){
+      if(val===null || val===undefined || val==="") return 0;
+      return +val || 0;
+    }
+
+    function afterModuleCheckUnlock(){
+      const primaryAll = state.modulesDone.special && state.modulesDone.boiler &&
+                         state.modulesDone.activity && state.modulesDone.smoke;
+      const btnDiscount = document.getElementById("btnDiscount");
+      if (primaryAll){
+        btnDiscount.disabled = false;
+          document.getElementById("unlockHint").textContent = "折扣机提成已解锁：可执行步骤⑤。";
+        document.querySelector("#btnDiscount .lock-icon")?.remove();
+        log("折扣机提成模块已解锁。","ok");
+      }
+    }
+    function updateModuleButtonStyle(module, status){
+      const btn = {
+        special:document.getElementById("btnSpecial"),
+        boiler:document.getElementById("btnBoiler"),
+        activity:document.getElementById("btnActivity"),
+        smoke:document.getElementById("btnSmoke"),
+        discount:document.getElementById("btnDiscount"),
+      }[module];
+      const dot = document.getElementById(`dot-${module}`);
+      if(!btn || !dot) return;
+      btn.classList.remove("done","running");
+      if (status==="running"){
+        btn.classList.add("running");
+        dot.style.background = "var(--primary)";
+      } else if (status==="done"){
+        btn.classList.add("done");
+        dot.style.background = "var(--ok)";
+      } else {
+        dot.style.background = "#94a3b8";
+      }
+    }
+
+    function refreshStats(){
+      const statsInfo = document.getElementById("statsInfo");
+      function flag(b){return b?"✔":"…";}
+      statsInfo.textContent = `当前数据行：${state.rows.length}；模块进度：特价(${flag(state.modulesDone.special)}) 壁挂炉(${flag(state.modulesDone.boiler)}) 活动(${flag(state.modulesDone.activity)}) 烟灶(${flag(state.modulesDone.smoke)}) 折扣(${flag(state.modulesDone.discount)})`;
+      renderPills();
+    }
+    function renderPills(){
+      const area = document.getElementById("pillArea");
+      area.innerHTML = "";
+      Object.entries(state.modulesDone).forEach(([k,v])=>{
+        const span = document.createElement("span");
+        span.className="pill";
+        span.textContent = `${k}:${v?"OK":"待"}`;
+        area.appendChild(span);
+      });
+    }
+    function flattenAvailableColumns(){
+      const set = new Set();
+      state.rows.forEach(r=>{
+        Object.keys(r).forEach(k=> set.add(k));
+      });
+      return Array.from(set);
+    }
+    function pickColumns(preset){
+      if (preset==="ALL" || preset==="all") return flattenAvailableColumns();
+      if (preset in COLUMN_PRESETS){
+        const config = COLUMN_PRESETS[preset];
+        if (config==="ALL") return flattenAvailableColumns();
+        return config.filter(col => {
+          return state.rows.some(r => r[col] !== undefined && r[col] !== null && r[col] !== "");
+        });
+      }
+      return COLUMN_PRESETS.basic;
+    }
+    function filterRows(keyword){
+      if (!keyword) return state.rows;
+      keyword = keyword.toLowerCase();
+      return state.rows.filter(r=>{
+        return (r["单据编号"] && r["单据编号"].toLowerCase().includes(keyword)) ||
+               (r["规格型号"] && r["规格型号"].toLowerCase().includes(keyword)) ||
+               (r["客户店名"] && r["客户店名"].toLowerCase().includes(keyword));
+      });
+    }
+
+    function renderTable(){
+      if (!state.rows.length){
+        document.getElementById("tableWrap").style.display="none";
+        return;
+      }
+      document.getElementById("tableWrap").style.display="block";
+      const preset = document.getElementById("columnPreset").value;
+      let columns = pickColumns(preset);
+      state.lastRenderColumns = columns;
+
+      const thead = document.getElementById("tableHead");
+      const tbody = document.getElementById("tableBody");
+      thead.innerHTML="";
+      tbody.innerHTML="";
+
+      const trHead = document.createElement("tr");
+      columns.forEach(col=>{
+        const th = document.createElement("th");
+        th.className="sticky";
+        th.textContent = getColLabel(col);
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+
+      const keyword = document.getElementById("searchInput").value.trim();
+      const displayRows = filterRows(keyword);
+
+      displayRows.forEach(r=>{
+        const tr = document.createElement("tr");
+        if (r["是否退货"]) tr.classList.add("return-row");
+        columns.forEach(col=>{
+          const td = document.createElement("td");
+          let val = r[col];
+          if (typeof val === "number"){
+            if (Math.abs(val) > 1000000) {
+              val = val.toExponential(2);
+            } else {
+              val = (Math.round(val*100)/100).toString();
+            }
+          }
+          if (val===null || val===undefined || val==="") val = "";
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById("rowCountLabel").textContent = `显示 ${displayRows.length} / 总计 ${state.rows.length} 行`;
+    }
+
+    function exportExcel(){
+      if (!state.rows.length) return;
+      const columns = flattenAvailableColumns();
+      const data = [columns.map(getColLabel)];
+      state.rows.forEach(r=>{
+        const row = columns.map(c=> r[c]===undefined? "" : r[c]);
+        data.push(row);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "明细");
+
+      const summary = buildSummary();
+      const sumData = [["促销员","条数","最终总提成"]];
+      summary.forEach(s=>{
+        sumData.push([s.promoter,s.count,s.totalAfter]);
+      });
+      const ws2 = XLSX.utils.aoa_to_sheet(sumData);
+      XLSX.utils.book_append_sheet(wb, ws2, "汇总");
+
+      const ruleSheet = XLSX.utils.aoa_to_sheet([
+        ["规则版本", state.ruleVersion],
+        ["计算规则", "活动规则精简：70%/75% 档达到即4.5%，未达档0；其余逻辑同原版本。"]
+      ]);
+      XLSX.utils.book_append_sheet(wb, ruleSheet, "规则版本");
+
+      const logSheetData = [["时间","级别","消息"]];
+      state.logs.forEach(l=> logSheetData.push([l.time,l.level,l.msg]));
+      const wsLog = XLSX.utils.aoa_to_sheet(logSheetData);
+      XLSX.utils.book_append_sheet(wb, wsLog, "日志");
+
+      const fileName = `五合一提成计算_${new Date().toISOString().slice(0,10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      log(`导出完成：${fileName}`,"ok");
+    }
+
+    function buildSummary(){
+      const map = {};
+      state.rows.forEach(r=>{
+        const p = r["促销员"] || "未知";
+        if (!map[p]) map[p] = {promoter:p, count:0, totalAfter:0};
+        map[p].count++;
+        map[p].totalAfter += ensureNumeric(r["最终总提成"]);
+      });
+      return Object.values(map);
+    }
+
+    function isActivityPackageRow(row){
+      return row["提成计算状态"] === "activity_package";
+    }
+
+    function calculateSpecial(){
+      log("开始执行模块：special（含 activity_package 跳过）");
+      let count = 0;
+      state.rows.forEach(r=>{
+        if (isActivityPackageRow(r)){
+          r["特价机提成"] = 0;
+          r["特价机提成说明"] = "已计算活动套餐提成，跳过特价机计算";
+          return;
+        }
+        const model = normalizeString(r["规格型号"]);
+        const jntPrice = normalizeNumber(r["佳尼特特价"]);
+          const listPrice = normalizeNumber(r["系统定价"]);
+        const paymentAmount = normalizeNumber(r["回款收款金额"]);
+        const salesQty = normalizeNumber(r["销售数量"]);
+        const scheme = normalizeString(r["特价机提成计算方案"]);
+
+        r["特价机提成"] = 0;
+        r["特价机提成说明"] = "";
+        r["特价机公司最低折扣"] = null;
+
+        const isSpecial = model.includes("特价") || (jntPrice!==null && jntPrice>0);
+        const isReturn = !!r["是否退货"];
+
+        if (jntPrice && listPrice){
+          const minDiscount = jntPrice / listPrice;
+          r["特价机公司最低折扣"] = parseFloat(minDiscount.toFixed(4));
+        }
+
+        if (isSpecial){
+          if (scheme && scheme.includes("元/台")){
+            const match = scheme.match(/(\d+(?:\.\d+)?)元\/台/);
+            if (match && salesQty){
+              const unitCommission = parseFloat(match[1]);
+              r["特价机提成"] = salesQty * unitCommission;
+              r["特价机提成说明"] = `按元/台：销售数量${salesQty} × ${unitCommission}元/台 → 特价机提成=${fmtCurrency(r["特价机提成"])}`;
+            } else {
+              r["特价机提成说明"] = `方案为元/台但无法解析金额或缺少销售数量，提成=0`;
+            }
+          } else if (scheme && scheme.includes("%")){
+            const match = scheme.match(/(\d+(?:\.\d+)?)%/);
+            if (match && paymentAmount){
+              const rate = parseFloat(match[1]) / 100;
+              r["特价机提成"] = paymentAmount * rate;
+              r["特价机提成说明"] = `按百分比：回款${fmtCurrency(paymentAmount)} × ${fmtPercent(rate)} → 特价机提成=${fmtCurrency(r["特价机提成"])}`;
+            } else {
+              r["特价机提成说明"] = `方案为百分比但无法解析比例或缺少回款金额，提成=0`;
+            }
+          } else if (jntPrice && paymentAmount){
+            if (paymentAmount >= jntPrice){
+              const diff = paymentAmount - jntPrice;
+              r["特价机提成"] = diff;
+              r["特价机提成说明"] = `按超底价：回款${fmtCurrency(paymentAmount)} - 特价${fmtCurrency(jntPrice)} = ${fmtCurrency(diff)} → 特价机提成=${fmtCurrency(r["特价机提成"])}`;
+            } else {
+              r["特价机提成说明"] = `回款${fmtCurrency(paymentAmount)} < 特价${fmtCurrency(jntPrice)}，低于底价，提成=0`;
+            }
+          } else {
+            r["特价机提成说明"] = `识别为特价机但缺少方案/底价/回款，提成=0`;
+          }
+          count++;
+        } else {
+          r["特价机提成说明"] = `未命中特价机（型号不含“特价”且佳尼特特价≤0），提成=0`;
+        }
+        if (isReturn){
+          r["特价机提成说明"] += "。该行为退货标记，当前规则未额外冲减";
+        }
+      });
+      log(`模块 special 计算完成（含跳过），处理 ${count} 条非 activity_package 记录。`,"ok");
+      state.modulesDone.special = true;
+      updateModuleButtonStyle("special", "done");
+      document.getElementById("btnBoiler").disabled = false;
+      renderTable();
+      refreshStats();
+    }
+
+    function calculateBoiler(){
+      log("开始执行模块：boiler（含 activity_package 跳过）");
+      let count = 0;
+      state.rows.forEach(r=>{
+        if (isActivityPackageRow(r)){
+          r["壁挂炉提成"] = 0;
+          r["壁挂炉提成说明"] = "已计算活动套餐提成，跳过壁挂炉计算";
+          return;
+        }
+        const sourceCommission = normalizeNumber(r["壁挂炉提成原始"]);
+        r["壁挂炉提成"] = 0;
+        r["壁挂炉提成说明"] = "";
+        const majorCat = normalizeString(r["大类型"]);
+          const boilerDiscount = normalizeNumber(r["壁挂炉销售折扣"]);
+        const actualDiscount = normalizeNumber(r["卖出的实际折扣"]);
+        const paymentAmount = normalizeNumber(r["回款收款金额"]);
+
+        if (majorCat === "壁挂炉"){
+          if (boilerDiscount === 0.8 || boilerDiscount === 80){
+            if (actualDiscount >= 0.8){
+              const commissionRate = 0.05;
+              r["壁挂炉提成"] = paymentAmount * commissionRate;
+              r["壁挂炉提成说明"] = `80%规则：实际折扣≥80% → 收款×5% = ${fmtCurrency(r["壁挂炉提成"])}`;
+            } else if (actualDiscount >= 0.75 && actualDiscount < 0.8){
+              const commissionRate = (actualDiscount - 0.75) * 1;
+              r["壁挂炉提成"] = paymentAmount * commissionRate;
+              r["壁挂炉提成说明"] = `80%规则：(${fmtPercent(actualDiscount)} - 75%)×100点 = ${fmtPercent(commissionRate)} → 收款×该比例 = ${fmtCurrency(r["壁挂炉提成"])}`;
+            } else {
+              r["壁挂炉提成说明"] = `80%规则：实际折扣${fmtPercent(actualDiscount)} < 75%，提成=0`;
+            }
+          } else if (boilerDiscount === 0.78 || boilerDiscount === 78){
+            if (actualDiscount >= 0.78){
+              const commissionRate = 0.11;
+              r["壁挂炉提成"] = paymentAmount * commissionRate;
+              r["壁挂炉提成说明"] = `78%规则：实际折扣≥78% → 收款×11% = ${fmtCurrency(r["壁挂炉提成"])}`;
+            } else if (actualDiscount >= 0.67 && actualDiscount < 0.78){
+              const commissionRate = (actualDiscount - 0.67) * 1;
+              r["壁挂炉提成"] = paymentAmount * commissionRate;
+              r["壁挂炉提成说明"] = `78%规则：(${fmtPercent(actualDiscount)} - 67%)×100点 = ${fmtPercent(commissionRate)} → 收款×该比例 = ${fmtCurrency(r["壁挂炉提成"])}`;
+            } else {
+              r["壁挂炉提成说明"] = `78%规则：实际折扣${fmtPercent(actualDiscount)} < 67%，提成=0`;
+            }
+          } else {
+            r["壁挂炉提成说明"] = `壁挂炉销售折扣${boilerDiscount} 非 80%/78%，提成=0`;
+          }
+          count++;
+        } else {
+          r["壁挂炉提成说明"] = "非壁挂炉大类，跳过，提成=0";
+        }
+      });
+      log(`模块 boiler 计算完成（含跳过），处理 ${count} 条非 activity_package 记录。`,"ok");
+      state.modulesDone.boiler = true;
+      updateModuleButtonStyle("boiler","done");
+      document.getElementById("btnActivity").disabled = false;
+      renderTable();
+      refreshStats();
+    }
+
+    // =======================
+    // 活动模块（已精简规则）
+    // =======================
+    function calculateActivity(){
+      log("开始执行模块：activity（精简：满档直接4.5%，无线性过渡）");
+      let count = 0;
+      state.rows.forEach(r=>{
+        if (isActivityPackageRow(r)){
+          r["七月活动提成"] = 0;
+          r["七月活动提成说明"] = "已计算活动套餐提成，跳过七月活动计算";
+          r["七月活动加提"] = 0;
+          r["七月活动加提说明"] = "已计算活动套餐提成，跳过活动加提计算";
+          return;
+        }
+        r["七月活动提成"] = 0;
+        r["七月活动加提"] = 0;
+        r["七月活动提成说明"] = "";
+        r["七月活动加提说明"] = "";
+        const julyDiscount = normalizeNumber(r["七月部分活动折扣率"]);
+        const julyExtra = normalizeNumber(r["七月部分活动加提"]);
+        const actualDiscount = normalizeNumber(r["卖出的实际折扣"]);
+        const paymentAmount = normalizeNumber(r["回款收款金额"]);
+
+        const hasActivityField = (julyDiscount>0) || (normalizeNumber(r["七月部分活动提成"])>0) || (julyExtra>0);
+
+        if (hasActivityField){
+          if (julyDiscount === 0.7 || julyDiscount === 70){
+            if (actualDiscount >= 0.70){
+              const commissionRate = 0.045;
+              r["七月活动提成"] = paymentAmount * commissionRate;
+              r["七月活动提成说明"] = `70%档：实际折扣≥70% → 收款×4.5% = ${fmtCurrency(r["七月活动提成"])}`;
+            } else {
+              r["七月活动提成说明"] = `70%档：实际折扣${fmtPercent(actualDiscount)} < 70%，提成=0`;
+            }
+          } else if (julyDiscount === 0.75 || julyDiscount === 75){
+            if (actualDiscount >= 0.75){
+              const commissionRate = 0.045;
+              r["七月活动提成"] = paymentAmount * commissionRate;
+              r["七月活动提成说明"] = `75%档：实际折扣≥75% → 收款×4.5% = ${fmtCurrency(r["七月活动提成"])}`;
+            } else {
+              r["七月活动提成说明"] = `75%档：实际折扣${fmtPercent(actualDiscount)} < 75%，提成=0`;
+            }
+          } else {
+            r["七月活动提成说明"] = `活动折扣率${julyDiscount} 非 70% / 75%，提成=0`;
+          }
+
+          if (julyExtra > 0){
+            r["七月活动加提"] = julyExtra;
+            r["七月活动加提说明"] = `来源字段加提=${fmtCurrency(julyExtra)}`;
+          } else {
+            r["七月活动加提说明"] = "无加提来源，加提=0";
+          }
+          count++;
+        } else {
+          r["七月活动提成说明"] = "无活动相关字段，跳过，提成=0";
+          r["七月活动加提说明"] = "无活动相关字段，跳过，加提=0";
+        }
+      });
+      log(`模块 activity 计算完成（精简规则），处理 ${count} 条非 activity_package 记录。`,"ok");
+      state.modulesDone.activity = true;
+      updateModuleButtonStyle("activity","done");
+      document.getElementById("btnSmoke").disabled = false;
+      renderTable();
+      refreshStats();
+    }
+
+    function calculateSmoke(){
+      log("开始执行模块：smoke（含 activity_package 跳过）");
+      let count = 0;
+      state.rows.forEach(r=>{
+        if (isActivityPackageRow(r)){
+          r["烟灶提成"] = 0;
+          r["烟灶提成说明"] = "已计算活动套餐提成，跳过烟灶计算";
+          return;
+        }
+        r["烟灶提成"] = 0;
+        r["烟灶提成说明"] = "";
+        const majorCat = normalizeString(r["大类型"]);
+        const actualDiscount = normalizeNumber(r["卖出的实际折扣"]);
+        const paymentAmount = normalizeNumber(r["回款收款金额"]);
+
+        const isSmokeRelated = majorCat.includes("油烟机") || majorCat.includes("净烟机") ||
+                                majorCat.includes("蒸烤") || majorCat.includes("洗碗机");
+
+        if (isSmokeRelated && actualDiscount !== null && paymentAmount !== null){
+          let threshold = 0;
+          let categoryName = "";
+          if (majorCat.includes("油烟机")){ threshold = 0.7; categoryName = "油烟机"; }
+          else if (majorCat.includes("净烟机")){ threshold = 0.65; categoryName = "净烟机"; }
+          else if (majorCat.includes("蒸烤")){ threshold = 0.65; categoryName = "蒸烤"; }
+          else if (majorCat.includes("洗碗机")){ threshold = 0.65; categoryName = "洗碗机"; }
+
+          if (actualDiscount >= threshold){
+            r["烟灶提成"] = paymentAmount * 0.1;
+            r["烟灶提成说明"] = `${categoryName}：实际折扣${fmtPercent(actualDiscount)} ≥ ${fmtPercent(threshold)} → 收款×10% = ${fmtCurrency(r["烟灶提成"])}`;
+          } else {
+            r["烟灶提成说明"] = `${categoryName}：实际折扣${fmtPercent(actualDiscount)} < ${fmtPercent(threshold)}，提成=0`;
+          }
+          count++;
+        } else {
+          const miss = [];
+          if (!isSmokeRelated) miss.push("非烟灶相关大类型");
+          if (actualDiscount === null) miss.push("卖出的实际折扣缺失");
+          if (paymentAmount === null) miss.push("回款收款金额缺失");
+          r["烟灶提成说明"] = `未命中：${miss.join("、")}，提成=0`;
+        }
+      });
+      log(`模块 smoke 计算完成（含跳过），处理 ${count} 条非 activity_package 记录。`,"ok");
+      state.modulesDone.smoke = true;
+      updateModuleButtonStyle("smoke","done");
+      afterModuleCheckUnlock();
+      renderTable();
+      refreshStats();
+    }
+
+    function calculateDiscount(){
+      log("开始执行模块：discount（含 activity_package 跳过）");
+      let count = 0;
+      state.rows.forEach(r=>{
+        const c_special = ensureNumeric(r["特价机提成"]);
+        const c_boiler = ensureNumeric(r["壁挂炉提成"]);
+        const c_act_base = ensureNumeric(r["七月活动提成"]);
+        const c_act_extra = ensureNumeric(r["七月活动加提"]);
+        const c_smoke = ensureNumeric(r["烟灶提成"]);
+
+        r["折扣前小计"] = c_special + c_boiler + c_act_base + c_act_extra + c_smoke;
+        r["折扣前小计说明"] = `小计 = 特价${fmtCurrency(c_special)} + 壁挂炉${fmtCurrency(c_boiler)} + 活动${fmtCurrency(c_act_base)} + 加提${fmtCurrency(c_act_extra)} + 烟灶${fmtCurrency(c_smoke)} → ${fmtCurrency(r["折扣前小计"])}`;
+
+        if (isActivityPackageRow(r)){
+          r["折扣机提成"] = 0;
+          r["折扣机提成说明"] = "已计算活动套餐提成，跳过折扣机计算";
+          r["最终总提成"] = r["折扣前小计"];
+          r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])}（activity_package跳过折扣）`;
+          return;
+        }
+
+        r["折扣机提成"] = 0;
+        r["折扣机提成说明"] = "";
+        const finalDiscount = r["最终折扣率"];
+        const amountTax = normalizeNumber(r["价税合计"]);
+        const allZero = (c_special === 0 && c_boiler === 0 && c_act_base === 0 && c_smoke === 0);
+
+        if (allZero && finalDiscount !== null && finalDiscount > 0.755 && finalDiscount < 0.80){
+          if (amountTax !== null){
+            r["折扣机提成"] = (finalDiscount - 0.755) * amountTax;
+            r["折扣机提成说明"] = `条件满足：(${fmtPercent(finalDiscount)} - 75.5%) × 价税合计${fmtCurrency(amountTax)} = ${fmtCurrency(r["折扣机提成"])}`;
+          } else {
+            r["折扣机提成说明"] = "符合折扣条件但缺少价税合计，折扣机提成=0";
+          }
+        } else if (!allZero){
+          r["折扣机提成说明"] = "前四模块提成不全为0，不符合折扣机条件，折扣机提成=0";
+        } else if (finalDiscount === null){
+          r["折扣机提成说明"] = "缺少系统定价或价税合计，无法计算折扣率，折扣机提成=0";
+        } else {
+          r["折扣机提成说明"] = `最终折扣率${fmtPercent(finalDiscount)}不在(0.755,0.80)内，折扣机提成=0`;
+        }
+        r["最终总提成"] = r["折扣前小计"] + ensureNumeric(r["折扣机提成"]);
+        r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])} + 折扣机${fmtCurrency(r["折扣机提成"])} → ${fmtCurrency(r["最终总提成"])}`;
+        count++;
+      });
+      log(`模块 discount 计算完成（含跳过），处理 ${count} 条非 activity_package 记录。`,"ok");
+      state.modulesDone.discount = true;
+      updateModuleButtonStyle("discount","done");
+      renderTable();
+      refreshStats();
+    }
+
+    function recalcActualDiscount(){
+      if(!state.rows.length){
+        log("暂无数据，无法计算卖出的实际折扣","warn");
+        return;
+      }
+      const modulesExecuted = Object.values(state.modulesDone).some(v=>v);
+      if (modulesExecuted){
+        log("警告：已有模块结果，重算折扣不会回溯，请必要时重置后再计算。","warn");
+      }
+      let updated = 0;
+      let warnCount = 0;
+      state.rows.forEach(r=>{
+        const pay = normalizeNumber(r["回款收款金额"]);
+        const bring = normalizeNumber(r["支付带单提成点位"]);
+        const qty = normalizeNumber(r["销售数量"]);
+        const list = normalizeNumber(r["系统定价"]);
+
+        if (pay!=null && qty && qty!==0 && list && list!==0){
+          const basePay = (bring!=null)? (pay - bring) : pay;
+          const disc = basePay / qty / list;
+          if (isFinite(disc) && !isNaN(disc)){
+            r["卖出的实际折扣"] = parseFloat(disc.toFixed(4));
+            updated++;
+            if (disc < 0 || disc > 2){
+              warnCount++;
+            }
+          }
+        }
+      });
+      log(`重新计算卖出的实际折扣完成，更新 ${updated} 行${warnCount>0?`（异常折扣值：${warnCount}）`:''}。`,"ok");
+      if (warnCount>0){
+        log("发现折扣 <0 或 >200% 的异常行，请核对数据。","warn");
+      }
+      renderTable();
+    }
+
+    document.addEventListener("DOMContentLoaded", function(){
+      const fileInput = document.getElementById("fileInput");
+      const pickFileBtn = document.getElementById("pickFileBtn");
+      const uploader = document.getElementById("uploader");
+
+      pickFileBtn.addEventListener("click", ()=> fileInput.click());
+      fileInput.addEventListener("change", handleFileUpload);
+
+      uploader.addEventListener("dragover", e=>{
+        e.preventDefault();
+        uploader.classList.add("drag");
+      });
+      uploader.addEventListener("dragleave", ()=>{
+        uploader.classList.remove("drag");
+      });
+      uploader.addEventListener("drop", e=>{
+        e.preventDefault();
+        uploader.classList.remove("drag");
+        if (e.dataTransfer.files.length>0){
+          handleFileUpload({target:{files:e.dataTransfer.files}});
+        }
+      });
+
+      document.getElementById("btnSpecial").addEventListener("click", ()=> runModule("special"));
+      document.getElementById("btnBoiler").addEventListener("click", ()=> runModule("boiler"));
+      document.getElementById("btnActivity").addEventListener("click", ()=> runModule("activity"));
+      document.getElementById("btnSmoke").addEventListener("click", ()=> runModule("smoke"));
+      document.getElementById("btnDiscount").addEventListener("click", ()=> runModule("discount"));
+
+      document.getElementById("searchInput").addEventListener("input", renderTable);
+      document.getElementById("columnPreset").addEventListener("change", renderTable);
+      document.getElementById("refreshBtn").addEventListener("click", renderTable);
+      document.getElementById("resetBtn").addEventListener("click", resetData);
+      document.getElementById("exportBtn").addEventListener("click", exportExcel);
+
+      document.getElementById("btnRecalcActual").addEventListener("click", recalcActualDiscount);
+
+      log("系统初始化完成。");
+      log("已启用：七月活动规则精简（70/75%档满档=4.5%，未达=0）","ok");
+      refreshStats();
+    });
+
+    function handleFileUpload(event){
+      const file = event.target.files[0];
+      if (!file) return;
+      if (typeof XLSX === "undefined"){
+        log("XLSX 库未加载。","error");
+        return;
+      }
+      document.getElementById("fileName").textContent = file.name;
+      log(`开始读取文件：${file.name}`);
+      const reader = new FileReader();
+      reader.onload = function(e){
+        try {
+          let workbook;
+          if (file.name.endsWith('.csv')){
+            const text = e.target.result;
+            workbook = XLSX.read(text, {type:'string'});
+          } else {
+            workbook = XLSX.read(e.target.result, {type:'array'});
+          }
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+          if (!jsonData.length){
+            log("文件为空或格式错误。","error");
+            return;
+          }
+          state.rawRows = jsonData;
+          log(`文件读取完成，原始行数：${jsonData.length}`,"ok");
+          standardizeData();
+          document.getElementById("btnSpecial").disabled = false;
+          document.getElementById("exportBtn").disabled = false;
+          document.getElementById("btnRecalcActual").disabled = false;
+        } catch (err){
+          log(`文件解析失败：${err.message}`,"error");
+        }
+      };
+      if (file.name.endsWith('.csv')){
+        reader.readAsText(file, 'UTF-8');
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    function detectPreprocessFields(){
+      state.hasCalcStatusField = state.rows.some(r=> Object.prototype.hasOwnProperty.call(r,"提成计算状态"));
+      state.hasPriorityField = state.rows.some(r=> Object.prototype.hasOwnProperty.call(r,"计算优先级"));
+      const hintEl = document.getElementById("preprocessHint");
+      if (state.hasCalcStatusField && state.hasPriorityField){
+        hintEl.textContent = "检测到活动套餐预处理数据，将跳过 activity_package 行。";
+        hintEl.className = "preproc-detect ok";
+        log("检测到预处理字段：提成计算状态 & 计算优先级，启用跳过逻辑。","ok");
+      } else {
+        hintEl.textContent = "未检测到预处理标记，将对所有行正常计算。";
+        hintEl.className = "preproc-detect warn";
+        log("未检测到预处理字段，将对全部行计算。","warn");
+      }
+    }
+
+    function standardizeData(){
+      state.rows = state.rawRows.map(raw=>{
+        const row = {};
+        Object.entries(raw).forEach(([key, value])=>{
+          const mappedKey = FIELD_MAP[key] || key;
+          row[mappedKey] = value;
+        });
+        Object.keys(row).forEach(k=>{
+          if (k.endsWith("_desc")) {
+            row[k] = normalizeString(row[k]);
+          } else {
+            if (["价税合计","系统定价","销售数量","佳尼特特价","壁挂炉销售折扣","壁挂炉提成原始","七月部分活动折扣率","七月部分活动提成","七月部分活动加提","回款收款金额","卖出的实际折扣","计算优先级","支付带单提成点位"].includes(k)){
+              row[k] = normalizeNumber(row[k]);
+            } else {
+              row[k] = normalizeString(row[k]);
+            }
+          }
+        });
+        deriveFinalDiscount(row);
+        markReturn(row);
+        return row;
+      });
+      log("字段映射与初步标准化完成。","ok");
+      detectPreprocessFields();
+      renderTable();
+      refreshStats();
+    }
+
+    function runModule(moduleName){
+      if (state.running) {
+        log("已有模块在运行中，请等待完成。","warn");
+        return;
+      }
+      state.running = moduleName;
+      updateModuleButtonStyle(moduleName, "running");
+      setTimeout(()=>{
+        try {
+          switch(moduleName){
+            case "special": calculateSpecial(); break;
+            case "boiler": calculateBoiler(); break;
+            case "activity": calculateActivity(); break;
+            case "smoke": calculateSmoke(); break;
+            case "discount": calculateDiscount(); break;
+          }
+        } catch (err){
+          log(`模块 ${moduleName} 执行失败：${err.message}`,"error");
+          updateModuleButtonStyle(moduleName, "error");
+        } finally {
+          state.running = null;
+        }
+      }, 80);
+    }
+
+    function resetData(){
+      if (confirm("确定要清空所有数据和计算结果吗？")){
+        state.rawRows = [];
+        state.rows = [];
+        state.logs = [];
+        Object.keys(state.modulesDone).forEach(k=> state.modulesDone[k] = false);
+        state.hasCalcStatusField = false;
+        state.hasPriorityField = false;
+        ["special","boiler","activity","smoke","discount"].forEach(m=>{
+          updateModuleButtonStyle(m, "reset");
+          document.getElementById(`btn${m.charAt(0).toUpperCase()+m.slice(1)}`).disabled = m !== "special";
+        });
+        document.getElementById("unlockHint").textContent = "折扣机提成尚未解锁：请先顺序完成前四个模块。";
+        document.getElementById("fileName").textContent = "";
+        document.getElementById("fileInput").value = "";
+        document.getElementById("exportBtn").disabled = true;
+        document.getElementById("tableWrap").style.display = "none";
+        document.getElementById("logPanel").innerHTML = "";
+        document.getElementById("preprocessHint").textContent = "";
+        document.getElementById("preprocessHint").className="preproc-detect";
+        document.getElementById("btnSpecial").disabled = true;
+        document.getElementById("btnRecalcActual").disabled = true;
+        log("数据已清空。");
+        refreshStats();
+      }
+    }
+  </script>
+</body>
+</html>
