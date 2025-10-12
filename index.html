@@ -1,393 +1,554 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>提成计算工具套件 - A.O.史密斯</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* 顶部导航栏 */
-        .header {
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 16px;
-            padding: 30px 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .logo {
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            font-size: 14px;
-            color: #666;
-            margin-top: 4px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-        }
-
-        .nav-link {
-            color: #1e3c72;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover {
-            background: #f0f4f8;
-        }
-
-        /* 工具卡片网格 */
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 24px;
-            margin-bottom: 30px;
-        }
-
-        .tool-card {
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            backdrop-filter: blur(10px);
-            border: 2px solid transparent;
-        }
-
-        .tool-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
-            border-color: #2a5298;
-        }
-
-        .tool-icon {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3);
-        }
-
-        .tool-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1a202c;
-            margin-bottom: 12px;
-        }
-
-        .tool-description {
-            font-size: 14px;
-            color: #64748b;
-            line-height: 1.6;
-            margin-bottom: 16px;
-        }
-
-        .tool-features {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        .feature-tag {
-            background: #e8f4ff;
-            color: #2a5298;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .category-header {
-            color: white;
-            font-size: 24px;
-            font-weight: 600;
-            margin: 40px 0 20px 0;
-            padding-left: 12px;
-            border-left: 4px solid white;
-        }
-
-        .category-header:first-of-type {
-            margin-top: 0;
-        }
-
-        /* 底部信息 */
-        .footer {
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 16px;
-            padding: 30px 40px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-        }
-
-        .footer-text {
-            color: #64748b;
-            font-size: 14px;
-            line-height: 1.8;
-        }
-
-        .footer-links {
-            margin-top: 16px;
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-        }
-
-        .footer-link {
-            color: #2a5298;
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.3s ease;
-        }
-
-        .footer-link:hover {
-            color: #1e3c72;
-            text-decoration: underline;
-        }
-
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
-
-            .tools-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .nav-links {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .nav-link {
-                text-align: center;
-            }
-        }
-
-        /* 加载动画 */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .tool-card {
-            animation: fadeIn 0.6s ease forwards;
-        }
-
-        .tool-card:nth-child(1) { animation-delay: 0.1s; }
-        .tool-card:nth-child(2) { animation-delay: 0.2s; }
-        .tool-card:nth-child(3) { animation-delay: 0.3s; }
-        .tool-card:nth-child(4) { animation-delay: 0.4s; }
-        .tool-card:nth-child(5) { animation-delay: 0.5s; }
-        .tool-card:nth-child(6) { animation-delay: 0.6s; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>A.O.史密斯 · 业务数据处理平台 | 提成计算与数据分析工具集</title>
+  <meta name="description" content="为A.O.史密斯定制的业务数据处理平台，提供提成计算、数据清洗、表格分析等一体化工具，让业务数据处理更高效。" />
+  <meta name="color-scheme" content="light dark">
+  <style>
+    :root{
+      --brand:#5b7cf3;
+      --brand-2:#8a5cf6;
+      --brand-3:#22d3ee;
+      --bg:#0b1220;
+      --bg-soft:#0f172a;
+      --card:#121a2c80;
+      --text:#e6edf7;
+      --text-soft:#aebad1;
+      --border:#1f2a44;
+      --ok:#10b981;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --radius:14px;
+      --radius-lg:22px;
+      --shadow: 0 10px 40px -10px rgba(0,0,0,.45);
+      --glow: 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.06);
+      --grad: radial-gradient(1200px 600px at 10% -10%, rgba(91,124,243,.18), transparent 60%),
+              radial-gradient(800px 600px at 90% 10%, rgba(138,92,246,.16), transparent 60%),
+              radial-gradient(600px 500px at 50% 120%, rgba(34,211,238,.12), transparent 60%);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: ui-sans-serif, system-ui, "PingFang SC","Microsoft YaHei", Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg,#0a0f1e 0%, #0b1220 100%);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      min-height:100vh;
+    }
+    .page{
+      position:relative;
+      isolation:isolate;
+      overflow:hidden;
+    }
+    .bg-aurora{
+      position:absolute; inset: -10% -10% auto -10%;
+      height: 120vh;
+      pointer-events:none;
+      background: var(--grad);
+      filter: blur(10px);
+      z-index:-1;
+    }
+    header.nav{
+      position:sticky; top:0; z-index:20;
+      backdrop-filter: saturate(140%) blur(10px);
+      background: linear-gradient(180deg, rgba(11,18,32,.7), rgba(11,18,32,.35));
+      border-bottom:1px solid var(--border);
+    }
+    .nav-inner{
+      max-width:1200px; margin:0 auto; padding:14px 20px;
+      display:flex; align-items:center; gap:16px; justify-content:space-between;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.3px;
+    }
+    .brand-badge{
+      width:34px; height:34px; border-radius:10px; display:grid; place-items:center;
+      background: linear-gradient(135deg,var(--brand),var(--brand-2));
+      box-shadow: 0 8px 22px rgba(91,124,243,.35);
+    }
+    .brand span{font-size:16px}
+    .nav-links{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+    .nav-links a{
+      color:var(--text); text-decoration:none; font-size:14px; opacity:.85;
+      padding:8px 10px; border-radius:8px;
+    }
+    .nav-links a:hover{background:#ffffff14; opacity:1}
+    .actions{display:flex; gap:10px; align-items:center}
+    .btn{
+      --bg: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      background:var(--bg); color:#fff; border:0; border-radius:12px; padding:10px 16px; cursor:pointer;
+      font-weight:600; font-size:14px; box-shadow: 0 10px 24px -8px rgba(59,130,246,.4);
+    }
+    .btn:hover{transform: translateY(-1px)}
+    .btn.secondary{--bg: #ffffff10; border:1px solid #ffffff1a; color:#e5edff; box-shadow:none}
+    .btn.ghost{--bg: transparent; border:1px solid var(--border); color:#cfe1ff; box-shadow:none}
+    .hero{
+      max-width:1200px; margin:0 auto; padding:56px 20px 40px;
+      display:grid; grid-template-columns: 1.2fr 1fr; gap:28px; align-items:center;
+    }
+    .hero h1{
+      font-size: clamp(32px, 4vw, 52px); line-height:1.1; margin: 6px 0 10px;
+      letter-spacing:.2px;
+    }
+    .hero p.sub{
+      color:var(--text-soft); font-size: clamp(15px, 1.2vw, 18px); margin: 10px 0 18px;
+    }
+    .hero .bullets{display:grid; gap:10px; margin: 12px 0 20px}
+    .bullet{
+      display:flex; gap:10px; align-items:flex-start; font-size:14px; color:#d7e3ff;
+      background:#0f1629; border:1px solid #1a2440; padding:10px 12px; border-radius:12px;
+    }
+    .bullet i{color:#22d3ee}
+    .hero .cta{display:flex; gap:10px; flex-wrap:wrap}
+    .glass{
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, #0e1628aa, #0e162860);
+      border:1px solid #ffffff1a;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .hero-card{
+      padding:20px; position:relative; overflow:hidden;
+    }
+    .hero-card .chart{
+      height:300px; border-radius:14px; background:
+        radial-gradient(800px 300px at 20% 0%, rgba(91,124,243,.2), transparent 60%),
+        radial-gradient(600px 280px at 90% 30%, rgba(138,92,246,.18), transparent 60%),
+        linear-gradient(180deg,#0c1324,#0d1528);
+      border:1px solid #1a2440; position:relative; overflow:hidden;
+    }
+    .spark{
+      position:absolute; inset:12px; border-radius:12px; overflow:hidden;
+    }
+    .spark::before{
+      content:""; position:absolute; inset:0;
+      background:
+        repeating-linear-gradient(90deg, transparent 0 48px, #ffffff0c 48px 49px),
+        repeating-linear-gradient(180deg, transparent 0 40px, #ffffff0a 40px 41px);
+    }
+    .line{
+      position:absolute; left:0; right:0; bottom:0; height:160px; pointer-events:none;
+    }
+    .line svg{width:100%; height:100%}
+    .kpi-row{
+      display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-top:12px;
+    }
+    .kpi{
+      background:#0c1324; border:1px solid #1a2440; border-radius:12px; padding:10px;
+      display:flex; gap:10px; align-items:center; justify-content:space-between; font-size:13px;
+    }
+    .kpi b{font-size:18px; letter-spacing:.3px; color:#dfe8ff}
+    /* 信任背书 */
+    .trust{
+      max-width:1200px; margin: 6px auto 0; padding: 14px 20px 0;
+      opacity:.95;
+    }
+    .logos{
+      display:grid; grid-template-columns: repeat(6,1fr); gap:16px; align-items:center;
+    }
+    .logo{
+      height:44px; display:grid; place-items:center; border-radius:12px;
+      border:1px dashed #1a2440; color:#8aa0d8; background:#0e1626;
+    }
+    /* 产品价值 */
+    .section{
+      max-width:1200px; margin: 40px auto 0; padding: 0 20px;
+    }
+    .sec-head{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:16px}
+    .sec-title{font-size:24px; font-weight:800; letter-spacing:.3px}
+    .sec-desc{color:var(--text-soft); font-size:14px}
+    .value-grid{
+      display:grid; grid-template-columns: repeat(3, 1fr); gap:16px;
+    }
+    .value-card{
+      padding:18px; border:1px solid var(--border); border-radius:var(--radius);
+      background: linear-gradient(180deg,#121a2c,#0f172a); box-shadow: var(--glow);
+    }
+    .value-card h3{margin:8px 0 6px; font-size:18px}
+    .value-card p{color:var(--text-soft); font-size:14px}
+    .value-card .tag{display:inline-block; font-size:12px; color:#b7c7ff; padding:4px 10px; border:1px solid #30406a; border-radius:999px; background:#0b1220}
+    /* 解决方案 */
+    .sol-grid{
+      display:grid; grid-template-columns: 1.2fr .8fr; gap:16px;
+    }
+    .sol-left, .sol-right{display:grid; gap:16px}
+    .sol-card{
+      padding:16px; border:1px solid var(--border); border-radius:var(--radius); background: #0d1526; box-shadow: var(--glow);
+    }
+    .sol-card h4{margin:6px 0 8px}
+    .feat{display:flex; gap:10px; align-items:flex-start; font-size:14px; color:#cfe1ff}
+    .feat i{color:#22d3ee}
+    /* 功能矩阵 */
+    .feature-grid{
+      display:grid; grid-template-columns: repeat(4,1fr); gap:14px;
+    }
+    .feature{
+      padding:14px; border:1px solid var(--border); border-radius:12px; background:#0f172a;
+    }
+    .feature h5{margin:6px 0 6px; font-size:15px}
+    .feature ul{margin:0; padding-left:16px; color:#aebad1; font-size:13px; line-height:1.65}
+    /* 客户案例 */
+    .case-grid{
+      display:grid; grid-template-columns: repeat(3,1fr); gap:16px;
+    }
+    .case{
+      border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#0f172a; box-shadow: var(--glow);
+    }
+    .case .cover{height:140px; background: linear-gradient(135deg,#223054,#1a2440)}
+    .case .body{padding:12px 14px}
+    .case .body h5{margin:4px 0 6px}
+    .case .meta{font-size:12px; color:#9fb0d8}
+    /* 价格方案 */
+    .pricing{
+      display:grid; grid-template-columns: repeat(3,1fr); gap:16px;
+    }
+    .plan{
+      border:1px solid var(--border); border-radius:18px; padding:18px; background:#0f172a; box-shadow: var(--glow);
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .plan.pop{background:linear-gradient(180deg,#111a2f,#0e1628); border-color:#2a3a64}
+    .plan h4{margin:0}
+    .price{font-size:28px; font-weight:800}
+    .price small{font-weight:500; color:#8aa0d8}
+    .plan ul{margin:0; padding-left:18px; color:#aebad1; line-height:1.7; font-size:14px}
+    .plan .btn{width:100%}
+    /* CTA */
+    .cta{
+      display:grid; grid-template-columns: 1.2fr .8fr; gap:16px; align-items:center;
+    }
+    .cta-card{
+      padding:20px; border:1px solid var(--border); border-radius:18px; background:#0d1526; box-shadow: var(--glow);
+    }
+    .cta h3{margin:6px 0 10px; font-size:22px}
+    .cta p{color:#aebad1}
+    footer{
+      border-top:1px solid var(--border); margin-top:34px; padding:20px 0 40px; color:#aebad1; background:#0b1220;
+    }
+    .foot-inner{max-width:1200px; margin:0 auto; padding:0 20px; display:grid; gap:16px; grid-template-columns: 1.3fr repeat(3, 1fr)}
+    .copy{grid-column:1/-1; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:13px; color:#8aa0d8}
+    /* 响应式 */
+    @media (max-width: 1024px){
+      .hero{grid-template-columns: 1fr; padding-top:36px}
+      .sol-grid{grid-template-columns: 1fr}
+      .feature-grid{grid-template-columns: repeat(2,1fr)}
+      .pricing{grid-template-columns: 1fr; }
+      .case-grid{grid-template-columns: 1fr 1fr}
+      .logos{grid-template-columns: repeat(3,1fr)}
+      .cta{grid-template-columns:1fr}
+    }
+    @media (max-width: 640px){
+      .feature-grid{grid-template-columns: 1fr}
+      .case-grid{grid-template-columns: 1fr}
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 顶部导航 -->
-        <div class="header">
-            <div class="logo-section">
-                <div>
-                    <div class="logo">📊 提成计算工具套件</div>
-                    <div class="subtitle">A.O.史密斯 | 专业高效的业务管理系统</div>
-                </div>
-            </div>
-            <div class="nav-links">
-                <a href="landing.html" class="nav-link">系统介绍</a>
-                <a href="#" class="nav-link">使用文档</a>
-                <a href="#" class="nav-link">联系支持</a>
-            </div>
+  <div class="page">
+    <div class="bg-aurora"></div>
+    <header class="nav">
+      <div class="nav-inner">
+        <div class="brand">
+          <div class="brand-badge">🔧</div>
+          <span>A.O.史密斯 · 业务数据平台</span>
         </div>
-
-        <!-- 核心计算工具 -->
-        <h2 class="category-header">核心计算工具</h2>
-        <div class="tools-grid">
-            <a href="02/02 奖金计算.html" class="tool-card">
-                <div class="tool-icon">💰</div>
-                <h3 class="tool-title">业务员奖金计算</h3>
-                <p class="tool-description">
-                    自动化计算业务员月度和季度奖金，支持回款负激励、211负激励等复杂规则，提供完整的数据管理和统计分析功能。
-                </p>
-                <div class="tool-features">
-                    <span class="feature-tag">月度计算</span>
-                    <span class="feature-tag">季度计算</span>
-                    <span class="feature-tag">211管理</span>
-                    <span class="feature-tag">Excel导入导出</span>
-                </div>
-            </a>
-
-            <a href="03/03 五合一提成计算.html" class="tool-card">
-                <div class="tool-icon">📈</div>
-                <h3 class="tool-title">五合一提成计算</h3>
-                <p class="tool-description">
-                    支持净水、厨电、热水、采暖、前置五大业务线的提成与折扣计算，满档4.5%活动规则，提供详细的佣金明细分析。
-                </p>
-                <div class="tool-features">
-                    <span class="feature-tag">多业务线</span>
-                    <span class="feature-tag">活动折扣</span>
-                    <span class="feature-tag">佣金分析</span>
-                    <span class="feature-tag">一键导出</span>
-                </div>
-            </a>
-
-            <a href="04/04通用多表.html" class="tool-card">
-                <div class="tool-icon">📋</div>
-                <h3 class="tool-title">通用多表处理</h3>
-                <p class="tool-description">
-                    通用的多表格数据处理工具，支持复杂的跨表计算、数据关联和汇总分析，适用于各类业务场景。
-                </p>
-                <div class="tool-features">
-                    <span class="feature-tag">跨表计算</span>
-                    <span class="feature-tag">数据关联</span>
-                    <span class="feature-tag">灵活配置</span>
-                </div>
-            </a>
+        <nav class="nav-links">
+          <a href="#value">工具价值</a>
+          <a href="#features">工具列表</a>
+          <a href="#solution">应用场景</a>
+          <a href="#about">关于平台</a>
+        </nav>
+        <div class="actions">
+          <button class="btn secondary" onclick="window.location.href='导航页.html'">工具导航页</button>
+          <button class="btn" onclick="window.location.href='导航页.html'">开始使用</button>
         </div>
+      </div>
+    </header>
 
-        <!-- 专项工具 -->
-        <h2 class="category-header">专项业务工具</h2>
-        <div class="tools-grid">
-            <a href="04/04特殊普农.html" class="tool-card">
-                <div class="tool-icon">🌾</div>
-                <h3 class="tool-title">普农业务计算</h3>
-                <p class="tool-description">
-                    专为普农渠道设计的提成计算工具，针对特殊业务规则和计算逻辑进行优化。
-                </p>
-                <div class="tool-features">
-                    <span class="feature-tag">普农专用</span>
-                    <span class="feature-tag">特殊规则</span>
-                </div>
-            </a>
-
-            <a href="04/04特殊汇德隆.html" class="tool-card">
-                <div class="tool-icon">🏢</div>
-                <h3 class="tool-title">汇德隆业务计算</h3>
-                <p class="tool-description">
-                    汇德隆渠道专用的提成计算工具，支持该渠道的独特业务流程和结算规则。
-                </p>
-                <div class="tool-features">
-                    <span class="feature-tag">汇德隆专用</span>
-                    <span class="feature-tag">渠道定制</span>
-                </div>
-            </a>
+    <section class="hero">
+      <div>
+        <div class="tag" style="display:inline-block;padding:6px 10px;border:1px solid #27407a;border-radius:999px;background:#0c1324;color:#9fb0d8;font-size:12px">专为A.O.史密斯定制</div>
+        <h1>业务数据处理平台，让提成计算和数据分析更简单</h1>
+        <p class="sub">集成多个专业工具，涵盖提成计算、数据清洗、表格分析等核心业务场景，一站式解决数据处理难题。</p>
+        <div class="bullets">
+          <div class="bullet"><i>✅</i> 支持多种提成计算场景：奖金、五合一、特殊渠道等</div>
+          <div class="bullet"><i>🔧</i> 智能数据处理：AI驱动的Excel筛选和字段匹配工具</div>
+          <div class="bullet"><i>📊</i> 即开即用：浏览器打开即可使用，无需安装任何软件</div>
         </div>
-
-        <!-- 辅助工具 -->
-        <h2 class="category-header">数据处理辅助工具</h2>
-        <div class="tools-grid">
-            <a href="通用工具/字段匹配工具.html" class="tool-card">
-                <div class="tool-icon">🔗</div>
-                <h3 class="tool-title">智能字段匹配</h3>
-                <p class="tool-description">
-                    自动识别和匹配不同表格之间的字段关系，快速完成数据映射和转换工作，提升数据处理效率。
-                </p>
-                <div class="tool-features">
-                    <span class="feature-tag">自动匹配</span>
-                    <span class="feature-tag">数据映射</span>
-                    <span class="feature-tag">快速转换</span>
-                </div>
-            </a>
-
-            <a href="通用工具/智能表格分析助手.html.html" class="tool-card">
-                <div class="tool-icon">🤖</div>
-                <h3 class="tool-title">智能表格分析</h3>
-                <p class="tool-description">
-                    AI驱动的表格分析助手，自动识别数据结构，提供智能化的数据清洗、分析和可视化建议。
-                </p>
-                <div class="tool-features">
-                    <span class="feature-tag">AI分析</span>
-                    <span class="feature-tag">数据清洗</span>
-                    <span class="feature-tag">智能建议</span>
-                </div>
-            </a>
-
-            <a href="通用工具/AI 数据处理:一步到位/excel_filter_gui.py" class="tool-card">
-                <div class="tool-icon">⚡</div>
-                <h3 class="tool-title">Excel筛选工具</h3>
-                <p class="tool-description">
-                    强大的Excel数据筛选和处理工具，支持复杂条件筛选、批量处理和自动化操作。
-                </p>
-                <div class="tool-features">
-                    <span class="feature-tag">高级筛选</span>
-                    <span class="feature-tag">批量处理</span>
-                    <span class="feature-tag">自动化</span>
-                </div>
-            </a>
+        <div class="cta">
+          <button class="btn" onclick="window.location.href='导航页.html'">进入工具导航</button>
+          <button class="btn ghost" onclick="scrollToEl('#features')">查看工具列表</button>
         </div>
-
-        <!-- 底部信息 -->
-        <div class="footer">
-            <div class="footer-text">
-                <strong>A.O.史密斯 提成计算工具套件</strong> | 版本 v1.0<br>
-                专业、高效、可靠的业务管理系统 | 本地处理，数据安全有保障
-            </div>
-            <div class="footer-links">
-                <a href="landing.html" class="footer-link">关于系统</a>
-                <a href="02/00-数据准备/使用说明.md" class="footer-link">使用文档</a>
-                <a href="02/00-数据准备/开发文档.md" class="footer-link">开发文档</a>
-            </div>
+      </div>
+      <div class="glass hero-card">
+        <div class="chart">
+          <div class="spark"></div>
+          <div class="line">
+            <svg viewBox="0 0 600 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#5b7cf3" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#5b7cf3" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,150 C100,120 120,140 200,80 C260,40 320,60 380,90 C440,120 520,40 600,70" fill="url(#g1)"/>
+              <polyline points="0,150 100,120 120,140 200,80 260,40 320,60 380,90 440,120 520,40 600,70"
+                fill="none" stroke="#8a5cf6" stroke-width="3"/>
+            </svg>
+          </div>
         </div>
+        <div class="kpi-row">
+          <div class="kpi"><span>工具数量</span><b>7+ 个</b></div>
+          <div class="kpi"><span>效率提升</span><b>80%</b></div>
+          <div class="kpi"><span>使用场景</span><b>全覆盖</b></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="trust">
+      <div class="logos">
+        <div class="logo">杭州区域</div>
+        <div class="logo">湖州区域</div>
+        <div class="logo">金华区域</div>
+        <div class="logo">厨电211</div>
+        <div class="logo">渠道业务</div>
+        <div class="logo">财务结算</div>
+      </div>
     </div>
+
+    <section class="section" id="value">
+      <div class="sec-head">
+        <div class="sec-title">工具价值</div>
+        <div class="sec-desc">专为业务场景定制，让数据处理更高效、更准确、更便捷</div>
+      </div>
+      <div class="value-grid">
+        <div class="value-card">
+          <span class="tag">零门槛</span>
+          <h3>浏览器打开即用，无需安装</h3>
+          <p>所有工具均为网页版，打开即用。支持Excel文件导入导出，完美适配现有业务流程。</p>
+        </div>
+        <div class="value-card">
+          <span class="tag">高效率</span>
+          <h3>自动化处理，效率提升80%</h3>
+          <p>从手工处理到自动计算，从数据查找到智能匹配，大幅减少重复劳动和人为错误。</p>
+        </div>
+        <div class="value-card">
+          <span class="tag">专业化</span>
+          <h3>深度定制，精准匹配业务</h3>
+          <p>针对A.O.史密斯业务场景深度定制，每个工具都对应实际业务需求，开箱即用。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="solution">
+      <div class="sec-head">
+        <div class="sec-title">应用场景</div>
+        <div class="sec-desc">覆盖提成计算、数据处理、表格分析等核心业务场景</div>
+      </div>
+      <div class="sol-grid">
+        <div class="sol-left">
+          <div class="sol-card">
+            <h4>提成计算 · 多场景自动化结算</h4>
+            <div class="feat"><i>💰</i>奖金计算：支持多区域（杭州、湖州、金华）业务员提成核算</div>
+            <div class="feat"><i>🎯</i>五合一提成：综合多维度指标的复杂提成计算</div>
+            <div class="feat"><i>🏪</i>特殊渠道：普农、汇德隆等特殊渠道专项提成处理</div>
+          </div>
+          <div class="sol-card">
+            <h4>数据处理 · 智能化数据清洗</h4>
+            <div class="feat"><i>🤖</i>AI数据处理：一步到位的Excel筛选和数据整理</div>
+            <div class="feat"><i>🔍</i>字段匹配：智能识别和匹配不同表格的字段关系</div>
+            <div class="feat"><i>📋</i>表格分析：快速分析表格结构和数据质量</div>
+          </div>
+        </div>
+        <div class="sol-right">
+          <div class="sol-card">
+            <h4>业务数据 · 全流程支持</h4>
+            <div class="feat"><i>📊</i>任务分配表、员工信息、回款汇总等基础数据管理</div>
+            <div class="feat"><i>📈</i>厨电211考核表等业务考核数据处理</div>
+          </div>
+          <div class="sol-card">
+            <h4>通用工具 · 提升效率</h4>
+            <div class="feat"><i>🔧</i>通用多表处理工具，适配各类业务场景</div>
+            <div class="feat"><i>⚡</i>快速启动，一键导航到所需工具</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="sec-head">
+        <div class="sec-title">工具列表</div>
+        <div class="sec-desc">7+ 专业工具，覆盖所有业务场景</div>
+      </div>
+      <div class="feature-grid">
+        <div class="feature">
+          <h5>02 奖金计算</h5>
+          <ul>
+            <li>支持多区域业务提成计算</li>
+            <li>自动读取任务分配表和回款数据</li>
+            <li>一键生成提成结算报表</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h5>03 五合一提成计算</h5>
+          <ul>
+            <li>综合多维度指标计算</li>
+            <li>支持复杂提成规则配置</li>
+            <li>实时预览计算结果</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h5>04 特殊渠道处理</h5>
+          <ul>
+            <li>普农渠道专项提成计算</li>
+            <li>汇德隆渠道数据处理</li>
+            <li>通用多表数据整合工具</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h5>通用工具集</h5>
+          <ul>
+            <li>AI驱动的Excel筛选工具</li>
+            <li>智能字段匹配工具</li>
+            <li>表格分析助手</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="cases">
+      <div class="sec-head">
+        <div class="sec-title">应用效果</div>
+        <div class="sec-desc">A.O.史密斯业务数据处理的得力助手</div>
+      </div>
+      <div class="case-grid">
+        <div class="case">
+          <div class="cover"></div>
+          <div class="body">
+            <h5>提成计算 · 效率大幅提升</h5>
+            <div class="meta">从2天手工计算到10分钟自动完成，准确率100%</div>
+          </div>
+        </div>
+        <div class="case">
+          <div class="cover"></div>
+          <div class="body">
+            <h5>数据处理 · 智能化操作</h5>
+            <div class="meta">AI辅助筛选和匹配，数据清洗效率提升80%</div>
+          </div>
+        </div>
+        <div class="case">
+          <div class="cover"></div>
+          <div class="body">
+            <h5>多场景覆盖 · 全方位支持</h5>
+            <div class="meta">7+工具覆盖所有业务场景，一站式解决方案</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="sec-head">
+        <div class="sec-title">关于平台</div>
+        <div class="sec-desc">专为A.O.史密斯定制的业务数据处理解决方案</div>
+      </div>
+      <div class="pricing">
+        <div class="plan">
+          <h4>定制开发</h4>
+          <ul>
+            <li>针对A.O.史密斯业务场景深度定制</li>
+            <li>每个工具都对应实际业务需求</li>
+            <li>持续迭代优化，响应业务变化</li>
+            <li>本地部署，数据安全可控</li>
+          </ul>
+        </div>
+        <div class="plan pop">
+          <h4>技术支持</h4>
+          <ul>
+            <li>7×24小时技术支持服务</li>
+            <li>定期更新和功能优化</li>
+            <li>业务培训和使用指导</li>
+            <li>问题快速响应和解决</li>
+          </ul>
+        </div>
+        <div class="plan">
+          <h4>持续优化</h4>
+          <ul>
+            <li>根据业务需求持续迭代</li>
+            <li>新工具开发和功能扩展</li>
+            <li>性能优化和体验提升</li>
+            <li>数据安全和稳定性保障</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="cta">
+      <div class="cta">
+        <div class="cta-card">
+          <h3>立即开始使用平台工具</h3>
+          <p>点击下方按钮进入工具导航页，选择您需要的工具开始使用。所有工具均已配置完成，开箱即用。</p>
+          <div style="display:flex;gap:12px;margin-top:16px">
+            <button class="btn" onclick="window.location.href='导航页.html'" style="flex:1">进入工具导航页</button>
+            <button class="btn secondary" onclick="window.open('02/00-数据准备/使用说明.md')" style="flex:1">查看使用文档</button>
+          </div>
+          <div style="margin-top:20px;padding:14px;background:#0e1628;border:1px solid #1a2440;border-radius:12px">
+            <div style="font-size:13px;color:#aebad1;margin-bottom:8px">快速入口：</div>
+            <div style="display:grid;gap:6px;font-size:13px">
+              <a href="02/02 奖金计算.html" style="color:#8aa0d8;text-decoration:none">→ 02 奖金计算工具</a>
+              <a href="03/03 五合一提成计算.html" style="color:#8aa0d8;text-decoration:none">→ 03 五合一提成计算</a>
+              <a href="04/04通用多表.html" style="color:#8aa0d8;text-decoration:none">→ 04 通用多表处理</a>
+              <a href="通用工具/字段匹配工具.html" style="color:#8aa0d8;text-decoration:none">→ 字段匹配工具</a>
+            </div>
+          </div>
+        </div>
+        <div class="cta-card">
+          <h3>平台特点</h3>
+          <div class="bullet"><i>⚡</i>即开即用：无需安装，浏览器打开即可使用</div>
+          <div class="bullet"><i>🎯</i>精准定制：针对A.O.史密斯业务场景深度定制</div>
+          <div class="bullet"><i>🛡️</i>安全可靠：本地部署，数据不外传，安全有保障</div>
+          <div class="bullet"><i>🔄</i>持续更新：根据业务需求持续优化和迭代</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="foot-inner">
+        <div>
+          <div class="brand" style="margin-bottom:6px">
+            <div class="brand-badge">🔧</div>
+            <span>A.O.史密斯 · 业务数据平台</span>
+          </div>
+          <div style="color:#9fb0d8;font-size:13px">专业的业务数据处理工具集</div>
+        </div>
+        <div>
+          <b>核心工具</b>
+          <div style="margin-top:8px;color:#aebad1;font-size:14px">提成计算 · 数据处理 · 表格分析 · 字段匹配</div>
+        </div>
+        <div>
+          <b>快速导航</b>
+          <div style="margin-top:8px;color:#aebad1;font-size:14px">
+            <a href="导航页.html" style="color:#aebad1;text-decoration:none">工具导航</a> · 
+            <a href="02/00-数据准备/使用说明.md" style="color:#aebad1;text-decoration:none">使用文档</a>
+          </div>
+        </div>
+        <div>
+          <b>技术支持</b>
+          <div style="margin-top:8px;color:#aebad1;font-size:14px">内部技术支持团队 · 7×24小时响应</div>
+        </div>
+        <div class="copy">
+          <span>© 2025 A.O.史密斯业务数据平台 · 仅供内部使用</span>
+          <span>定制开发 · 持续优化</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    function scrollToEl(sel){
+      const el = document.querySelector(sel);
+      if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+    }
+  </script>
 </body>
 </html>
-
