@@ -1,363 +1,510 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI科技应用集 | 企业智能解决方案</title>
-<link rel="stylesheet" href="导航页.css">
-<!-- 添加字体图标库 -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>企业工具导航门户</title>
+  <meta name="color-scheme" content="light dark">
+  <style>
+    :root{
+      --brand:#4f46e5;
+      --brand-2:#7c3aed;
+      --bg:#0b1220;
+      --bg-2:#0f172a;
+      --panel:#0f1b2d;
+      --panel-soft:#0c1426;
+      --text:#e5e7eb;
+      --text-soft:#9aa4b2;
+      --border:#1f2a44;
+      --border-strong:#2a3a5d;
+      --success:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --radius:14px;
+      --radius-sm:10px;
+      --radius-lg:20px;
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --shadow-sm: 0 6px 20px rgba(0,0,0,.35);
+      --grad: linear-gradient(135deg,rgba(79,70,229,.9),rgba(124,58,237,.9));
+      --grad-soft: linear-gradient(135deg,rgba(79,70,229,.14),rgba(124,58,237,.10));
+      --grad-cta: linear-gradient(135deg,#22c55e,#10b981);
+      --transition:.25s cubic-bezier(.4,0,.2,1);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;height:100%}
+    body{
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+      background: radial-gradient(1200px 800px at 10% -10%,rgba(79,70,229,.22),transparent 45%),
+                  radial-gradient(1000px 700px at 95% 10%,rgba(124,58,237,.18),transparent 50%),
+                  linear-gradient(180deg,var(--bg),var(--bg-2));
+      color:var(--text);
+    }
+    .app{
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: clamp(16px,2.5vw,28px);
+      display:flex;
+      flex-direction:column;
+      gap: 20px;
+    }
+    .hero{
+      position:relative;
+      background: linear-gradient(180deg,rgba(255,255,255,.06),transparent),
+                  var(--grad-soft);
+      border:1px solid var(--border);
+      border-radius: 20px;
+      padding: clamp(18px,2.6vw,28px);
+      overflow:hidden;
+      box-shadow: var(--shadow);
+    }
+    .hero::after{
+      content:"";
+      position:absolute;
+      width:520px;height:520px;
+      right:-160px;top:-180px;
+      background: radial-gradient(circle at center, rgba(124,58,237,.35), transparent 60%);
+      filter: blur(10px);
+      opacity:.6;
+      animation: float 26s linear infinite;
+    }
+    @keyframes float { 0%{transform:rotate(0)} 50%{transform:rotate(180deg) scale(1.03)} 100%{transform:rotate(360deg)} }
+    .brand{
+      display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    }
+    .logo{
+      width:46px;height:46px;border-radius:12px;
+      background: var(--grad);
+      display:grid;place-items:center;
+      box-shadow: 0 10px 24px -8px rgba(79,70,229,.7);
+      font-weight:700;
+    }
+    .title{
+      display:flex;flex-direction:column;gap:4px;
+    }
+    .title h1{
+      margin:0;font-size: clamp(20px,2.2vw,28px);letter-spacing:.2px;
+    }
+    .title .sub{
+      color: var(--text-soft);font-size: .95rem;
+    }
+    .hero-actions{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:14px
+    }
+    .btn{
+      border:none;outline:none;cursor:pointer;
+      padding: 10px 14px;border-radius: 12px;
+      font-weight:600;letter-spacing:.2px;
+      display:inline-flex;align-items:center;gap:8px;
+      transition: transform var(--transition),box-shadow var(--transition),background var(--transition),opacity var(--transition);
+      background: #1b2540;color:#e5e7eb;border:1px solid var(--border);
+    }
+    .btn:hover{ transform: translateY(-1px) }
+    .btn.primary{
+      background: var(--grad); color:#fff;
+      box-shadow: 0 10px 26px -10px rgba(79,70,229,.7);
+      border: none;
+    }
+    .btn.success{ background: var(--grad-cta); color:#032312; border:none }
+    .toolbar{
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto
+    }
+    .pill{
+      padding:6px 10px;border-radius:999px;font-size:.8rem;
+      background: linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      display:inline-flex;align-items:center;gap:6px;color:#c7cfda
+    }
+    .layout{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:18px;
+      align-items: start;
+    }
+    .side{
+      position:sticky;top:16px;
+      background: linear-gradient(180deg,rgba(255,255,255,.03),transparent), #0b1326;
+      border:1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 120px;
+      box-shadow: var(--shadow-sm);
+    }
+    .side h3{
+      margin: 4px 8px 10px;font-size: .95rem;color:#cbd5e1;letter-spacing:.3px
+    }
+    .nav{
+      display:flex;flex-direction:column;gap:6px
+    }
+    .nav a{
+      text-decoration:none;color:#cfd7e5;background:#0c162b;border:1px solid var(--border);
+      padding:10px 12px;border-radius: 12px;font-size:.92rem;
+      display:flex;align-items:center;gap:10px;transition:background var(--transition),transform var(--transition),border-color var(--transition)
+    }
+    .nav a:hover{ background:#111c36; transform: translateX(2px); border-color:#344368 }
+    .nav .badge{margin-left:auto;font-size:.72rem;color:#a7b3c8;background:#111a31;border:1px solid #2a3a5d;border-radius:10px;padding:2px 8px}
+    .content{
+      display:flex;flex-direction:column;gap:18px
+    }
+    .group{
+      background: linear-gradient(180deg,rgba(255,255,255,.03),transparent), #0b1326;
+      border:1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .group-header{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px
+    }
+    .group-title{
+      display:flex;align-items:center;gap:10px
+    }
+    .group-title .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: linear-gradient(135deg,#60a5fa,#a78bfa);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.18);
+    }
+    .group-title h2{ margin:0;font-size:1rem }
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(auto-fill,minmax(260px,1fr));
+      gap:12px;
+    }
+    .card{
+      position:relative;
+      background: #0b172e;
+      border:1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 120px;
+      overflow:hidden;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition);
+    }
+    .card:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -14px rgba(124,58,237,.55);
+      border-color: #374772;
+      background: #0d1c37;
+    }
+    .card .icon{
+      width:36px;height:36px;border-radius:10px;
+      background: var(--grad); display:grid; place-items:center; color:#fff;
+      box-shadow: 0 8px 18px -8px rgba(79,70,229,.8);
+      font-size: 16px;
+    }
+    .card h3{ margin: 10px 0 6px; font-size: 1rem; letter-spacing:.2px }
+    .card p{ margin: 0; color: var(--text-soft); font-size: .9rem; line-height: 1.45 }
+    .meta{
+      display:flex;align-items:center;gap:8px;margin-top:10px;color:#aab6c8;font-size:.8rem;flex-wrap:wrap
+    }
+    .meta .tag{
+      padding: 4px 8px;border-radius: 999px;border:1px solid var(--border-strong);
+      background: #0b162d;color:#b9c3d6;
+    }
+    .meta .ok{ color: var(--success); }
+    .meta .warn{ color: var(--warn); }
+    .meta .danger{ color: var(--danger); }
+    .card a.link{
+      position:absolute;inset:0;z-index:1
+    }
+    .footer{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+      color:#98a4b8;font-size:.9rem;padding: 8px 2px 16px
+    }
+    .footer .links{display:flex;gap:12px;flex-wrap:wrap}
+    .footer a{color:#c5cde0;text-decoration:none}
+    .footer a:hover{ text-decoration:underline }
+    .search-row{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:10px
+    }
+    .search{
+      flex:1;min-width:240px;
+      background:#0c162b;border:1px solid var(--border);
+      border-radius:12px;display:flex;align-items:center;gap:8px;padding:8px 10px
+    }
+    .search input{
+      flex:1;border:none;outline:none;background:transparent;color:#cfd7e5;font-size:.95rem
+    }
+    .switch{
+      background:#0c162b;border:1px solid var(--border);color:#cfd7e5;
+      padding:8px 10px;border-radius:12px;cursor:pointer
+    }
+    .empty{ color:#7d8aa1; padding: 8px 2px }
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr }
+      .side{ position:relative; top:auto }
+    }
+  </style>
 </head>
 <body>
-  <!-- 背景渐变效果 -->
-  <div class="gradient-bg"></div>
-  
-  <!-- 背景粒子效果 -->
-  <div class="particles" id="particles"></div>
-  
-  <!-- 鼠标跟踪效果 -->
-  <div class="cursor-effect" id="cursor-effect"></div>
-  
-  <!-- 滚动指示器 -->
-  <div class="scroll-indicator"></div>
+  <div class="app">
+    <section class="hero">
+      <div class="brand">
+        <div class="logo">HQ</div>
+        <div class="title">
+          <h1>企业内部工具导航门户</h1>
+          <div class="sub">统一入口 · 提升效率 · 保证一致体验</div>
+        </div>
+        <div class="toolbar">
+          <span class="pill">版本 v1.0</span>
+          <span class="pill" id="envText">环境：内网</span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn primary" onclick="scrollToContent()">浏览全部模块</button>
+        <button class="btn" onclick="location.reload()">刷新</button>
+        <button class="btn success" onclick="quickStart()">快速开始</button>
+      </div>
+      <div class="search-row">
+        <div class="search">
+          <span>🔎</span>
+          <input id="searchInput" placeholder="搜索工具名称、关键词（如：提成、奖金、匹配）" />
+        </div>
+        <button class="switch" id="toggleDensity">切换布局密度</button>
+      </div>
+    </section>
 
-  <!-- 主要内容 -->
-  <div class="header">
-    <div class="header-content">
-      <h1>
-        <!-- 添加动态文字效果 -->
-        <span >企业级 AI 应用集成平台</span>
-      </h1>
-      <p>基于<span class="highlight">大语言模型</span>的<span class="highlight">端到端企业解决方案</span>，构建智能化业务流程</p>
-      <div class="header-buttons">
-        <a href="#app-grid" class="btn-primary">探索应用</a>
-        <a href="#" class="btn-secondary">技术白皮书</a>
-      </div>
-      
-      <!-- 添加科技装饰元素 -->
-      <div class="header-decor decor-1"></div>
-      <div class="header-decor decor-2"></div>
-    </div>
-  </div>
-  
-  <div class="container">
-    <!-- 添加统计数据展示 -->
-    <div class="stats-container">
-      <div class="stat-item">
-        <div class="stat-number" data-count="5">0</div>
-        <div class="stat-label">解决方案</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number" data-count="99.8">0</div>
-        <div class="stat-label">准确率 (%)</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number" data-count="85">0</div>
-        <div class="stat-label">效率提升 (%)</div>
-      </div>
-    </div>
-    
-    <!-- 添加分隔栏 -->
-    <div class="section-divider">
-      <span>企业级 AI 应用</span>
-    </div>
-    
-    <div class="app-grid" id="app-grid">
-      <!-- 智能客服系统 -->
-      <div class="app-card" data-aos="fade-up">
-        <div class="app-card-inner">
-          <div class="app-header" style="background-image: linear-gradient(45deg, #00c6fb 0%, #005bea 100%), url('https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');">
-            <div class="app-icon">
-              <i class="fas fa-robot"></i>
+    <section class="layout" id="main">
+      <aside class="side">
+        <h3>分组导航</h3>
+        <nav class="nav">
+          <a href="#group-common">💼 通用工具 <span class="badge">3 个项目</span></a>
+          <a href="#group-02">#02 专题 <span class="badge">1 个项目</span></a>
+          <a href="#group-03">#03 专题 <span class="badge">1 个项目</span></a>
+          <a href="#group-04">#04 专题 <span class="badge">3 个项目</span></a>
+        </nav>
+      </aside>
+
+      <div class="content">
+        <!-- 通用工具 -->
+        <div class="group" id="group-common" data-group="通用工具">
+          <div class="group-header">
+            <div class="group-title">
+              <span class="dot"></span>
+              <h2>通用工具</h2>
+            </div>
+            <span class="empty">跨团队通用，适配多种数据结构</span>
+          </div>
+          <div class="cards">
+            <div class="card" data-keywords="智能 表格 分析 AI 数据 可视化">
+              <a class="link" href="通用工具/智能表格分析助手.html.html" target="_blank" rel="noopener"></a>
+              <div class="icon">✨</div>
+              <h3>数据表格 AI 分析助手</h3>
+              <p>智能解析与洞察，多维汇总、字段质量巡检与异常标记，支持深浅色与导出。</p>
+              <div class="meta">
+                <span class="tag">实时分析</span>
+                <span class="ok">可用</span>
+              </div>
+            </div>
+            <div class="card" data-keywords="匹配 字段 合并 映射 预览 大数据 Worker">
+              <a class="link" href="通用工具/字段匹配工具.html" target="_blank" rel="noopener"></a>
+              <div class="icon">🧩</div>
+              <h3>智能表格匹配工具</h3>
+              <p>字段映射、预览虚拟化、大数据不卡顿，支持 CSV 回退导出与进度反馈。</p>
+              <div class="meta">
+                <span class="tag">匹配</span>
+                <span class="tag">10万+ 行</span>
+                <span class="ok">可用</span>
+              </div>
+            </div>
+            <div class="card" data-keywords="多表 批量 统一入口 提成">
+              <a class="link" href="04/04通用多表.html" target="_blank" rel="noopener"></a>
+              <div class="icon">🗂️</div>
+              <h3>通用多表批量处理</h3>
+              <p>批量上传与统一字段映射，任务进度可视化，适合多门店/多片区合并处理。</p>
+              <div class="meta">
+                <span class="tag">批量</span>
+                <span class="warn">测试通过</span>
+              </div>
             </div>
           </div>
-          <div class="app-content">
-            <span class="app-badge">自动化</span>
-            <h3 class="app-title">智能客服系统</h3>
-            <p class="app-desc">基于扣子AI的智能客服系统，支持自动回复、人工接入、数据统计等功能，降低人力成本提高客户满意度。</p>
-            <a href="智能客服系统.html" class="app-link">
-              <span>访问应用</span>
-              <i class="fas fa-arrow-right"></i>
-            </a>
-          </div>
-          <!-- 添加悬浮科技元素 -->
-          <div class="tech-element tech-circles"></div>
         </div>
-      </div>
-      
-      <!-- 会议纪要→任务分配助手 -->
-      <div class="app-card" data-aos="fade-up" data-aos-delay="100">
-        <div class="app-card-inner">
-          <div class="app-header" style="background-image: linear-gradient(45deg, #fa709a 0%, #fee140 100%), url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');">
-            <div class="app-icon">
-              <i class="fas fa-clipboard-list"></i>
+
+        <!-- 02 专题 -->
+        <div class="group" id="group-02" data-group="02">
+          <div class="group-header">
+            <div class="group-title">
+              <span class="dot"></span>
+              <h2>02 专题</h2>
+            </div>
+            <span class="empty">奖金与活动配置相关工具</span>
+          </div>
+          <div class="cards">
+            <div class="card" data-keywords="奖金 计算 活动 档位 SheetJS">
+              <a class="link" href="02/02 奖金计算.html" target="_blank" rel="noopener"></a>
+              <div class="icon">💰</div>
+              <h3>奖金计算系统</h3>
+              <p>上传基础数据，按规则计算奖金，含结果卡片与导出，流程化步骤指引。</p>
+              <div class="meta">
+                <span class="tag">奖金</span>
+                <span class="ok">可用</span>
+              </div>
             </div>
           </div>
-          <div class="app-content">
-            <span class="app-badge">生产力</span>
-            <h3 class="app-title">会议纪要→任务分配助手</h3>
-            <p class="app-desc">录音转文字、智能提取任务、自动分配跟进，提高会议效率的全能助手，实时追踪项目进度。</p>
-            <a href="会议纪要→任务分配助手.html" class="app-link">
-              <span>访问应用</span>
-              <i class="fas fa-arrow-right"></i>
-            </a>
-          </div>
-          <div class="tech-element tech-dots"></div>
         </div>
-      </div>
-      
-      <!-- 企业知识管家 -->
-      <div class="app-card" data-aos="fade-up" data-aos-delay="200">
-        <div class="app-card-inner">
-          <div class="app-header" style="background-image: linear-gradient(45deg, #13547a 0%, #80d0c7 100%), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');">
-            <div class="app-icon">
-              <i class="fas fa-book"></i>
+
+        <!-- 03 专题 -->
+        <div class="group" id="group-03" data-group="03">
+          <div class="group-header">
+            <div class="group-title">
+              <span class="dot"></span>
+              <h2>03 专题</h2>
+            </div>
+            <span class="empty">五合一规则与折扣测算</span>
+          </div>
+          <div class="cards">
+            <div class="card" data-keywords="五合一 提成 折扣 活动 满档 4.5%">
+              <a class="link" href="03/03 五合一提成计算.html" target="_blank" rel="noopener"></a>
+              <div class="icon">📈</div>
+              <h3>五合一提成与折扣计算</h3>
+              <p>满档 4.5% 精简规则版，清晰展示达档与未达档边界，导出友好。</p>
+              <div class="meta">
+                <span class="tag">规则引擎</span>
+                <span class="ok">可用</span>
+              </div>
             </div>
           </div>
-          <div class="app-content">
-            <span class="app-badge">知识管理</span>
-            <h3 class="app-title">企业知识管家</h3>
-            <p class="app-desc">基于本地RAG的企业知识库系统，上传文档后智能问答，保护企业数据安全，无需联网即可使用。</p>
-            <a href="企业知识管家 (本地 RAG).html" class="app-link">
-              <span>访问应用</span>
-              <i class="fas fa-arrow-right"></i>
-            </a>
-          </div>
-          <div class="tech-element tech-waves"></div>
         </div>
-      </div>
-      
-      <!-- 数据审计系统 -->
-      <div class="app-card" data-aos="fade-up" data-aos-delay="300">
-        <div class="app-card-inner">
-          <div class="app-header" style="background-image: linear-gradient(45deg, #2a6fc9 0%, #4f9cf9 100%), url('https://images.unsplash.com/photo-1518186285589-2f7649de83e0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');">
-            <div class="app-icon">
-              <i class="fas fa-chart-bar"></i>
+
+        <!-- 04 专题 -->
+        <div class="group" id="group-04" data-group="04">
+          <div class="group-header">
+            <div class="group-title">
+              <span class="dot"></span>
+              <h2>04 专题</h2>
+            </div>
+            <span class="empty">品牌/渠道专项处理</span>
+          </div>
+          <div class="cards">
+            <div class="card" data-keywords="提成 数据 处理 型号 提取 导出">
+              <a class="link" href="04/04特殊普农.html" target="_blank" rel="noopener"></a>
+              <div class="icon">🧮</div>
+              <h3>提成数据处理工具</h3>
+              <p>自动提取型号并计算提成，支持详细说明列与一键导出，过程可控。</p>
+              <div class="meta">
+                <span class="tag">普农</span>
+                <span class="ok">可用</span>
+              </div>
+            </div>
+            <div class="card" data-keywords="汇德隆 专项 提成 表格 导入 导出">
+              <a class="link" href="04/04特殊汇德隆.html" target="_blank" rel="noopener"></a>
+              <div class="icon">🏷️</div>
+              <h3>汇德隆提成计算（专项）</h3>
+              <p>对接汇德隆数据口径，格式化显示、粘性表头与高性能滚动。</p>
+              <div class="meta">
+                <span class="tag">汇德隆</span>
+                <span class="warn">稳定</span>
+              </div>
+            </div>
+            <div class="card" data-keywords="批量 多表 统一入口 进度 管理">
+              <a class="link" href="04/04通用多表.html" target="_blank" rel="noopener"></a>
+              <div class="icon">📦</div>
+              <h3>多表批量工具（通用）</h3>
+              <p>统一入口处理多个文件，含文件级状态、失败重试与单表导出。</p>
+              <div class="meta">
+                <span class="tag">批量</span>
+                <span class="ok">可用</span>
+              </div>
             </div>
           </div>
-          <div class="app-content">
-            <span class="app-badge">数据安全</span>
-            <h3 class="app-title">企业数据审计平台</h3>
-            <p class="app-desc">智能数据审计解决方案，支持多格式文件解析、智能数据比对和异常检测，提供详细分析报告和可视化展示。</p>
-            <a href="数据审计/demo-js.html" class="app-link">
-              <span>访问应用</span>
-              <i class="fas fa-arrow-right"></i>
-            </a>
-          </div>
-          <div class="tech-element tech-grid"></div>
         </div>
-      </div>
-      
-      <!-- 数据查询分析工具 -->
-      <div class="app-card" data-aos="fade-up" data-aos-delay="400">
-        <div class="app-card-inner">
-          <div class="app-header" style="background-image: linear-gradient(45deg, #5ee7df 0%, #b490ca 100%), url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');">
-            <div class="app-icon">
-              <i class="fas fa-database"></i>
+
+        <!-- 其他/备用：图片占位或外链 -->
+        <div class="group" id="group-assets" data-group="资产">
+          <div class="group-header">
+            <div class="group-title">
+              <span class="dot"></span>
+              <h2>资产与示意</h2>
+            </div>
+            <span class="empty">放置视觉素材与参考链接</span>
+          </div>
+          <div class="cards">
+            <div class="card" data-keywords="示意 截图 形象 图像">
+              <a class="link" href="image.png" target="_blank" rel="noopener"></a>
+              <div class="icon">🖼️</div>
+              <h3>工具分组截图（示意）</h3>
+              <p>通用工具、02、03、04 分组视图截图，供培训或汇报使用。</p>
+              <div class="meta">
+                <span class="tag">PNG</span>
+                <span class="ok">可用</span>
+              </div>
             </div>
           </div>
-          <div class="app-content">
-            <span class="app-badge">数据分析</span>
-            <h3 class="app-title">数据查询分析工具</h3>
-            <p class="app-desc">使用自然语言查询和分析数据，自动生成图表，提供数据可视化功能，实现数据民主化，让人人都能用数据说话。</p>
-            <a href="数据查询分析工具.html" class="app-link">
-              <span>访问应用</span>
-              <i class="fas fa-arrow-right"></i>
-            </a>
-          </div>
-          <div class="tech-element tech-code"></div>
         </div>
+
       </div>
-    </div>
-    
-    <!-- 技术部分 -->
-    <div class="section-divider">
-      <span>核心技术</span>
-    </div>
-    
-    <div class="tech-banner">
-      <div class="tech-items">
-        <div class="tech-item">
-          <div class="tech-icon"><i class="fas fa-microchip"></i></div>
-          <h4>大语言模型</h4>
-          <p>基于最新LLM技术</p>
-        </div>
-        <div class="tech-item">
-          <div class="tech-icon"><i class="fas fa-network-wired"></i></div>
-          <h4>本地部署</h4>
-          <p>私有云解决方案</p>
-        </div>
-        <div class="tech-item">
-          <div class="tech-icon"><i class="fas fa-shield-alt"></i></div>
-          <h4>数据安全</h4>
-          <p>企业级数据保护</p>
-        </div>
-        <div class="tech-item">
-          <div class="tech-icon"><i class="fas fa-plug"></i></div>
-          <h4>API集成</h4>
-          <p>无缝对接现有系统</p>
-        </div>
+    </section>
+
+    <footer class="footer">
+      <div>© 2025 Company Internal. All rights reserved.</div>
+      <div class="links">
+        <a href="#" onclick="alert('请联系 IT 服务台：it-support@example.com');return false;">IT 支持</a>
+        <a href="#" onclick="alert('请在企业微信工单系统提交需求');return false;">需求与反馈</a>
+        <a href="#" onclick="toggleEnv();return false;" id="envSwitch">切换环境</a>
       </div>
-    </div>
-  </div>
-  
-  <div class="footer">
-    <div class="footer-content">
-      <div class="footer-logo">
-        <div class="logo-text">AI Enterprise</div>
-        <div class="logo-tagline">智能应用，改变企业</div>
-      </div>
-      <div class="footer-links">
-        <a href="#">关于我们</a>
-        <a href="#">技术文档</a>
-        <a href="#">API</a>
-        <a href="#">联系我们</a>
-      </div>
-      <div class="footer-copyright">
-        <p>© 2025 企业级AI应用集成平台 | 以AI驱动业务创新 提升企业核心竞争力</p>
-        <div class="social-icons">
-          <a href="#"><i class="fab fa-github"></i></a>
-          <a href="#"><i class="fab fa-linkedin"></i></a>
-          <a href="#"><i class="fab fa-twitter"></i></a>
-        </div>
-      </div>
-    </div>
+    </footer>
   </div>
 
-  <!-- JavaScript 代码 -->
   <script>
-    // 创建背景粒子效果
-    document.addEventListener('DOMContentLoaded', function() {
-      // 粒子效果
-      const particlesContainer = document.getElementById('particles');
-      const particleCount = 25; // 增加粒子数量
-      
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.classList.add('particle');
-        
-        // 随机大小 - 更多变化
-        const size = Math.random() * 150 + 30;
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-        
-        // 随机位置
-        particle.style.left = `${Math.random() * 100}%`;
-        particle.style.top = `${Math.random() * 100}%`;
-        
-        // 随机模糊度
-        const blur = Math.random() * 15 + 5;
-        particle.style.filter = `blur(${blur}px)`;
-        
-        // 随机动画延迟
-        particle.style.animationDelay = `${Math.random() * 15}s`;
-        
-        // 随机动画持续时间
-        particle.style.animationDuration = `${15 + Math.random() * 20}s`;
-        
-        particlesContainer.appendChild(particle);
-      }
-      
-      // 鼠标跟踪效果
-      const cursorEffect = document.getElementById('cursor-effect');
-      document.addEventListener('mousemove', function(e) {
-        cursorEffect.style.opacity = 1;
-        cursorEffect.style.left = e.clientX + 'px';
-        cursorEffect.style.top = e.clientY + 'px';
-      });
-      
-      // 离开窗口时隐藏鼠标效果
-      document.addEventListener('mouseout', function() {
-        cursorEffect.style.opacity = 0;
-      });
-      
-      // 数字统计动画
-      const statNumbers = document.querySelectorAll('.stat-number');
-      
-      // 检查元素是否在视窗内
-      function isInViewport(element) {
-        const rect = element.getBoundingClientRect();
-        return (
-          rect.top >= 0 &&
-          rect.left >= 0 &&
-          rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-          rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-        );
-      }
-      
-      // 动画数字递增效果
-      function animateNumbers() {
-        statNumbers.forEach(number => {
-          if (isInViewport(number) && !number.classList.contains('animated')) {
-            const finalValue = parseFloat(number.getAttribute('data-count'));
-            const decimals = finalValue % 1 !== 0 ? 1 : 0;
-            const duration = 2000; // 动画持续时间（毫秒）
-            const frameRate = 60;
-            const increment = finalValue / (duration / 1000 * frameRate);
-            let currentValue = 0;
-            
-            const timer = setInterval(() => {
-              currentValue += increment;
-              if (currentValue >= finalValue) {
-                currentValue = finalValue;
-                clearInterval(timer);
-              }
-              number.textContent = currentValue.toFixed(decimals);
-            }, 1000/frameRate);
-            
-            number.classList.add('animated');
-          }
+    // 搜索过滤
+    const searchInput = document.getElementById('searchInput');
+    const groups = document.querySelectorAll('.group');
+    const toggleDensityBtn = document.getElementById('toggleDensity');
+
+    function filterCards(keyword){
+      const kw = (keyword||'').trim().toLowerCase();
+      let visibleCount = 0;
+      groups.forEach(g=>{
+        let groupVisible = 0;
+        const cards = g.querySelectorAll('.card');
+        cards.forEach(card=>{
+          const text = (card.querySelector('h3')?.innerText + ' ' + (card.dataset.keywords||'') + ' ' + (card.querySelector('p')?.innerText||'')).toLowerCase();
+          const show = !kw || text.includes(kw);
+          card.style.display = show ? '' : 'none';
+          groupVisible += show ? 1 : 0;
         });
-      }
-      
-      // 页面滚动时触发数字动画
-      window.addEventListener('scroll', animateNumbers);
-      // 页面加载完成后也触发一次
-      setTimeout(animateNumbers, 500);
-      
-      // 添加滚动动画效果
-      const appCards = document.querySelectorAll('.app-card');
-      function animateOnScroll() {
-        appCards.forEach(card => {
-          if (isInViewport(card) && !card.classList.contains('visible')) {
-            card.classList.add('visible');
-          }
-        });
-      }
-      
-      window.addEventListener('scroll', animateOnScroll);
-      // 初始检查
-      setTimeout(animateOnScroll, 100);
-      
-      // 文字动画效果
-      const textAnimate = document.querySelector('.text-animate');
-    if (textAnimate) {
-      const text = textAnimate.textContent;
-      textAnimate.innerHTML = '';
-      
-      // 添加一个小延迟确保DOM已完全加载
-      setTimeout(() => {
-        for (let i = 0; i < text.length; i++) {
-          const span = document.createElement('span');
-          span.textContent = text[i] === ' ' ? '\u00A0' : text[i]; // 保留空格
-          span.style.animationDelay = `${i * 0.05}s`;
-          span.classList.add('char-animate');
-          textAnimate.appendChild(span);
-        }
-      }, 100);
+        g.style.display = groupVisible ? '' : 'none';
+        visibleCount += groupVisible;
+      });
+      return visibleCount;
     }
-      
-      // 平滑滚动
-      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-          e.preventDefault();
-          
-          document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
-          });
-        });
+
+    searchInput?.addEventListener('input', e=>filterCards(e.target.value));
+
+    // 快速开始：滚动到第一个模块卡片并高亮
+    function quickStart(){
+      const firstCard = document.querySelector('.card a.link');
+      if(firstCard){
+        firstCard.parentElement.style.outline = '2px solid #22c55e';
+        firstCard.parentElement.style.outlineOffset = '2px';
+        setTimeout(()=>{ firstCard.parentElement.style.outline='none' }, 2000);
+        firstCard.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+    }
+
+    // 滚动到内容区域
+    function scrollToContent(){
+      document.getElementById('main').scrollIntoView({behavior:'smooth',block:'start'});
+    }
+
+    // 切换布局密度（卡片紧凑模式）
+    let compact = false;
+    toggleDensityBtn?.addEventListener('click', ()=>{
+      compact = !compact;
+      document.querySelectorAll('.cards').forEach(c=>{
+        c.style.gridTemplateColumns = compact ? 'repeat(auto-fill,minmax(220px,1fr))':'repeat(auto-fill,minmax(260px,1fr))';
       });
+      document.querySelectorAll('.card').forEach(card=>{
+        card.style.minHeight = compact ? '100px' : '120px';
+      });
+      toggleDensityBtn.innerText = compact ? '切换为舒适布局' : '切换布局密度';
     });
+
+    // 环境文本模拟切换
+    function toggleEnv(){
+      const el = document.getElementById('envText');
+      el.textContent = el.textContent.includes('内网') ? '环境：预发' : '环境：内网';
+    }
+    window.toggleEnv = toggleEnv;
   </script>
 </body>
 </html>
