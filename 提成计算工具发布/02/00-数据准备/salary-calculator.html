@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>业务员奖金计算系统 v1.0</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    /* ==================== CSS变量定义 ==================== */
+    :root {
+      /* 主色调 */
+      --primary-color: #1890ff;
+      --primary-hover: #40a9ff;
+      --primary-active: #096dd9;
+      
+      /* 辅助色 */
+      --success-color: #52c41a;
+      --warning-color: #faad14;
+      --error-color: #f5222d;
+      --info-color: #1890ff;
+      
+      /* 中性色 */
+      --text-primary: #262626;
+      --text-secondary: #8c8c8c;
+      --text-disabled: #bfbfbf;
+      
+      /* 背景色 */
+      --bg-primary: #ffffff;
+      --bg-secondary: #fafafa;
+      --bg-hover: #f5f5f5;
+      
+      /* 边框色 */
+      --border-color: #d9d9d9;
+      --border-light: #f0f0f0;
+      
+      /* 阴影 */
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.16);
+    }
+
+    /* ==================== 基础样式 ==================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f0f2f5;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ==================== 页面头部 ==================== */
+    .header {
+      background: white;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab {
+      padding: 8px 20px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+
+    .tab:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* ==================== 页面容器 ==================== */
+    .page {
+      padding: 24px 0;
+    }
+
+    section {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    section h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+    }
+
+    /* ==================== 上传组件 ==================== */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    .upload-item {
+      padding: 20px;
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .upload-item:hover {
+      border-color: var(--primary-color);
+      background: #f0f7ff;
+    }
+
+    .upload-item.uploaded {
+      border-color: var(--success-color);
+      background: #f6ffed;
+      border-style: solid;
+    }
+
+    .upload-item label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .upload-item input[type="file"] {
+      display: none;
+    }
+
+    .upload-item .status {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .upload-item .status.success {
+      color: var(--success-color);
+      font-weight: 500;
+    }
+
+    .upload-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .upload-btn:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    /* ==================== 按钮组件 ==================== */
+    .btn-primary {
+      padding: 10px 24px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:active {
+      background: var(--primary-active);
+    }
+
+    .btn-primary:disabled {
+      background: #d9d9d9;
+      color: rgba(0,0,0,0.25);
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      padding: 10px 24px;
+      background: white;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-secondary:hover {
+      color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ==================== 参数选择区 ==================== */
+    .param-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .param-section h2 {
+      margin-bottom: 0;
+      margin-right: 8px;
+    }
+
+    .param-section select {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+      min-width: 200px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .param-section select:hover {
+      border-color: var(--primary-color);
+    }
+
+    .param-section select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+
+    /* ==================== 表格组件 ==================== */
+    .table-container {
+      margin-top: 16px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+    }
+
+    .table-actions {
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .search-box input {
+      padding: 6px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+      width: 250px;
+    }
+
+    .search-box button {
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .search-box button:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: white;
+    }
+
+    .data-table thead {
+      background: var(--bg-secondary);
+      position: sticky;
+      top: 0;
+    }
+
+    .data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border-light);
+      white-space: nowrap;
+    }
+
+    .data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-secondary);
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--bg-hover);
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* 数据状态样式 */
+    .status-complete {
+      color: var(--text-primary);
+    }
+
+    .status-missing {
+      background: #fff2f0 !important;
+    }
+
+    .status-missing td {
+      color: var(--error-color) !important;
+    }
+
+    .status-trial {
+      background: #fffbe6 !important;
+    }
+
+    .negative-value {
+      color: var(--error-color);
+      font-weight: 500;
+    }
+
+    /* ==================== Result Tabs ==================== */
+    .result-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-light);
+      padding-bottom: 8px;
+    }
+
+    .result-tab {
+      padding: 8px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 4px 4px 0 0;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+
+    .result-tab:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .result-tab.active {
+      color: var(--primary-color);
+      background: var(--bg-hover);
+      font-weight: 500;
+    }
+
+    /* ==================== 统计面板 ==================== */
+    .statistics-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .stat-card:hover {
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-2px);
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .stat-card.success .stat-value { color: var(--success-color); }
+    .stat-card.error .stat-value { color: var(--error-color); }
+    .stat-card.warning .stat-value { color: var(--warning-color); }
+    .stat-card.primary .stat-value { color: var(--primary-color); }
+    .stat-card.info .stat-value { color: var(--info-color); }
+
+    /* ==================== 211编辑表格 ==================== */
+    .editable-table {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .edit-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .edit-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+
+    .btn-icon {
+      padding: 6px 10px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-icon:hover {
+      background: #fff2f0;
+      border-color: var(--error-color);
+    }
+
+    /* ==================== 消息提示 ==================== */
+    .message {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      border-radius: 4px;
+      box-shadow: var(--shadow-md);
+      font-size: 14px;
+      z-index: 9999;
+      animation: slideDown 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+      }
+    }
+
+    .message.success {
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+      color: #52c41a;
+    }
+
+    .message.error {
+      background: #fff2f0;
+      border: 1px solid #ffccc7;
+      color: #f5222d;
+    }
+
+    .message.warning {
+      background: #fffbe6;
+      border: 1px solid #ffe58f;
+      color: #faad14;
+    }
+
+    .message.info {
+      background: #e6f7ff;
+      border: 1px solid #91d5ff;
+      color: #1890ff;
+    }
+
+    .message-icon {
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* ==================== 加载动画 ==================== */
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .loading-content {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 16px;
+      border: 4px solid var(--border-light);
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==================== 响应式设计 ==================== */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .upload-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .statistics-panel {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      .data-table {
+        font-size: 12px;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 8px;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+
+      .search-box input {
+        flex: 1;
+      }
+    }
+
+    /* ==================== 滚动条样式 ==================== */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <!-- 页面头部 -->
+  <header class="header">
+    <div class="header-content">
+      <h1>💰 业务员奖金计算系统</h1>
+      <nav class="tabs">
+        <button class="tab active" onclick="switchPage('monthly')">月度计算</button>
+        <button class="tab" onclick="switchPage('quarterly')">季度计算</button>
+        <button class="tab" onclick="switchPage('manage-211')">211管理</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- ==================== 月度计算页面 ==================== -->
+    <div class="page" id="monthly-page">
+      <!-- 数据上传区 -->
+      <section class="upload-section">
+        <h2>📁 步骤1: 上传基础数据</h2>
+        <div class="upload-grid">
+          <div class="upload-item" onclick="document.getElementById('file-employee').click()">
+            <label>员工基础信息表</label>
+            <input type="file" id="file-employee" accept=".xlsx,.xls" onchange="handleFileUpload(event, 'employee')">
+            <div class="upload-btn">选择文件</div>
+            <span class="status">未上传</span>
+          </div>
+          <div class="upload-item" onclick="document.getElementById('file-task').click()">
+            <label>任务分配表</label>
+            <input type="file" id="file-task" accept=".xlsx,.xls" onchange="handleFileUpload(event, 'task')">
+            <div class="upload-btn">选择文件</div>
+            <span class="status">未上传</span>
+          </div>
+          <div class="upload-item" onclick="document.getElementById('file-sales').click()">
+            <label>销售员回款汇总表</label>
+            <input type="file" id="file-sales" accept=".xlsx,.xls" onchange="handleFileUpload(event, 'sales')">
+            <div class="upload-btn">选择文件</div>
+            <span class="status">未上传</span>
+          </div>
+          <div class="upload-item" onclick="document.getElementById('file-211').click()">
+            <label>211厨电表</label>
+            <input type="file" id="file-211" accept=".xlsx,.xls" onchange="handleFileUpload(event, 'exam211')">
+            <div class="upload-btn">选择文件</div>
+            <span class="status">未上传</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 计算参数区 -->
+      <section class="param-section">
+        <h2>🔢 步骤2: 选择计算月份</h2>
+        <select id="month-select">
+          <option value="">请选择月份</option>
+          <option value="1">1月</option>
+          <option value="2">2月</option>
+          <option value="3">3月</option>
+          <option value="4">4月</option>
+          <option value="5">5月</option>
+          <option value="6">6月</option>
+          <option value="7">7月</option>
+          <option value="8">8月</option>
+          <option value="9">9月</option>
+          <option value="10">10月</option>
+          <option value="11">11月</option>
+          <option value="12">12月</option>
+        </select>
+        <button id="btn-calculate" class="btn-primary" onclick="startMonthlyCalculation()">🚀 开始计算</button>
+      </section>
+
+      <!-- 结果展示区 -->
+      <section class="result-section" id="result-section">
+        <h2>📊 计算结果</h2>
+        
+        <!-- 统计面板 -->
+        <div id="statistics-container"></div>
+        
+        <!-- Tab切换 -->
+        <div class="result-tabs">
+          <button class="result-tab active" onclick="switchResultTab('monthly')">月度奖金明细</button>
+          <button class="result-tab" onclick="switchResultTab('payment')">回款明细</button>
+          <button class="result-tab" onclick="switchResultTab('211')">211考核</button>
+        </div>
+        
+        <!-- 表格容器 -->
+        <div class="table-container">
+          <div class="table-actions">
+            <div class="search-box">
+              <input type="text" id="table-search" placeholder="🔍 搜索业务员、地区...">
+              <button onclick="filterTable(document.getElementById('table-search').value)">搜索</button>
+              <button onclick="clearTableFilter()">清除</button>
+            </div>
+            <button id="btn-export" class="btn-secondary" onclick="exportToExcel()">📥 导出Excel</button>
+          </div>
+          <div id="table-wrapper" style="max-height: 600px; overflow-y: auto;">
+            <p style="text-align: center; padding: 40px; color: var(--text-secondary);">暂无数据，请先上传文件并开始计算</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== 季度计算页面 ==================== -->
+    <div class="page hidden" id="quarterly-page">
+      <section class="upload-section">
+        <h2>📁 基础数据状态</h2>
+        <div id="quarterly-data-status" style="padding: 16px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 16px;">
+          <p style="color: var(--text-secondary);">请先在月度计算页面上传员工信息和任务分配表</p>
+        </div>
+      </section>
+      
+      <section class="param-section">
+        <h2>🔢 选择计算季度</h2>
+        <select id="quarter-select">
+          <option value="">请选择季度</option>
+          <option value="Q1">第一季度 (1-3月)</option>
+          <option value="Q2">第二季度 (4-6月)</option>
+          <option value="Q3">第三季度 (7-9月)</option>
+          <option value="Q4">第四季度 (10-12月)</option>
+        </select>
+        <button id="btn-calculate-quarter" class="btn-primary" onclick="startQuarterlyCalculation()">🚀 开始计算</button>
+      </section>
+      
+      <section class="result-section">
+        <h2>📊 季度奖金汇总</h2>
+        <div class="table-container">
+          <div class="table-actions">
+            <div></div>
+            <button id="btn-export-quarter" class="btn-secondary" onclick="exportQuarterlyToExcel()">📥 导出Excel</button>
+          </div>
+          <div id="quarter-table-wrapper" style="max-height: 600px; overflow-y: auto;">
+            <p style="text-align: center; padding: 40px; color: var(--text-secondary);">暂无数据，请选择季度并开始计算</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== 211管理页面 ==================== -->
+    <div class="page hidden" id="manage-211-page">
+      <section class="upload-section">
+        <h2>📋 211厨电数据管理</h2>
+        <div class="button-group">
+          <button class="btn-secondary" onclick="upload211ForManage()">📤 上传211数据</button>
+          <button class="btn-secondary" onclick="download211Template()">📄 下载模板</button>
+          <button class="btn-secondary" onclick="add211Row()">➕ 添加记录</button>
+          <button class="btn-primary" onclick="save211Data()">💾 保存数据</button>
+        </div>
+        <input type="file" id="file-211-manage" accept=".xlsx,.xls" style="display:none" onchange="handle211FileUpload(event)">
+      </section>
+      
+      <section class="edit-section">
+        <h2>✏️ 在线编辑</h2>
+        <div class="table-container editable-table">
+          <table class="data-table" id="table-211-edit">
+            <thead>
+              <tr>
+                <th>月份</th>
+                <th>具体地区</th>
+                <th>业务人员</th>
+                <th>任务分值</th>
+                <th>完成分值</th>
+                <th>备注</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-211-edit">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                  暂无数据，请上传211数据或添加新记录
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ==================== 全局数据存储 ====================
+    const AppData = {
+      raw: {
+        employee: null,
+        task: null,
+        sales: null,
+        exam211: null
+      },
+      index: {
+        employee: {},
+        task: {},
+        sales: {},
+        exam211: {}
+      },
+      results: {
+        monthly: [],
+        quarterly: [],
+        payment: [],
+        exam211: []
+      },
+      config: {
+        selectedMonth: null,
+        selectedQuarter: null,
+        currentResultTab: 'monthly'
+      }
+    };
+
+    // ==================== 页面切换功能 ====================
+    function switchPage(pageName) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.add('hidden');
+      });
+      document.getElementById(`${pageName}-page`).classList.remove('hidden');
+      
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // 如果切换到季度页面，更新数据状态
+      if (pageName === 'quarterly') {
+        updateQuarterlyDataStatus();
+      }
+    }
+
+    function switchResultTab(tabName) {
+      AppData.config.currentResultTab = tabName;
+      
+      document.querySelectorAll('.result-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // 渲染对应的表格
+      if (tabName === 'monthly') {
+        renderMonthlyReport();
+      } else if (tabName === 'payment') {
+        renderPaymentReport();
+      } else if (tabName === '211') {
+        render211Report();
+      }
+    }
+
+    // ==================== 消息提示 ====================
+    function showMessage(text, type = 'info', duration = 3000) {
+      const existingMessage = document.querySelector('.message');
+      if (existingMessage) {
+        existingMessage.remove();
+      }
+      
+      const message = document.createElement('div');
+      message.className = `message ${type}`;
+      
+      const icons = {
+        success: '✓',
+        error: '✗',
+        warning: '⚠',
+        info: 'ℹ'
+      };
+      message.innerHTML = `<span class="message-icon">${icons[type]}</span> ${text}`;
+      
+      document.body.appendChild(message);
+      
+      setTimeout(() => {
+        message.style.animation = 'slideUp 0.3s ease';
+        setTimeout(() => message.remove(), 300);
+      }, duration);
+    }
+
+    // ==================== 辅助函数 ====================
+    function formatPercent(value) {
+      return (value * 100).toFixed(2) + '%';
+    }
+
+    function roundMoney(value) {
+      return Math.round(value * 100) / 100;
+    }
+
+    function formatMoney(value) {
+      if (value === null || value === undefined || value === '-') return '-';
+      return value.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function isTrialEmployee(employee) {
+      const 备注 = employee.备注 || '';
+      return 备注.includes('试用期') || 备注.includes('试用');
+    }
+
+    // ==================== Excel文件处理 ====================
+    function handleFileUpload(event, dataType) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      showMessage('正在读取文件...', 'info');
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = e.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          let jsonData = XLSX.utils.sheet_to_json(worksheet);
+          
+          console.log(`[${dataType}] 原始数据行数:`, jsonData.length);
+          if (jsonData.length > 0) {
+            console.log(`[${dataType}] 列名:`, Object.keys(jsonData[0]));
+          }
+          
+          // 如果是211数据，过滤掉汇总行
+          let filteredCount = 0;
+          if (dataType === 'exam211') {
+            const originalLength = jsonData.length;
+            jsonData = jsonData.filter(row => {
+              const month = String(row['月份'] || '');
+              const name = row['业务人员'];
+              return name && !month.includes('合计') && !month.includes('季度');
+            });
+            filteredCount = originalLength - jsonData.length;
+            console.log('[211] 过滤后数据行数:', jsonData.length);
+          }
+          
+          // 验证数据
+          const validation = validateData(jsonData, dataType);
+          if (!validation.valid) {
+            console.error(`[${dataType}] 验证失败:`, validation.error);
+            showMessage(`数据验证失败: ${validation.error}`, 'error');
+            return;
+          }
+          
+          // 存储原始数据
+          AppData.raw[dataType] = jsonData;
+          
+          // 构建索引
+          switch(dataType) {
+            case 'employee':
+              AppData.index.employee = buildEmployeeIndex(jsonData);
+              break;
+            case 'task':
+              AppData.index.task = buildTaskIndex(jsonData);
+              break;
+            case 'sales':
+              AppData.index.sales = buildSalesIndex(jsonData);
+              break;
+            case 'exam211':
+              AppData.index.exam211 = build211Index(jsonData);
+              break;
+          }
+          
+          updateUploadStatus(dataType, true);
+          const successMsg = filteredCount > 0 
+            ? `${getDataTypeName(dataType)}上传成功！已自动过滤${filteredCount}行汇总数据`
+            : `${getDataTypeName(dataType)}上传成功！`;
+          showMessage(successMsg, 'success');
+          
+        } catch (error) {
+          console.error(`[${dataType}] 文件解析错误:`, error);
+          console.error('错误堆栈:', error.stack);
+          showMessage(`文件解析失败: ${error.message || '请检查文件格式'}`, 'error');
+        }
+      };
+      
+      reader.onerror = function(error) {
+        console.error('文件读取错误:', error);
+        showMessage('文件读取失败，请重试', 'error');
+      };
+      
+      reader.readAsBinaryString(file);
+    }
+
+    function updateUploadStatus(dataType, success) {
+      // 映射dataType到实际的文件输入id
+      const fileIdMap = {
+        'employee': 'file-employee',
+        'task': 'file-task',
+        'sales': 'file-sales',
+        'exam211': 'file-211'
+      };
+      
+      const fileId = fileIdMap[dataType] || `file-${dataType}`;
+      const fileInput = document.getElementById(fileId);
+      
+      if (!fileInput) {
+        console.warn(`找不到文件输入元素: ${fileId}`);
+        return;
+      }
+      
+      const uploadItem = fileInput.closest('.upload-item');
+      const statusSpan = uploadItem.querySelector('.status');
+      
+      if (success) {
+        uploadItem.classList.add('uploaded');
+        statusSpan.textContent = '✓ 已上传';
+        statusSpan.classList.add('success');
+      } else {
+        uploadItem.classList.remove('uploaded');
+        statusSpan.textContent = '未上传';
+        statusSpan.classList.remove('success');
+      }
+    }
+
+    function getDataTypeName(dataType) {
+      const names = {
+        'employee': '员工基础信息表',
+        'task': '任务分配表',
+        'sales': '销售员回款汇总表',
+        'exam211': '211厨电表'
+      };
+      return names[dataType] || dataType;
+    }
+
+    // ==================== 数据验证 ====================
+    function validateData(data, type) {
+      const validationRules = {
+        employee: {
+          requiredColumns: ['员工姓名', '标准奖金', '所属地区', '业务类型'],
+          columnTypes: {
+            '员工姓名': 'string',
+            '标准奖金': 'number',
+            '所属地区': 'string',
+            '业务类型': 'string'
+          }
+        },
+        task: {
+          requiredColumns: ['负责人'],
+          columnTypes: {
+            '负责人': 'string'
+          }
+        },
+        sales: {
+          requiredColumns: ['销售员'],
+          columnTypes: {
+            '销售员': 'string'
+          }
+        },
+        exam211: {
+          requiredColumns: ['月份', '业务人员', '任务', '完成'],
+          columnTypes: {
+            '月份': 'string',
+            '业务人员': 'string',
+            '任务': 'number',
+            '完成': 'number'
+          }
+        }
+      };
+      
+      const rules = validationRules[type];
+      if (!rules) {
+        return { valid: false, error: '未知的数据类型' };
+      }
+      
+      if (!data || data.length === 0) {
+        return { valid: false, error: '数据为空' };
+      }
+      
+      const firstRow = data[0];
+      const missingColumns = rules.requiredColumns.filter(
+        col => !(col in firstRow)
+      );
+      
+      if (missingColumns.length > 0) {
+        return { 
+          valid: false, 
+          error: `缺少必需列: ${missingColumns.join(', ')}` 
+        };
+      }
+      
+      return { valid: true };
+    }
+
+    // ==================== 索引构建 ====================
+    function buildEmployeeIndex(data) {
+      const index = {};
+      
+      data.forEach(row => {
+        const name = row['员工姓名'];
+        index[name] = {
+          标准奖金: row['标准奖金'],
+          所属地区: row['所属地区'],
+          业务类型: row['业务类型'],
+          备注: row['备注'] || '',
+          是否试用期: isTrialEmployee(row)
+        };
+      });
+      
+      return index;
+    }
+
+    function buildTaskIndex(data) {
+      const index = {};
+      const months = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+      
+      data.forEach(row => {
+        const name = row['负责人'];
+        index[name] = {};
+        
+        months.forEach(month => {
+          const value = row[`${month}月`];
+          if (value !== undefined && value !== null) {
+            index[name][month] = value * 10000;
+          }
+        });
+        
+        ['Q1', 'Q2', 'Q3', 'Q4'].forEach(quarter => {
+          const value = row[quarter];
+          if (value !== undefined && value !== null) {
+            index[name][quarter] = value * 10000;
+          }
+        });
+      });
+      
+      return index;
+    }
+
+    function buildSalesIndex(data) {
+      const index = {};
+      const months = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+      
+      data.forEach(row => {
+        const name = row['销售员'];
+        if (!index[name]) {
+          index[name] = {};
+        }
+        
+        // 检查是否有月度列
+        let hasMonthColumns = false;
+        months.forEach(month => {
+          const value = row[`${month}月`];
+          if (value !== undefined && value !== null) {
+            index[name][month] = value;
+            hasMonthColumns = true;
+          }
+        });
+        
+        // 如果没有月度列，使用回款字段
+        if (!hasMonthColumns && row['回款'] !== undefined) {
+          // 这里需要根据实际的月份来分配，暂时不处理
+          console.warn(`销售员${name}的回款数据缺少月度明细`);
+        }
+      });
+      
+      return index;
+    }
+
+    function build211Index(data) {
+      const index = {};
+      
+      data.forEach(row => {
+        const name = row['业务人员'];
+        const month = String(row['月份']).replace(/[月]/g, '');
+        
+        // 过滤掉汇总行和无效数据
+        if (!name || !month || month.includes('合计') || month.includes('季度')) {
+          return;
+        }
+        
+        if (!index[name]) {
+          index[name] = {};
+        }
+        
+        index[name][month] = {
+          任务: row['任务'] || 10,
+          完成: row['完成'] || 0,
+          备注: row['备注'] || ''
+        };
+      });
+      
+      return index;
+    }
+
+    // ==================== 月度奖金计算 ====================
+    function calculateMonthlyBonus(employeeName, month) {
+      const employee = AppData.index.employee[employeeName];
+      if (!employee) {
+        return { error: "员工信息不存在" };
+      }
+      
+      const 标准奖金 = employee.标准奖金;
+      const 地区 = employee.所属地区;
+      const 是否试用期 = employee.是否试用期;
+      
+      const 任务 = AppData.index.task[employeeName]?.[month];
+      const 回款 = AppData.index.sales[employeeName]?.[month];
+      
+      if (任务 === undefined || 回款 === undefined) {
+        return {
+          业务员: employeeName,
+          地区: 地区,
+          月份: `${month}月`,
+          任务: 任务 || '-',
+          回款: 回款 || '-',
+          完成率: '-',
+          基础奖金: '-',
+          回款负激励: '-',
+          负激励211: '-',
+          实发奖金: '-',
+          个税: '-',
+          数据状态: "数据缺失",
+          备注: `缺失${任务 === undefined ? '任务' : ''}${回款 === undefined ? '回款' : ''}数据`
+        };
+      }
+      
+      if (是否试用期) {
+        return {
+          业务员: employeeName,
+          地区: 地区,
+          月份: `${month}月`,
+          任务: 任务,
+          回款: 回款,
+          完成率: formatPercent(回款 / 任务),
+          基础奖金: 0,
+          回款负激励: 0,
+          负激励211: 0,
+          实发奖金: 0,
+          个税: 0,
+          备注: "试用期无考核奖金，负激励不扣",
+          数据状态: "试用期"
+        };
+      }
+      
+      const 完成率 = 回款 / 任务;
+      const 基础奖金 = 标准奖金 * 0.7 * 完成率;
+      
+      let 回款负激励 = 0;
+      let 负激励说明 = "";
+      
+      if (地区 === "杭州") {
+        if (完成率 < 0.5) {
+          回款负激励 = 标准奖金 * 0.2;
+          负激励说明 = "完成率<50%，扣20%";
+        } else if (完成率 < 0.8) {
+          回款负激励 = 标准奖金 * 0.1;
+          负激励说明 = "完成率50%-80%，扣10%";
+        } else {
+          负激励说明 = "完成率≥80%，不扣款";
+        }
+      } else {
+        负激励说明 = "非杭州地区";
+      }
+      
+      const exam211 = AppData.index.exam211[employeeName]?.[month];
+      let 负激励211 = 0;
+      
+      if (exam211) {
+        const { 任务: 任务分值, 完成: 完成分值 } = exam211;
+        负激励211 = 800 - (完成分值 / 任务分值) * 800;
+      } else {
+        负激励211 = 800;
+      }
+      
+      const 实发奖金 = 基础奖金 - 回款负激励 - 负激励211;
+      
+      return {
+        业务员: employeeName,
+        地区: 地区,
+        月份: `${month}月`,
+        任务: 任务,
+        回款: 回款,
+        完成率: formatPercent(完成率),
+        基础奖金: roundMoney(基础奖金),
+        回款负激励: roundMoney(回款负激励),
+        负激励211: roundMoney(负激励211),
+        实发奖金: roundMoney(实发奖金),
+        个税: 0,
+        备注: 负激励说明,
+        数据状态: "完整"
+      };
+    }
+
+    // ==================== 季度奖金计算 ====================
+    function calculateQuarterlyBonus(employeeName, quarter) {
+      const employee = AppData.index.employee[employeeName];
+      if (!employee) {
+        return { error: "员工信息不存在" };
+      }
+      
+      const 标准奖金 = employee.标准奖金;
+      const 地区 = employee.所属地区;
+      const 是否试用期 = employee.是否试用期;
+      
+      const quarterMonths = {
+        'Q1': ['1', '2', '3'],
+        'Q2': ['4', '5', '6'],
+        'Q3': ['7', '8', '9'],
+        'Q4': ['10', '11', '12']
+      };
+      const months = quarterMonths[quarter];
+      
+      let 季度任务 = 0;
+      let 季度回款 = 0;
+      let 数据完整 = true;
+      
+      for (const month of months) {
+        const 任务 = AppData.index.task[employeeName]?.[month];
+        const 回款 = AppData.index.sales[employeeName]?.[month];
+        
+        if (任务 === undefined || 回款 === undefined) {
+          数据完整 = false;
+          break;
+        }
+        
+        季度任务 += 任务;
+        季度回款 += 回款;
+      }
+      
+      if (!数据完整) {
+        return {
+          业务员: employeeName,
+          季度: quarter,
+          季度任务: '-',
+          季度回款: '-',
+          完成率: '-',
+          基础奖金: '-',
+          返还金额: '-',
+          实发奖金: '-',
+          数据状态: "数据缺失",
+          备注: "季度数据不完整"
+        };
+      }
+      
+      if (是否试用期) {
+        return {
+          业务员: employeeName,
+          季度: quarter,
+          季度任务: 季度任务,
+          季度回款: 季度回款,
+          完成率: formatPercent(季度回款 / 季度任务),
+          基础奖金: 0,
+          返还金额: 0,
+          实发奖金: 0,
+          备注: "试用期无季度奖金",
+          数据状态: "试用期"
+        };
+      }
+      
+      const 季度完成率 = 季度回款 / 季度任务;
+      
+      let 基础奖金 = 0;
+      let 备注 = "";
+      
+      if (地区 === "杭州" && 季度完成率 < 0.5) {
+        基础奖金 = 0;
+        备注 = "触发红线，季度完成率<50%，季度奖金归零";
+      } else {
+        基础奖金 = 标准奖金 * 0.3 * 3 * 季度完成率;
+        备注 = `季度完成率${formatPercent(季度完成率)}`;
+      }
+      
+      let 返还金额 = 0;
+      
+      if (地区 === "杭州" && 季度完成率 >= 0.8) {
+        for (const month of months) {
+          const 任务 = AppData.index.task[employeeName][month];
+          const 回款 = AppData.index.sales[employeeName][month];
+          const 月完成率 = 回款 / 任务;
+          
+          if (月完成率 < 0.5) {
+            返还金额 += 标准奖金 * 0.2;
+          } else if (月完成率 < 0.8) {
+            返还金额 += 标准奖金 * 0.1;
+          }
+        }
+        
+        if (返还金额 > 0) {
+          备注 += "，返还月度负激励";
+        }
+      }
+      
+      const 实发奖金 = 基础奖金 + 返还金额;
+      
+      return {
+        业务员: employeeName,
+        季度: quarter,
+        季度任务: 季度任务,
+        季度回款: 季度回款,
+        完成率: formatPercent(季度完成率),
+        基础奖金: roundMoney(基础奖金),
+        返还金额: roundMoney(返还金额),
+        实发奖金: roundMoney(实发奖金),
+        备注: 备注,
+        数据状态: "完整"
+      };
+    }
+
+    // ==================== 计算触发 ====================
+    function checkDataReady(requiredTypes) {
+      for (const type of requiredTypes) {
+        if (!AppData.raw[type] || AppData.raw[type].length === 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function startMonthlyCalculation() {
+      if (!checkDataReady(['employee', 'task', 'sales', 'exam211'])) {
+        showMessage('请先上传所有必需的数据文件', 'warning');
+        return;
+      }
+      
+      const month = document.getElementById('month-select').value;
+      if (!month) {
+        showMessage('请选择计算月份', 'warning');
+        return;
+      }
+      
+      showMessage('正在计算，请稍候...', 'info');
+      
+      setTimeout(() => {
+        try {
+          const employees = Object.keys(AppData.index.employee);
+          const results = employees.map(name => calculateMonthlyBonus(name, month));
+          
+          AppData.results.monthly = results;
+          AppData.results.payment = generatePaymentReport(month);
+          AppData.results.exam211 = generate211Report(month);
+          
+          renderStatistics();
+          renderMonthlyReport();
+          
+          showMessage('计算完成！', 'success');
+          
+        } catch (error) {
+          console.error('计算错误:', error);
+          showMessage('计算过程中出现错误', 'error');
+        }
+      }, 100);
+    }
+
+    function startQuarterlyCalculation() {
+      if (!checkDataReady(['employee', 'task', 'sales'])) {
+        showMessage('请先在月度计算页面上传员工信息、任务分配表和回款数据', 'warning');
+        return;
+      }
+      
+      const quarter = document.getElementById('quarter-select').value;
+      if (!quarter) {
+        showMessage('请选择计算季度', 'warning');
+        return;
+      }
+      
+      showMessage('正在计算季度奖金，请稍候...', 'info');
+      
+      setTimeout(() => {
+        try {
+          const employees = Object.keys(AppData.index.employee);
+          const results = employees.map(name => calculateQuarterlyBonus(name, quarter));
+          
+          AppData.results.quarterly = results;
+          renderQuarterlyReport();
+          
+          showMessage('季度奖金计算完成！', 'success');
+          
+        } catch (error) {
+          console.error('计算错误:', error);
+          showMessage('计算过程中出现错误', 'error');
+        }
+      }, 100);
+    }
+
+    // ==================== 报表生成 ====================
+    function generatePaymentReport(month) {
+      const results = [];
+      
+      for (const [name, payments] of Object.entries(AppData.index.sales)) {
+        if (payments[month] !== undefined) {
+          const employee = AppData.index.employee[name];
+          results.push({
+            业务员: name,
+            门店: employee?.所属地区 || '-',
+            月份: `${month}月`,
+            回款金额: payments[month]
+          });
+        }
+      }
+      
+      return results;
+    }
+
+    function generate211Report(month) {
+      const results = [];
+      
+      for (const [name, exams] of Object.entries(AppData.index.exam211)) {
+        if (exams[month]) {
+          const exam = exams[month];
+          const 完成率 = exam.完成 / exam.任务;
+          const 扣款金额 = 800 - (exam.完成 / exam.任务) * 800;
+          
+          results.push({
+            业务员: name,
+            月份: `${month}月`,
+            目标分值: exam.任务,
+            完成分值: exam.完成,
+            完成率: formatPercent(完成率),
+            扣款金额: roundMoney(扣款金额),
+            备注: exam.备注 || `完成${exam.完成}/${exam.任务}分`
+          });
+        }
+      }
+      
+      return results;
+    }
+
+    // ==================== UI渲染 ====================
+    function renderStatistics() {
+      const data = AppData.results.monthly;
+      if (!data || data.length === 0) return;
+      
+      const stats = {
+        总人数: data.length,
+        数据完整: data.filter(r => r.数据状态 === '完整').length,
+        数据缺失: data.filter(r => r.数据状态 === '数据缺失').length,
+        试用期: data.filter(r => r.数据状态 === '试用期').length,
+        总奖金: data.reduce((sum, r) => sum + (typeof r.实发奖金 === 'number' ? r.实发奖金 : 0), 0),
+        平均奖金: 0
+      };
+      
+      stats.平均奖金 = stats.数据完整 > 0 ? stats.总奖金 / stats.数据完整 : 0;
+      
+      const statsHtml = `
+        <div class="statistics-panel">
+          <div class="stat-card">
+            <div class="stat-value">${stats.总人数}</div>
+            <div class="stat-label">总人数</div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-value">${stats.数据完整}</div>
+            <div class="stat-label">数据完整</div>
+          </div>
+          <div class="stat-card error">
+            <div class="stat-value">${stats.数据缺失}</div>
+            <div class="stat-label">数据缺失</div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-value">${stats.试用期}</div>
+            <div class="stat-label">试用期</div>
+          </div>
+          <div class="stat-card primary">
+            <div class="stat-value">${formatMoney(stats.总奖金)}</div>
+            <div class="stat-label">总奖金(元)</div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-value">${formatMoney(stats.平均奖金)}</div>
+            <div class="stat-label">平均奖金(元)</div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('statistics-container').innerHTML = statsHtml;
+    }
+
+    function renderMonthlyReport() {
+      const data = AppData.results.monthly;
+      if (!data || data.length === 0) {
+        document.getElementById('table-wrapper').innerHTML = '<p style="text-align: center; padding: 40px; color: var(--text-secondary);">暂无数据</p>';
+        return;
+      }
+      
+      const tableHtml = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>业务员</th>
+              <th>地区</th>
+              <th>月份</th>
+              <th>任务(元)</th>
+              <th>回款(元)</th>
+              <th>完成率</th>
+              <th>基础奖金</th>
+              <th>回款负激励</th>
+              <th>211负激励</th>
+              <th>实发奖金</th>
+              <th>个税</th>
+              <th>备注</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(row => renderMonthlyRow(row)).join('')}
+          </tbody>
+        </table>
+      `;
+      
+      document.getElementById('table-wrapper').innerHTML = tableHtml;
+    }
+
+    function renderMonthlyRow(row) {
+      const statusClass = row.数据状态 === '完整' ? 'status-complete' : 
+                          row.数据状态 === '数据缺失' ? 'status-missing' : 
+                          'status-trial';
+      
+      const highlightNegative = (value) => {
+        if (typeof value === 'number' && value < 0) {
+          return `<span class="negative-value">${formatMoney(value)}</span>`;
+        }
+        return typeof value === 'number' ? formatMoney(value) : value;
+      };
+      
+      return `
+        <tr class="${statusClass}">
+          <td><strong>${row.业务员}</strong></td>
+          <td>${row.地区}</td>
+          <td>${row.月份}</td>
+          <td>${formatMoney(row.任务)}</td>
+          <td>${formatMoney(row.回款)}</td>
+          <td>${row.完成率}</td>
+          <td>${highlightNegative(row.基础奖金)}</td>
+          <td>${highlightNegative(row.回款负激励)}</td>
+          <td>${highlightNegative(row.负激励211)}</td>
+          <td><strong>${highlightNegative(row.实发奖金)}</strong></td>
+          <td>${row.个税 || 0}</td>
+          <td>${row.备注 || '-'}</td>
+        </tr>
+      `;
+    }
+
+    function renderPaymentReport() {
+      const data = AppData.results.payment;
+      if (!data || data.length === 0) {
+        document.getElementById('table-wrapper').innerHTML = '<p style="text-align: center; padding: 40px; color: var(--text-secondary);">暂无回款数据</p>';
+        return;
+      }
+      
+      const tableHtml = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>业务员</th>
+              <th>门店</th>
+              <th>月份</th>
+              <th>回款金额(元)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(row => `
+              <tr>
+                <td><strong>${row.业务员}</strong></td>
+                <td>${row.门店}</td>
+                <td>${row.月份}</td>
+                <td>${formatMoney(row.回款金额)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      
+      document.getElementById('table-wrapper').innerHTML = tableHtml;
+    }
+
+    function render211Report() {
+      const data = AppData.results.exam211;
+      if (!data || data.length === 0) {
+        document.getElementById('table-wrapper').innerHTML = '<p style="text-align: center; padding: 40px; color: var(--text-secondary);">暂无211考核数据</p>';
+        return;
+      }
+      
+      const tableHtml = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>业务员</th>
+              <th>月份</th>
+              <th>目标分值</th>
+              <th>完成分值</th>
+              <th>完成率</th>
+              <th>扣款金额(元)</th>
+              <th>备注</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(row => `
+              <tr>
+                <td><strong>${row.业务员}</strong></td>
+                <td>${row.月份}</td>
+                <td>${row.目标分值}</td>
+                <td>${row.完成分值}</td>
+                <td>${row.完成率}</td>
+                <td class="${row.扣款金额 > 0 ? 'negative-value' : ''}">${formatMoney(row.扣款金额)}</td>
+                <td>${row.备注}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      
+      document.getElementById('table-wrapper').innerHTML = tableHtml;
+    }
+
+    function renderQuarterlyReport() {
+      const data = AppData.results.quarterly;
+      if (!data || data.length === 0) {
+        document.getElementById('quarter-table-wrapper').innerHTML = '<p style="text-align: center; padding: 40px; color: var(--text-secondary);">暂无数据</p>';
+        return;
+      }
+      
+      const tableHtml = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>业务员</th>
+              <th>季度</th>
+              <th>季度任务(元)</th>
+              <th>季度回款(元)</th>
+              <th>完成率</th>
+              <th>基础奖金</th>
+              <th>返还金额</th>
+              <th>实发奖金</th>
+              <th>备注</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(row => renderQuarterlyRow(row)).join('')}
+          </tbody>
+        </table>
+      `;
+      
+      document.getElementById('quarter-table-wrapper').innerHTML = tableHtml;
+    }
+
+    function renderQuarterlyRow(row) {
+      const statusClass = row.数据状态 === '完整' ? 'status-complete' : 
+                          row.数据状态 === '数据缺失' ? 'status-missing' : 
+                          'status-trial';
+      
+      return `
+        <tr class="${statusClass}">
+          <td><strong>${row.业务员}</strong></td>
+          <td>${row.季度}</td>
+          <td>${formatMoney(row.季度任务)}</td>
+          <td>${formatMoney(row.季度回款)}</td>
+          <td>${row.完成率}</td>
+          <td>${formatMoney(row.基础奖金)}</td>
+          <td>${formatMoney(row.返还金额)}</td>
+          <td><strong>${formatMoney(row.实发奖金)}</strong></td>
+          <td>${row.备注}</td>
+        </tr>
+      `;
+    }
+
+    // ==================== 表格搜索筛选 ====================
+    function filterTable(keyword) {
+      const tableWrapper = document.getElementById(
+        AppData.config.currentResultTab === 'monthly' || 
+        AppData.config.currentResultTab === 'payment' || 
+        AppData.config.currentResultTab === '211' ? 'table-wrapper' : 'quarter-table-wrapper'
+      );
+      const rows = tableWrapper.querySelectorAll('tbody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(keyword.toLowerCase())) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function clearTableFilter() {
+      document.getElementById('table-search').value = '';
+      const tableWrapper = document.getElementById('table-wrapper');
+      const rows = tableWrapper.querySelectorAll('tbody tr');
+      rows.forEach(row => row.style.display = '');
+    }
+
+    // ==================== Excel导出 ====================
+    function exportToExcel() {
+      const data = AppData.results.monthly;
+      if (!data || data.length === 0) {
+        showMessage('没有数据可导出', 'warning');
+        return;
+      }
+      
+      try {
+        const wb = XLSX.utils.book_new();
+        
+        const ws1 = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws1, '月度奖金明细');
+        
+        if (AppData.results.payment && AppData.results.payment.length > 0) {
+          const ws2 = XLSX.utils.json_to_sheet(AppData.results.payment);
+          XLSX.utils.book_append_sheet(wb, ws2, '回款明细');
+        }
+        
+        if (AppData.results.exam211 && AppData.results.exam211.length > 0) {
+          const ws3 = XLSX.utils.json_to_sheet(AppData.results.exam211);
+          XLSX.utils.book_append_sheet(wb, ws3, '211考核');
+        }
+        
+        const month = document.getElementById('month-select').value;
+        const filename = `奖金计算结果_${month}月_${new Date().toISOString().slice(0,10)}.xlsx`;
+        
+        XLSX.writeFile(wb, filename);
+        showMessage('导出成功！', 'success');
+        
+      } catch (error) {
+        console.error('导出错误:', error);
+        showMessage('导出失败', 'error');
+      }
+    }
+
+    function exportQuarterlyToExcel() {
+      const data = AppData.results.quarterly;
+      if (!data || data.length === 0) {
+        showMessage('没有数据可导出', 'warning');
+        return;
+      }
+      
+      try {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, '季度奖金汇总');
+        
+        const quarter = document.getElementById('quarter-select').value;
+        const filename = `季度奖金_${quarter}_${new Date().toISOString().slice(0,10)}.xlsx`;
+        
+        XLSX.writeFile(wb, filename);
+        showMessage('导出成功！', 'success');
+        
+      } catch (error) {
+        console.error('导出错误:', error);
+        showMessage('导出失败', 'error');
+      }
+    }
+
+    // ==================== 211数据管理 ====================
+    function render211EditTable() {
+      let data = AppData.raw.exam211 || [];
+      
+      // 过滤掉汇总行
+      data = data.filter(row => {
+        const month = String(row['月份'] || '');
+        const name = row['业务人员'];
+        return name && !month.includes('合计') && !month.includes('季度');
+      });
+      
+      if (data.length === 0) {
+        document.getElementById('tbody-211-edit').innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+              暂无数据，请上传211数据或添加新记录
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      const tbody = data.map((row, index) => render211EditRow(row, index)).join('');
+      document.getElementById('tbody-211-edit').innerHTML = tbody;
+    }
+
+    function render211EditRow(row, index) {
+      return `
+        <tr data-index="${index}">
+          <td>
+            <select class="edit-input" data-field="月份">
+              ${generateMonthOptions(row.月份)}
+            </select>
+          </td>
+          <td>
+            <input type="text" class="edit-input" data-field="具体地区" 
+                   value="${row.具体地区 || ''}" placeholder="输入地区">
+          </td>
+          <td>
+            <select class="edit-input" data-field="业务人员">
+              ${generateEmployeeOptions(row.业务人员)}
+            </select>
+          </td>
+          <td>
+            <input type="number" class="edit-input" data-field="任务" 
+                   value="${row.任务 || 10}" min="0" step="1">
+          </td>
+          <td>
+            <input type="number" class="edit-input" data-field="完成" 
+                   value="${row.完成 || 0}" min="0" step="0.1">
+          </td>
+          <td>
+            <input type="text" class="edit-input" data-field="备注" 
+                   value="${row.备注 || ''}" placeholder="备注信息">
+          </td>
+          <td>
+            <button class="btn-icon" onclick="delete211Row(${index})" title="删除">
+              🗑️
+            </button>
+          </td>
+        </tr>
+      `;
+    }
+
+    function generateMonthOptions(selectedMonth) {
+      const months = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+      return months.map(m => 
+        `<option value="${m}" ${m === String(selectedMonth) ? 'selected' : ''}>${m}月</option>`
+      ).join('');
+    }
+
+    function generateEmployeeOptions(selectedEmployee) {
+      const employees = Object.keys(AppData.index.employee || {});
+      let options = '<option value="">请选择</option>';
+      
+      options += employees.map(name => 
+        `<option value="${name}" ${name === selectedEmployee ? 'selected' : ''}>${name}</option>`
+      ).join('');
+      
+      return options;
+    }
+
+    function add211Row() {
+      if (!AppData.raw.exam211) {
+        AppData.raw.exam211 = [];
+      }
+      
+      const newRow = {
+        月份: '1',
+        具体地区: '',
+        业务人员: '',
+        任务: 10,
+        完成: 0,
+        备注: ''
+      };
+      
+      AppData.raw.exam211.push(newRow);
+      render211EditTable();
+      
+      const tbody = document.getElementById('tbody-211-edit');
+      tbody.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+      
+      showMessage('已添加新记录', 'success');
+    }
+
+    function delete211Row(index) {
+      if (!confirm('确定要删除这条记录吗？')) {
+        return;
+      }
+      
+      AppData.raw.exam211.splice(index, 1);
+      render211EditTable();
+      showMessage('已删除记录', 'success');
+    }
+
+    function save211Data() {
+      const tbody = document.getElementById('tbody-211-edit');
+      const rows = tbody.querySelectorAll('tr[data-index]');
+      const newData = [];
+      
+      rows.forEach(row => {
+        const data = {};
+        row.querySelectorAll('.edit-input').forEach(input => {
+          const field = input.dataset.field;
+          let value = input.value;
+          
+          if (field === '任务' || field === '完成') {
+            value = parseFloat(value) || 0;
+          } else if (field === '月份') {
+            value = String(value).replace(/[月]/g, '');
+          }
+          
+          data[field] = value;
+        });
+        
+        newData.push(data);
+      });
+      
+      const invalidRows = newData.filter(row => 
+        !row.业务人员 || !row.月份
+      );
+      
+      if (invalidRows.length > 0) {
+        showMessage('请填写完整的业务人员和月份信息', 'warning');
+        return;
+      }
+      
+      AppData.raw.exam211 = newData;
+      AppData.index.exam211 = build211Index(newData);
+      
+      showMessage('保存成功！', 'success');
+    }
+
+    function download211Template() {
+      const template = [
+        {
+          月份: '1',
+          具体地区: '示例地区',
+          业务人员: '示例员工',
+          任务: 10,
+          完成: 8,
+          备注: '试用期员工请在此标注'
+        }
+      ];
+      
+      const ws = XLSX.utils.json_to_sheet(template);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '211厨电模板');
+      
+      ws['!cols'] = [
+        { wch: 10 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 30 }
+      ];
+      
+      XLSX.writeFile(wb, '211厨电考核模板.xlsx');
+      showMessage('模板下载成功！', 'success');
+    }
+
+    function upload211ForManage() {
+      document.getElementById('file-211-manage').click();
+    }
+
+    function handle211FileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = e.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          let jsonData = XLSX.utils.sheet_to_json(worksheet);
+          
+          // 过滤掉汇总行
+          const originalLength = jsonData.length;
+          jsonData = jsonData.filter(row => {
+            const month = String(row['月份'] || '');
+            const name = row['业务人员'];
+            return name && !month.includes('合计') && !month.includes('季度');
+          });
+          const filteredCount = originalLength - jsonData.length;
+          
+          const validation = validateData(jsonData, 'exam211');
+          if (!validation.valid) {
+            showMessage(`数据验证失败: ${validation.error}`, 'error');
+            return;
+          }
+          
+          AppData.raw.exam211 = jsonData;
+          AppData.index.exam211 = build211Index(jsonData);
+          
+          render211EditTable();
+          const successMsg = filteredCount > 0 
+            ? `211数据上传成功！已自动过滤${filteredCount}行汇总数据，共载入${jsonData.length}条有效记录`
+            : `211数据上传成功！共载入${jsonData.length}条记录`;
+          showMessage(successMsg, 'success');
+          
+        } catch (error) {
+          console.error('[211管理] 文件解析错误:', error);
+          console.error('错误堆栈:', error.stack);
+          showMessage(`文件解析失败: ${error.message || '请检查文件格式'}`, 'error');
+        }
+      };
+      
+      reader.onerror = function(error) {
+        console.error('文件读取错误:', error);
+        showMessage('文件读取失败，请重试', 'error');
+      };
+      
+      reader.readAsBinaryString(file);
+    }
+
+    // ==================== 季度页面数据状态 ====================
+    function updateQuarterlyDataStatus() {
+      const hasEmployee = AppData.raw.employee && AppData.raw.employee.length > 0;
+      const hasTask = AppData.raw.task && AppData.raw.task.length > 0;
+      const hasSales = AppData.raw.sales && AppData.raw.sales.length > 0;
+      
+      let statusHtml = '';
+      
+      if (hasEmployee && hasTask && hasSales) {
+        statusHtml = `
+          <p style="color: var(--success-color); display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">✓</span>
+            <span>基础数据已准备完毕，可以开始计算季度奖金</span>
+          </p>
+        `;
+      } else {
+        statusHtml = `
+          <p style="color: var(--warning-color); margin-bottom: 12px;">
+            ⚠ 请先在月度计算页面上传以下数据：
+          </p>
+          <ul style="margin-left: 24px; color: var(--text-secondary);">
+            <li>${hasEmployee ? '✓' : '✗'} 员工基础信息表</li>
+            <li>${hasTask ? '✓' : '✗'} 任务分配表</li>
+            <li>${hasSales ? '✓' : '✗'} 销售员回款汇总表</li>
+          </ul>
+        `;
+      }
+      
+      document.getElementById('quarterly-data-status').innerHTML = statusHtml;
+    }
+
+    // ==================== 键盘快捷键 ====================
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        const currentPage = document.querySelector('.page:not(.hidden)');
+        if (currentPage.id === 'manage-211-page') {
+          save211Data();
+        }
+      }
+      
+      if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        const currentPage = document.querySelector('.page:not(.hidden)');
+        if (currentPage.id === 'monthly-page') {
+          exportToExcel();
+        } else if (currentPage.id === 'quarterly-page') {
+          exportQuarterlyToExcel();
+        }
+      }
+    });
+
+    // ==================== 页面初始化 ====================
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('%c业务员奖金计算系统 v1.0', 'color: #1890ff; font-size: 16px; font-weight: bold;');
+      console.log('系统初始化完成');
+      console.log('快捷键提示:');
+      console.log('  Ctrl+S: 保存211数据');
+      console.log('  Ctrl+E: 导出Excel');
+    });
+  </script>
+</body>
+</html>
+

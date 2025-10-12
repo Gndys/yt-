@@ -1,0 +1,2798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>批量提成计算工具 v1.8 - 含员工汇总表</title>
+  <style>
+      * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+      }
+      
+      html {
+          scroll-behavior: smooth;
+      }
+      
+      body {
+          font-family: 'Microsoft YaHei', Arial, sans-serif;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          min-height: 100vh;
+          padding: 20px;
+      }
+      
+      .container {
+          max-width: 1400px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 15px;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+          overflow: hidden;
+      }
+      
+      .header {
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          color: white;
+          padding: 30px;
+          text-align: center;
+      }
+      
+      .header h1 {
+          font-size: 2.5em;
+          margin-bottom: 10px;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      
+      .content {
+          padding: 30px;
+      }
+      
+      .section {
+          margin-bottom: 30px;
+          padding: 25px;
+          border: 2px solid #e1e8ed;
+          border-radius: 10px;
+          background: #f8fafc;
+      }
+      
+      .section h2 {
+          color: #2c3e50;
+          margin-bottom: 20px;
+          font-size: 1.5em;
+          border-bottom: 3px solid #3498db;
+          padding-bottom: 10px;
+      }
+      
+      .upload-area {
+          border: 3px dashed #3498db;
+          border-radius: 10px;
+          padding: 30px;
+          text-align: center;
+          background: white;
+          transition: all 0.3s ease;
+          margin-bottom: 15px;
+      }
+      
+      .upload-area:hover {
+          border-color: #2980b9;
+          background: #ecf0f1;
+      }
+      
+      .upload-area.dragover {
+          border-color: #27ae60;
+          background: #d5f4e6;
+      }
+      
+      input[type="file"] {
+          display: none;
+      }
+      
+      .upload-btn {
+          background: linear-gradient(135deg, #3498db, #2980b9);
+          color: white;
+          padding: 12px 25px;
+          border: none;
+          border-radius: 25px;
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 0.3s ease;
+          margin: 10px;
+      }
+      
+      .upload-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+      }
+      
+      .file-list {
+          margin-top: 20px;
+          max-height: none;
+          overflow-y: visible;
+      }
+      
+      /* 当文件较多时启用滚动 */
+      @media (min-height: 900px) {
+          .file-list {
+              max-height: calc(100vh - 400px);
+              overflow-y: auto;
+          }
+      }
+      
+      /* 优化滚动条样式 */
+      .file-list::-webkit-scrollbar {
+          width: 8px;
+      }
+      
+      .file-list::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+      }
+      
+      .file-list::-webkit-scrollbar-thumb {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          border-radius: 10px;
+      }
+      
+      .file-list::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(135deg, #764ba2, #667eea);
+      }
+      
+      .file-item {
+          display: flex;
+          flex-direction: column;
+          padding: 16px;
+          margin-bottom: 15px;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+          border-left: 4px solid #e1e8ed;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          scroll-margin-top: 20px; /* 为滚动到视图时预留顶部空间 */
+      }
+      
+      .file-item:hover {
+          box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+          transform: translateY(-2px);
+      }
+      
+      .file-item.processing {
+          background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+          border-left-color: #2196f3;
+          box-shadow: 0 3px 15px rgba(33, 150, 243, 0.3);
+      }
+      
+      .file-item.completed {
+          background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+          border-left-color: #4caf50;
+          box-shadow: 0 3px 15px rgba(76, 175, 80, 0.3);
+      }
+      
+      .file-item.error {
+          background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+          border-left-color: #f44336;
+          box-shadow: 0 3px 15px rgba(244, 67, 54, 0.3);
+      }
+      
+      .file-item-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 10px;
+      }
+      
+      .file-info {
+          flex: 1;
+          display: flex;
+          align-items: center;
+      }
+      
+      .file-name {
+          font-weight: 600;
+          margin-right: 15px;
+          color: #2c3e50;
+          font-size: 15px;
+          transition: color 0.3s ease;
+      }
+      
+      .file-name:hover {
+          color: #667eea;
+      }
+      
+      .file-status {
+          font-size: 12px;
+          padding: 5px 12px;
+          border-radius: 15px;
+          color: white;
+          margin-left: 10px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+      }
+      
+      .status-waiting {
+          background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);
+          box-shadow: 0 2px 8px rgba(158, 158, 158, 0.3);
+      }
+      
+      .status-waiting::before {
+          content: '⏱️';
+      }
+      
+      .status-processing {
+          background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+          box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+          animation: pulse 2s ease-in-out infinite;
+      }
+      
+      .status-processing::before {
+          content: '⚙️';
+      }
+      
+      @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+      }
+      
+      .status-completed {
+          background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+          box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+      }
+      
+      .status-completed::before {
+          content: '✅';
+      }
+      
+      .status-error {
+          background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+          box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+      }
+      
+      .status-error::before {
+          content: '❌';
+      }
+      
+      .file-actions {
+          display: flex;
+          gap: 10px;
+      }
+      
+      .file-toolbar {
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
+          margin: 8px 0 0 0;
+      }
+      
+      .mini-btn {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: #fff;
+          border: none;
+          padding: 8px 14px;
+          border-radius: 18px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      }
+      
+      .mini-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+      
+      .mini-btn:active {
+          transform: translateY(0);
+      }
+      
+      .file-toggle-btn {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: #fff;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      }
+      
+      .file-toggle-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+      
+      .mapping-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 16px;
+      }
+      
+      .file-name {
+          cursor: pointer;
+      }
+      
+      .remove-btn {
+          background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+          color: white;
+          border: none;
+          padding: 8px 14px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(235, 51, 73, 0.3);
+      }
+      
+      .remove-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(235, 51, 73, 0.4);
+      }
+      
+      .remove-btn:active {
+          transform: translateY(0);
+      }
+      
+      .export-single-btn {
+          background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+          color: white;
+          border: none;
+          padding: 8px 14px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          display: none;
+          box-shadow: 0 2px 8px rgba(56, 239, 125, 0.3);
+      }
+      
+      .export-single-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(56, 239, 125, 0.4);
+      }
+      
+      .export-single-btn:active {
+          transform: translateY(0);
+      }
+      
+      .sheet-selector {
+          margin: 15px 0;
+          display: none;
+          padding: 12px 15px;
+          background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+          border-radius: 10px;
+          border: 2px solid #e1e8ed;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      }
+      
+      .sheet-selector label {
+          font-weight: 600;
+          color: #2c3e50;
+          margin-right: 10px;
+          font-size: 14px;
+      }
+      
+      .sheet-selector select {
+          padding: 10px 12px;
+          border: 2px solid #e1e8ed;
+          border-radius: 8px;
+          font-size: 14px;
+          min-width: 200px;
+          background: white;
+          cursor: pointer;
+          transition: all 0.3s ease;
+      }
+      
+      .sheet-selector select:hover {
+          border-color: #667eea;
+      }
+      
+      .sheet-selector select:focus {
+          outline: none;
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      
+      .mapping-container {
+          display: none;
+          margin-top: 20px;
+          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          padding: 20px;
+          border-radius: 12px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+          animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          overflow: hidden;
+      }
+      
+      @keyframes slideDown {
+          from {
+              opacity: 0;
+              transform: translateY(-15px);
+              max-height: 0;
+          }
+          to {
+              opacity: 1;
+              transform: translateY(0);
+              max-height: 2000px;
+          }
+      }
+      
+      .mapping-row {
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 12px;
+          padding: 16px;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+          transition: all 0.3s ease;
+          border-left: 4px solid transparent;
+      }
+      
+      .mapping-row:hover {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          border-left-color: #667eea;
+          transform: translateX(2px);
+      }
+      
+      .mapping-row label {
+          font-weight: 600;
+          color: #2c3e50;
+          margin-bottom: 8px;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+      }
+      
+      .mapping-row label::before {
+          content: '📋';
+          font-size: 16px;
+      }
+      
+      .mapping-row select {
+          width: 100%;
+          padding: 10px 12px;
+          border: 2px solid #e1e8ed;
+          border-radius: 8px;
+          font-size: 14px;
+          background: white;
+          transition: all 0.3s ease;
+          cursor: pointer;
+      }
+      
+      .mapping-row select:focus {
+          outline: none;
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      
+      .mapping-row select:hover {
+          border-color: #667eea;
+      }
+      
+      .mapping-row select option {
+          padding: 10px;
+      }
+      
+      .mapping-row select option:checked {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+      }
+      
+      .auto-match-btn {
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          color: white;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 25px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          margin-left: 12px;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+      }
+      
+      .auto-match-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+      }
+      
+      .auto-match-btn:active {
+          transform: translateY(0);
+      }
+      
+      .match-confidence {
+          margin-top: 6px;
+          font-size: 12px;
+          padding: 4px 10px;
+          border-radius: 12px;
+          color: white;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-weight: 500;
+      }
+      
+      .match-confidence::before {
+          content: '●';
+          font-size: 10px;
+      }
+      
+      .confidence-high {
+          background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+          box-shadow: 0 2px 8px rgba(56, 239, 125, 0.3);
+      }
+      
+      .confidence-medium {
+          background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+          box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+      }
+      
+      .confidence-low {
+          background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+          box-shadow: 0 2px 8px rgba(235, 51, 73, 0.3);
+      }
+      
+      .btn {
+          background: linear-gradient(135deg, #27ae60, #2ecc71);
+          color: white;
+          padding: 12px 25px;
+          border: none;
+          border-radius: 25px;
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 0.3s ease;
+          margin: 10px 5px;
+      }
+      
+      .btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+      }
+      
+      .btn:disabled {
+          background: #95a5a6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+      }
+      
+      .btn-secondary {
+          background: linear-gradient(135deg, #9b59b6, #8e44ad);
+      }
+      
+      .btn-secondary:hover {
+          box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+      }
+      
+      .progress-container {
+          margin-top: 20px;
+          display: none;
+      }
+      
+      .progress-bar {
+          width: 100%;
+          height: 30px;
+          background: #ecf0f1;
+          border-radius: 15px;
+          overflow: hidden;
+          position: relative;
+      }
+      
+      .progress-fill {
+          height: 100%;
+          background: linear-gradient(135deg, #3498db, #2980b9);
+          width: 0%;
+          transition: width 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+      }
+      
+      .progress-info {
+          margin-top: 10px;
+          text-align: center;
+          color: #7f8c8d;
+      }
+      
+      .results {
+          margin-top: 30px;
+          display: none;
+      }
+      
+      .results-tabs {
+          display: flex;
+          border-bottom: 2px solid #ecf0f1;
+          margin-bottom: 20px;
+      }
+      
+      .tab {
+          padding: 10px 20px;
+          cursor: pointer;
+          background: #ecf0f1;
+          border: none;
+          margin-right: 5px;
+          border-radius: 10px 10px 0 0;
+          transition: all 0.3s ease;
+      }
+      
+      .tab.active {
+          background: linear-gradient(135deg, #3498db, #2980b9);
+          color: white;
+      }
+      
+      .tab-content {
+          display: none;
+      }
+      
+      .tab-content.active {
+          display: block;
+      }
+      
+      .results table {
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      }
+      
+      .results th, .results td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #ecf0f1;
+      }
+      
+      .results th {
+          background: linear-gradient(135deg, #34495e, #2c3e50);
+          color: white;
+          font-weight: bold;
+      }
+      
+      .results tr:hover {
+          background: #f8f9fa;
+      }
+      
+      .summary {
+          background: linear-gradient(135deg, #f39c12, #e67e22);
+          color: white;
+          padding: 20px;
+          border-radius: 10px;
+          margin-bottom: 20px;
+          text-align: center;
+      }
+      
+      .summary h3 {
+          font-size: 1.5em;
+          margin-bottom: 10px;
+      }
+      
+      .error {
+          background: #e74c3c;
+          color: white;
+          padding: 15px;
+          border-radius: 5px;
+          margin: 10px 0;
+          display: none;
+      }
+      
+      .success {
+          background: #27ae60;
+          color: white;
+          padding: 15px;
+          border-radius: 5px;
+          margin: 10px 0;
+          display: none;
+      }
+      
+      .loading-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.5);
+          display: none;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+      }
+      
+      .loading-content {
+          background: white;
+          padding: 30px;
+          border-radius: 10px;
+          text-align: center;
+          max-width: 400px;
+      }
+      
+      .spinner {
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #3498db;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 20px;
+      }
+      
+      @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
+      
+      .field-count {
+          color: #667eea;
+          font-size: 12px;
+          font-weight: 600;
+          margin-left: 10px;
+          padding: 4px 10px;
+          background: rgba(102, 126, 234, 0.1);
+          border-radius: 12px;
+          display: inline-block;
+      }
+      
+      /* 新增：调试信息样式 */
+      .debug-info {
+          background: #f8f9fa;
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          padding: 15px;
+          margin: 15px 0;
+          font-family: 'Courier New', monospace;
+          font-size: 12px;
+      }
+      
+      .debug-info h4 {
+          color: #495057;
+          margin-bottom: 10px;
+          font-family: 'Microsoft YaHei', Arial, sans-serif;
+      }
+      
+      .match-stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 10px;
+          margin: 10px 0;
+      }
+      
+      .stat-item {
+          background: white;
+          padding: 10px;
+          border-radius: 5px;
+          border-left: 4px solid #007bff;
+      }
+      
+      .stat-item.success {
+          border-left-color: #28a745;
+      }
+      
+      .stat-item.warning {
+          border-left-color: #ffc107;
+      }
+      
+      .stat-item.error {
+          border-left-color: #dc3545;
+      }
+      
+      .unmatched-models {
+          max-height: 200px;
+          overflow-y: auto;
+          background: white;
+          padding: 10px;
+          border-radius: 5px;
+          margin-top: 10px;
+      }
+      
+      .model-comparison {
+          display: flex;
+          justify-content: space-between;
+          padding: 5px 0;
+          border-bottom: 1px solid #eee;
+      }
+      
+      .model-comparison:last-child {
+          border-bottom: none;
+      }
+      
+      .model-original {
+          color: #6c757d;
+      }
+      
+      .model-normalized {
+          color: #007bff;
+          font-weight: bold;
+      }
+      
+      /* 布局优化：销售数据表配置字段（展开区域） */
+      .mapping-grid {
+          gap: 16px;
+      }
+      @media (min-width: 1280px) {
+          .mapping-grid {
+              grid-template-columns: repeat(3, minmax(280px, 1fr));
+          }
+      }
+      @media (min-width: 768px) and (max-width: 1279px) {
+          .mapping-grid {
+              grid-template-columns: repeat(2, minmax(320px, 1fr));
+          }
+      }
+      @media (max-width: 767px) {
+          .mapping-grid {
+              grid-template-columns: 1fr;
+          }
+      }
+      .mapping-subtitle {
+          grid-column: 1 / -1;
+          margin: 16px 0 12px;
+          padding: 10px 15px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          font-weight: 700;
+          font-size: 14px;
+          letter-spacing: 0.8px;
+          border-radius: 8px;
+          box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+      }
+      
+      .mapping-subtitle::before {
+          content: '⚡';
+          font-size: 18px;
+      }
+      
+      .mapping-subtitle.optional {
+          background: linear-gradient(135deg, #a8b8d8 0%, #8e9eae 100%);
+          box-shadow: 0 3px 10px rgba(168, 184, 216, 0.3);
+          margin-top: 16px;
+      }
+      
+      .mapping-subtitle.optional::before {
+          content: '📝';
+      }
+      
+      .mapping-container > h3 {
+          color: #2c3e50;
+          font-size: 18px;
+          margin-bottom: 20px;
+          padding-bottom: 12px;
+          border-bottom: 3px solid #667eea;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+      }
+      
+      .mapping-container > h3::before {
+          content: '🔧 ';
+          font-size: 20px;
+      }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-content">
+          <div class="spinner"></div>
+          <p id="loadingText">正在处理数据...</p>
+          <div class="progress-info" id="progressInfo"></div>
+      </div>
+  </div>
+  
+  <div class="container">
+      <div class="header">
+          <h1>🤖 批量提成计算工具 v1.8</h1>
+          <p>支持多文件批量处理 + 智能字段匹配 + 员工汇总表 + 门店提成系数</p>
+      </div>
+      
+      <div class="content">
+          <!-- 上传销售数据 -->
+          <div class="section">
+              <h2>📊 上传销售数据表（支持多个文件）</h2>
+              <div class="upload-area" id="salesUpload">
+                  <p>📁 拖拽多个Excel文件到此处或点击上传</p>
+                  <button class="upload-btn" onclick="document.getElementById('salesFiles').click()">选择文件</button>
+                  <input type="file" id="salesFiles" accept=".xlsx,.xls" multiple />
+              </div>
+              <div class="file-list" id="fileList"></div>
+              <div class="file-toolbar">
+                  <button class="mini-btn" onclick="collapseAllMappings()">一键收起全部</button>
+              </div>
+              <div class="progress-container" id="progressContainer">
+                  <div class="progress-bar">
+                      <div class="progress-fill" id="progressFill">0%</div>
+                  </div>
+                  <div class="progress-info" id="overallProgress"></div>
+              </div>
+          </div>
+          
+          <!-- 上传政策表 -->
+          <div class="section">
+              <h2>📋 上传政策表</h2>
+              <div class="upload-area" id="policyUpload">
+                  <p>📁 拖拽Excel文件到此处或点击上传</p>
+                  <button class="upload-btn" onclick="document.getElementById('policyFile').click()">选择文件</button>
+                  <input type="file" id="policyFile" accept=".xlsx,.xls" />
+              </div>
+              <div class="sheet-selector" id="policySheetSelector">
+                  <label>选择工作表：</label>
+                  <select id="policySheetSelect"></select>
+                  <span class="field-count" id="policyFieldCount"></span>
+              </div>
+              <div class="mapping-container" id="policyMapping">
+                  <h3>
+                      字段映射 - 政策表
+                      <button class="auto-match-btn" onclick="autoMatchFields('policy')">🎯 智能匹配</button>
+                  </h3>
+                  <div class="mapping-grid">
+                      <div class="mapping-row">
+                          <label>规格型号</label>
+                          <select id="policyModelField"></select>
+                          <span class="match-confidence" id="policyModelField_confidence"></span>
+                      </div>
+                      <div class="mapping-row">
+                          <label>单台提成</label>
+                          <select id="commissionField"></select>
+                          <span class="match-confidence" id="commissionField_confidence"></span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          
+          <!-- 字段映射模板 -->
+          <div class="section" id="fieldMappingSection" style="display: none;">
+              <h2>🔧 字段映射设置（将应用于所有文件）</h2>
+              <div class="mapping-container" style="display: block;">
+                  <h3>销售数据字段映射 
+                      <button class="auto-match-btn" onclick="autoMatchFieldsFromFirstFile()">🎯 从第一个文件智能匹配</button>
+                  </h3>
+                  <div class="mapping-row">
+                      <label>日期：</label>
+                      <select id="dateField"></select>
+                      <span class="match-confidence" id="dateField_confidence"></span>
+                  </div>
+                  <div class="mapping-row">
+                      <label>单据编号：</label>
+                      <select id="orderNoField"></select>
+                      <span class="match-confidence" id="orderNoField_confidence"></span>
+                  </div>
+                  <div class="mapping-row">
+                      <label>用户姓名：</label>
+                      <select id="userNameField"></select>
+                      <span class="match-confidence" id="userNameField_confidence"></span>
+                  </div>
+                  <div class="mapping-row">
+                      <label>门店：</label>
+                      <select id="storeField"></select>
+                      <span class="match-confidence" id="storeField_confidence"></span>
+                  </div>
+                  <div class="mapping-row">
+                      <label>促销员：</label>
+                      <select id="salesPersonField"></select>
+                      <span class="match-confidence" id="salesPersonField_confidence"></span>
+                  </div>
+                  <div class="mapping-row">
+                      <label>物料名称：</label>
+                      <select id="materialNameField"></select>
+                      <span class="match-confidence" id="materialNameField_confidence"></span>
+                  </div>
+                  <div class="mapping-row">
+                      <label>规格型号：</label>
+                      <select id="modelField"></select>
+                      <span class="match-confidence" id="modelField_confidence"></span>
+                  </div>
+                  <div class="mapping-row">
+                      <label>销售数量：</label>
+                      <select id="quantityField"></select>
+                      <span class="match-confidence" id="quantityField_confidence"></span>
+                  </div>
+              </div>
+          </div>
+          
+          <!-- 计算按钮 -->
+          <div class="section">
+              <button class="btn" id="calculateBtn" onclick="calculateAllCommissions()" disabled>🧮 批量计算提成</button>
+              <button class="btn btn-secondary" onclick="exportAllResults()" id="exportAllBtn" style="display:none;">📤 导出全部结果</button>
+              <button class="btn btn-secondary" onclick="exportSeparateResults()" id="exportSeparateBtn" style="display:none;">📦 分别导出结果</button>
+          </div>
+          
+          <div class="error" id="errorMsg"></div>
+          <div class="success" id="successMsg"></div>
+          
+          <!-- 结果显示 -->
+          <div class="results" id="results">
+              <h2>💰 计算结果</h2>
+              <div class="results-tabs" id="resultsTabs"></div>
+              <div id="resultsContent"></div>
+          </div>
+      </div>
+  </div>
+  
+  <script>
+      // 全局变量
+      let salesFiles = [];
+      let policyData = null;
+      let policyWorkbook = null;
+      let fieldMapping = null;
+      let allResults = {};
+      let matchingDebugInfo = {}; // 新增：匹配调试信息
+      
+      // 新增：字段定义（必填/可选 + 关键词）
+      const fieldDefinitions = {
+          sales: {
+              required: {
+                  modelField: { label: '规格型号', keywords: ['规格型号', '型号', '规格', '款式', 'model', 'spec'] },
+                  quantityField: { label: '销售数量', keywords: ['销售数量', '数量', '销量', 'quantity', 'qty', '件数'] }
+              },
+              optional: {
+                  dateField: { label: '日期', keywords: ['日期', 'date', '时间', '开单日期', '销售日期', '单据日期'] },
+                  orderNoField: { label: '单据编号', keywords: ['单据编号', '订单号', '单号', '编号', '单据号', 'order', 'orderNo'] },
+                  userNameField: { label: '用户姓名', keywords: ['用户姓名', '用户', '姓名', '客户姓名', 'user', 'userName'] },
+                  storeField: { label: '门店', keywords: ['门店', '店铺', '门店名称', '店铺名称', 'store', '客户'] },
+                  salesPersonField: { label: '促销员', keywords: ['促销员', '销售员', '业务员', '销售人员', 'sales', 'salesperson'] },
+                  materialNameField: { label: '物料名称', keywords: ['物料名称', '商品名称', '产品名称', '物料', '商品', '产品', 'material', 'product'] }
+              }
+          },
+          policy: {
+              required: {
+                  policyModelField: { label: '规格型号', keywords: ['规格型号', '型号', '规格', '款式', 'model', 'spec'] },
+                  commissionField: { label: '单台提成', keywords: ['单台提成', '提成', '佣金', '奖励', 'commission', '提成金额'] }
+              }
+          }
+      };
+      
+      // 字段匹配规则
+      const fieldMatchRules = {
+          sales: {
+              dateField: ['日期', 'date', '时间', '开单日期', '销售日期', '单据日期'],
+              orderNoField: ['单据编号', '订单号', '单号', '编号', '单据号', 'order', 'orderNo'],
+              userNameField: ['用户姓名', '用户', '姓名', '客户姓名', 'user', 'userName'],
+              storeField: ['门店', '店铺', '门店名称', '店铺名称', 'store', '客户'],
+              salesPersonField: ['促销员', '销售员', '业务员', '销售人员', 'sales', 'salesperson'],
+              materialNameField: ['物料名称', '商品名称', '产品名称', '物料', '商品', '产品', 'material', 'product'],
+              modelField: ['规格型号', '型号', '规格', '款式', 'model', 'spec'],
+              quantityField: ['销售数量', '数量', '销量', 'quantity', 'qty', '件数']
+          },
+          policy: {
+              policyModelField: ['规格型号', '型号', '规格', '款式', 'model', 'spec'],
+              commissionField: ['单台提成', '提成', '佣金', '奖励', 'commission', '提成金额']
+          }
+      };
+      
+      // 新增：标准化型号字符串的函数
+      function normalizeModel(model) {
+          if (!model) return '';
+          return model.toString().trim().toUpperCase();
+      }
+      
+      // 显示加载状态
+      function showLoading(text = '正在处理数据...', progressInfo = '') {
+          document.getElementById('loadingText').textContent = text;
+          document.getElementById('progressInfo').textContent = progressInfo;
+          document.getElementById('loadingOverlay').style.display = 'flex';
+      }
+      
+      function hideLoading() {
+          document.getElementById('loadingOverlay').style.display = 'none';
+      }
+      
+      // 更新进度条
+      function updateProgress(current, total) {
+          const percentage = Math.round((current / total) * 100);
+          const progressFill = document.getElementById('progressFill');
+          progressFill.style.width = percentage + '%';
+          progressFill.textContent = percentage + '%';
+          document.getElementById('overallProgress').textContent = `处理进度：${current}/${total} 个文件`;
+      }
+      
+      // 文件上传处理
+      function setupFileUpload() {
+          const salesFilesInput = document.getElementById('salesFiles');
+          const policyFile = document.getElementById('policyFile');
+          const salesUpload = document.getElementById('salesUpload');
+          const policyUpload = document.getElementById('policyUpload');
+          
+          // 销售数据文件上传（多文件）
+          salesFilesInput.addEventListener('change', function(e) {
+              handleMultipleFiles(Array.from(e.target.files));
+          });
+          
+          // 政策表文件上传
+          policyFile.addEventListener('change', function(e) {
+              handlePolicyFile(e.target.files[0]);
+          });
+          
+          // 拖拽上传 - 销售数据
+          salesUpload.addEventListener('dragover', function(e) {
+              e.preventDefault();
+              salesUpload.classList.add('dragover');
+          });
+          
+          salesUpload.addEventListener('dragleave', function(e) {
+              e.preventDefault();
+              salesUpload.classList.remove('dragover');
+          });
+          
+          salesUpload.addEventListener('drop', function(e) {
+              e.preventDefault();
+              salesUpload.classList.remove('dragover');
+              const files = Array.from(e.dataTransfer.files);
+              handleMultipleFiles(files);
+          });
+          
+          // 拖拽上传 - 政策表
+          policyUpload.addEventListener('dragover', function(e) {
+              e.preventDefault();
+              policyUpload.classList.add('dragover');
+          });
+          
+          policyUpload.addEventListener('dragleave', function(e) {
+              e.preventDefault();
+              policyUpload.classList.remove('dragover');
+          });
+          
+          policyUpload.addEventListener('drop', function(e) {
+              e.preventDefault();
+              policyUpload.classList.remove('dragover');
+              const files = e.dataTransfer.files;
+              if (files.length > 0) {
+                  handlePolicyFile(files[0]);
+              }
+          });
+      }
+      
+      // 处理多个销售文件
+      function handleMultipleFiles(files) {
+          files.forEach(file => {
+              if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                  const fileObj = {
+                      file: file,
+                      name: file.name,
+                      status: 'waiting',
+                      workbook: null,
+                      sheetName: null,
+                      headers: null,
+                      data: null,
+                      results: null,
+                      // 新增：每文件字段映射与状态
+                      fieldMapping: null,
+                      mappingStatus: { complete: false, missingFields: [] },
+                      isMappingOpen: false
+                  };
+                  salesFiles.push(fileObj);
+              }
+          });
+          
+          updateFileList();
+          // 取消旧的全局映射展示与首文件表头加载
+          checkCalculateReady();
+      }
+      
+      // 更新文件列表显示
+      function updateFileList() {
+          const fileList = document.getElementById('fileList');
+          fileList.innerHTML = '';
+          
+          salesFiles.forEach((fileObj, index) => {
+              const fileItem = document.createElement('div');
+              fileItem.className = `file-item ${fileObj.status}`;
+              
+              // 计算映射状态文本
+              const mappingStatus = (function() {
+                  const required = fieldDefinitions.sales.required;
+                  if (!fileObj.fieldMapping) {
+                      return { text: '未配置字段映射', tooltip: '需要配置字段映射才能进行计算' };
+                  }
+                  let configured = 0;
+                  Object.keys(required).forEach(fid => {
+                      const v = fileObj.fieldMapping[fid];
+                      if (v !== undefined && v !== '') configured++;
+                  });
+                  if (configured === Object.keys(required).length) {
+                      return { text: `字段映射完整 (${configured}/${Object.keys(required).length} 必填)`, tooltip: '所有必填字段已配置' };
+                  } else if (configured > 0) {
+                      return { text: `字段映射不完整 (${configured}/${Object.keys(required).length} 必填)`, tooltip: '部分必填字段未配置' };
+                  } else {
+                      return { text: '未配置必填字段', tooltip: '必填字段未配置' };
+                  }
+              })();
+              
+              fileItem.innerHTML = `
+                  <div class="file-item-header">
+                      <div class="file-info">
+                          <span class="file-name" onclick="toggleMapping(${index})" title="点击展开/收起配置">📄 ${fileObj.name}</span>
+                          <span class="file-status status-${fileObj.status}">
+                              ${getStatusText(fileObj.status)}
+                          </span>
+                      </div>
+                      <div class="file-actions">
+                          <button class="file-toggle-btn" onclick="toggleMapping(${index})">${fileObj.isMappingOpen ? '⬆️ 收起' : '⬇️ 展开配置'}</button>
+                          <button class="export-single-btn" id="export-${index}" 
+                                  onclick="exportSingleResult(${index})"
+                                  style="${fileObj.status === 'completed' ? 'display: inline-block;' : 'display: none;'}">
+                              📥 导出
+                          </button>
+                          <button class="remove-btn" onclick="removeFile(${index})">🗑️ 移除</button>
+                      </div>
+                  </div>
+                  <div class="sheet-selector" id="sheetSelector-${index}" style="${fileObj.isMappingOpen ? 'display: block; margin-top:8px;' : 'display: none; margin-top:8px;'}">
+                      <label>选择工作表：</label>
+                      <select id="sheetSelect-${index}"></select>
+                      <span class="field-count" id="fieldCount-${index}"></span>
+                  </div>
+                  <div class="mapping-container" id="mappingContainer-${index}" style="${fileObj.isMappingOpen ? 'display:block;' : 'display:none;'}">
+                      <h3>
+                          字段映射 - ${fileObj.name}
+                          <button class="auto-match-btn" onclick="autoMatchFileFields(${index})">🎯 智能匹配</button>
+                      </h3>
+                      <div class="mapping-grid">
+                          <div class="mapping-subtitle">必填字段</div>
+                          ${Object.entries(fieldDefinitions.sales.required).map(([fieldId, fieldDef]) => `
+                              <div class="mapping-row">
+                                  <label>${fieldDef.label}</label>
+                                  <select id="${fieldId}-${index}">
+                                      <option value="">请选择字段</option>
+                                  </select>
+                                  <span class="match-confidence" id="${fieldId}-${index}_confidence"></span>
+                              </div>
+                          `).join('')}
+                          <div class="mapping-subtitle optional">可选字段</div>
+                          ${Object.entries(fieldDefinitions.sales.optional).map(([fieldId, fieldDef]) => `
+                              <div class="mapping-row">
+                                  <label>${fieldDef.label}</label>
+                                  <select id="${fieldId}-${index}">
+                                      <option value="">请选择字段（可选）</option>
+                                  </select>
+                                  <span class="match-confidence" id="${fieldId}-${index}_confidence"></span>
+                              </div>
+                          `).join('')}
+                          <div style="grid-column: 1 / -1; margin-top: 12px; padding: 12px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                              <span id="mappingStatus-${index}" title="${mappingStatus.tooltip}" style="font-size: 14px; font-weight: 600; color: #2c3e50;">
+                                  ${mappingStatus.text}
+                              </span>
+                              <button class="file-toggle-btn" onclick="completeAndCollapse(${index})">✓ 完成并收起</button>
+                          </div>
+                      </div>
+                  </div>
+              `;
+              fileList.appendChild(fileItem);
+          });
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                'waiting': '等待处理',
+                'processing': '处理中',
+                'completed': '已完成',
+                'error': '处理失败'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // 移除文件
+        function removeFile(index) {
+            salesFiles.splice(index, 1);
+            updateFileList();
+            checkCalculateReady();
+            
+            if (salesFiles.length === 0) {
+                document.getElementById('fieldMappingSection').style.display = 'none';
+                document.getElementById('results').style.display = 'none';
+            }
+        }
+        
+        // 切换展开/收起映射配置
+        function toggleMapping(index) {
+            const fileObj = salesFiles[index];
+            if (!fileObj) return;
+            if (fileObj.isMappingOpen) {
+                fileObj.isMappingOpen = false;
+                updateFileList();
+            } else {
+                configureFileMapping(index);
+                // 展开后滚动到可见区域，确保配置面板完整显示
+                setTimeout(() => {
+                    const fileItem = document.querySelector(`.file-item:nth-child(${index + 1})`);
+                    if (fileItem) {
+                        fileItem.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start',
+                            inline: 'nearest'
+                        });
+                    }
+                }, 450); // 等待动画完成
+            }
+        }
+        
+        // 完成并收起
+        function completeAndCollapse(index) {
+            updateFileFieldMapping(index);
+            const fileObj = salesFiles[index];
+            if (fileObj) {
+                fileObj.isMappingOpen = false;
+            }
+            updateFileList();
+            checkCalculateReady();
+        }
+        
+        // 一键收起全部映射配置
+        function collapseAllMappings() {
+            salesFiles.forEach(f => f.isMappingOpen = false);
+            updateFileList();
+        }
+        
+        // 新增：打开并配置某文件的字段映射
+        async function configureFileMapping(index) {
+            const fileObj = salesFiles[index];
+            if (!fileObj) return;
+            
+            // 保持面板展开状态
+            fileObj.isMappingOpen = true;
+            updateFileList();
+            
+            if (!fileObj.workbook) {
+                showLoading(`正在读取文件 ${fileObj.name}...`);
+                try {
+                    const workbook = await readFileAsWorkbook(fileObj.file);
+                    fileObj.workbook = workbook;
+                    hideLoading();
+                } catch (error) {
+                    hideLoading();
+                    showError(`文件读取失败：${error.message}`);
+                    return;
+                }
+            }
+            
+            const sheetSelector = document.getElementById(`sheetSelector-${index}`);
+            const sheetSelect = document.getElementById(`sheetSelect-${index}`);
+            sheetSelect.innerHTML = '<option value="">请选择工作表</option>';
+            fileObj.workbook.SheetNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                sheetSelect.appendChild(option);
+            });
+            
+            // 优先使用之前选择的工作表
+            if (fileObj.workbook.SheetNames.length > 0) {
+                const defaultSheet = (fileObj.sheetName && fileObj.workbook.SheetNames.includes(fileObj.sheetName))
+                  ? fileObj.sheetName
+                  : fileObj.workbook.SheetNames[0];
+                sheetSelect.value = defaultSheet;
+                await loadFileSheetHeaders(index, defaultSheet);
+            }
+            
+            sheetSelector.style.display = 'block';
+            sheetSelect.onchange = async function() {
+                if (this.value) {
+                    await loadFileSheetHeaders(index, this.value);
+                }
+            };
+            
+            document.getElementById(`mappingContainer-${index}`).style.display = 'block';
+        }
+        
+        function readFileAsWorkbook(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const workbook = XLSX.read(e.target.result, {type: 'binary'});
+                        resolve(workbook);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = function() { reject(new Error('文件读取失败')); };
+                reader.readAsBinaryString(file);
+            });
+        }
+        
+        async function loadFileSheetHeaders(index, sheetName) {
+            const fileObj = salesFiles[index];
+            if (!fileObj || !fileObj.workbook) return;
+            
+            showLoading(`正在解析工作表 ${sheetName}...`);
+            setTimeout(() => {
+                try {
+                    const worksheet = fileObj.workbook.Sheets[sheetName];
+                    const headers = getWorksheetHeaders(worksheet);
+                    fileObj.sheetName = sheetName;
+                    fileObj.headers = headers;
+                    const count = document.getElementById(`fieldCount-${index}`);
+                    if (count) count.textContent = `(${headers.length} 个字段)`;
+                    populateFileFieldMapping(index, headers);
+                    hideLoading();
+                    showSuccess(`已加载工作表 ${sheetName} 的表头`);
+                } catch (error) {
+                    showError('工作表数据加载失败：' + error.message);
+                    hideLoading();
+                }
+            }, 100);
+        }
+        
+        function populateFileFieldMapping(index, headers) {
+            const allFields = { ...fieldDefinitions.sales.required, ...fieldDefinitions.sales.optional };
+            Object.keys(allFields).forEach(fieldId => {
+                const select = document.getElementById(`${fieldId}-${index}`);
+                if (select) {
+                    select.innerHTML = '<option value="">请选择字段</option>';
+                    headers.forEach((header, headerIndex) => {
+                        const option = document.createElement('option');
+                        option.value = headerIndex;
+                        option.textContent = header || `列${headerIndex + 1}`;
+                        select.appendChild(option);
+                    });
+                    // 还原之前的映射选择
+                    const existingMapping = salesFiles[index] && salesFiles[index].fieldMapping
+                      ? salesFiles[index].fieldMapping[fieldId]
+                      : undefined;
+                    if (existingMapping !== undefined) {
+                        select.value = existingMapping;
+                    }
+                    select.addEventListener('change', () => {
+                        updateFileFieldMapping(index);
+                        checkCalculateReady();
+                    });
+                }
+            });
+        }
+        
+        function updateFileFieldMapping(index) {
+            const fileObj = salesFiles[index];
+            if (!fileObj) return;
+            
+            const requiredFields = fieldDefinitions.sales.required;
+            const optionalFields = fieldDefinitions.sales.optional;
+            fileObj.fieldMapping = {};
+            let missing = [];
+            
+            Object.keys(requiredFields).forEach(fieldId => {
+                const select = document.getElementById(`${fieldId}-${index}`);
+                if (select && select.value !== '') {
+                    fileObj.fieldMapping[fieldId] = parseInt(select.value);
+                } else {
+                    missing.push(fieldId);
+                }
+            });
+            
+            Object.keys(optionalFields).forEach(fieldId => {
+                const select = document.getElementById(`${fieldId}-${index}`);
+                if (select && select.value !== '') {
+                    fileObj.fieldMapping[fieldId] = parseInt(select.value);
+                }
+            });
+            
+            fileObj.mappingStatus = { complete: missing.length === 0, missingFields: missing };
+            // 就地更新状态提示，避免重绘列表导致面板关闭
+            const statusSpan = document.getElementById(`mappingStatus-${index}`);
+            if (statusSpan) {
+                const required = fieldDefinitions.sales.required;
+                let configured = 0;
+                Object.keys(required).forEach(fid => {
+                    const v = fileObj.fieldMapping[fid];
+                    if (v !== undefined && v !== '') configured++;
+                });
+                if (configured === Object.keys(required).length) {
+                    statusSpan.textContent = `字段映射完整 (${configured}/${Object.keys(required).length} 必填)`;
+                    statusSpan.title = '所有必填字段已配置';
+                } else if (configured > 0) {
+                    statusSpan.textContent = `字段映射不完整 (${configured}/${Object.keys(required).length} 必填)`;
+                    statusSpan.title = '部分必填字段未配置';
+                } else {
+                    statusSpan.textContent = '未配置必填字段';
+                    statusSpan.title = '必填字段未配置';
+                }
+            }
+        }
+        
+        function autoMatchFileFields(index) {
+            const fileObj = salesFiles[index];
+            if (!fileObj || !fileObj.headers || fileObj.headers.length === 0) {
+                showError('请先选择工作表并确保工作表有表头数据');
+                return;
+            }
+            showLoading('正在进行智能字段匹配...');
+            setTimeout(() => {
+                const allFields = { ...fieldDefinitions.sales.required, ...fieldDefinitions.sales.optional };
+                let matchCount = 0;
+                Object.entries(allFields).forEach(([fieldId, fieldDef]) => {
+                    const keywords = fieldDef.keywords;
+                    let bestMatch = -1;
+                    let bestScore = 0;
+                    fileObj.headers.forEach((header, headerIndex) => {
+                        if (!header) return;
+                        keywords.forEach(keyword => {
+                            const score = calculateSimilarity(header, keyword);
+                            if (score > bestScore && score > 0.3) {
+                                bestScore = score;
+                                bestMatch = headerIndex;
+                            }
+                        });
+                    });
+                    const select = document.getElementById(`${fieldId}-${index}`);
+                    const confidenceSpan = document.getElementById(`${fieldId}-${index}_confidence`);
+                    if (bestMatch !== -1 && select) {
+                        select.value = bestMatch;
+                        matchCount++;
+                        if (confidenceSpan) {
+                            let cls = 'confidence-low';
+                            let txt = '低';
+                            if (bestScore > 0.8) { cls = 'confidence-high'; txt = '高'; }
+                            else if (bestScore > 0.6) { cls = 'confidence-medium'; txt = '中'; }
+                            confidenceSpan.className = `match-confidence ${cls}`;
+                            confidenceSpan.textContent = `${txt} (${Math.round(bestScore * 100)}%)`;
+                            confidenceSpan.style.display = 'inline-block';
+                        }
+                    } else if (confidenceSpan) {
+                        confidenceSpan.style.display = 'none';
+                    }
+                });
+                updateFileFieldMapping(index);
+                checkCalculateReady();
+                hideLoading();
+                if (matchCount > 0) {
+                    showSuccess(`智能匹配完成！成功匹配 ${matchCount} 个字段`);
+                } else {
+                    showError('未能自动匹配到任何字段，请手动配置字段映射');
+                }
+            }, 500);
+        }
+      
+      // 加载第一个文件的表头用于字段映射
+      async function loadFirstFileHeaders() {
+          if (salesFiles.length === 0) return;
+          
+          showLoading('正在读取第一个文件的表头...');
+          
+          const firstFile = salesFiles[0];
+          const reader = new FileReader();
+          
+          reader.onload = function(e) {
+              try {
+                  const workbook = XLSX.read(e.target.result, {type: 'binary'});
+                  firstFile.workbook = workbook;
+                  
+                  // 默认使用第一个工作表
+                  const sheetName = workbook.SheetNames[0];
+                  firstFile.sheetName = sheetName;
+                  
+                  const worksheet = workbook.Sheets[sheetName];
+                  const headers = getWorksheetHeaders(worksheet);
+                  firstFile.headers = headers;
+                  
+                  // 填充字段映射选择器
+                  populateSalesFieldMapping(headers);
+                  
+                  hideLoading();
+                  showSuccess('已加载第一个文件的表头用于字段映射');
+                  
+              } catch (error) {
+                  showError('文件读取失败：' + error.message);
+                  hideLoading();
+              }
+          };
+          
+          reader.readAsBinaryString(firstFile.file);
+      }
+      
+      // 获取工作表表头
+      function getWorksheetHeaders(worksheet) {
+          if (!worksheet['!ref']) return [];
+          
+          const range = XLSX.utils.decode_range(worksheet['!ref']);
+          const headerRange = {
+              s: range.s,
+              e: { r: range.s.r, c: range.e.c }
+            };
+            
+            const headerData = XLSX.utils.sheet_to_json(worksheet, {
+                header: 1,
+                range: headerRange
+            });
+            
+            return headerData[0] || [];
+        }
+        
+        // 填充销售数据字段映射
+        function populateSalesFieldMapping(headers) {
+            const fields = ['dateField', 'orderNoField', 'userNameField', 'customerField', 
+                          'salesPersonField', 'materialNameField', 'modelField', 'quantityField'];
+            
+            fields.forEach(fieldId => {
+                const select = document.getElementById(fieldId);
+                if (select) {
+                    select.innerHTML = '<option value="">请选择字段</option>';
+                    headers.forEach((header, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = header || `列${index + 1}`;
+                        select.appendChild(option);
+                    });
+                    
+                    select.addEventListener('change', checkCalculateReady);
+                }
+            });
+        }
+        
+        // 处理政策文件
+        function handlePolicyFile(file) {
+            if (!file) return;
+            
+            showLoading('正在读取政策文件...');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const workbook = XLSX.read(e.target.result, {type: 'binary'});
+                    policyWorkbook = workbook;
+                    
+                    populateSheetSelector('policySheetSelect', workbook, 'policy');
+                    document.getElementById('policySheetSelector').style.display = 'block';
+                    
+                    showSuccess('政策表上传成功！');
+                    hideLoading();
+                    
+                } catch (error) {
+                    showError('文件读取失败：' + error.message);
+                    hideLoading();
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+        
+        // 填充工作表选择器
+        function populateSheetSelector(selectId, workbook, type) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">请选择工作表</option>';
+            
+            workbook.SheetNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', function() {
+                if (this.value) {
+                    loadPolicySheetHeaders(workbook, this.value);
+                }
+            });
+        }
+        
+        // 加载政策表表头
+        function loadPolicySheetHeaders(workbook, sheetName) {
+            showLoading('正在解析政策表表头...');
+            
+            setTimeout(() => {
+                try {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const headers = getWorksheetHeaders(worksheet);
+                    
+                    policyData = {
+                        headers: headers,
+                        worksheet: worksheet,
+                        sheetName: sheetName
+                    };
+                    
+                    // 填充政策表字段映射
+                    const policyFields = ['policyModelField', 'commissionField'];
+                    
+                    policyFields.forEach(fieldId => {
+                        const select = document.getElementById(fieldId);
+                        if (select) {
+                            select.innerHTML = '<option value="">请选择字段</option>';
+                            headers.forEach((header, index) => {
+                                const option = document.createElement('option');
+                                option.value = index;
+                                option.textContent = header || `列${index + 1}`;
+                                select.appendChild(option);
+                            });
+                            
+                            select.addEventListener('change', checkCalculateReady);
+                        }
+                    });
+                    
+                    document.getElementById('policyMapping').style.display = 'block';
+                    
+                    hideLoading();
+                    checkCalculateReady();
+                    
+                } catch (error) {
+                    showError('工作表数据加载失败：' + error.message);
+                    hideLoading();
+                }
+            }, 100);
+        }
+        
+        // 字符串相似度计算
+        function calculateSimilarity(str1, str2) {
+            if (!str1 || !str2) return 0;
+            
+            str1 = str1.toLowerCase().trim();
+            str2 = str2.toLowerCase().trim();
+            
+            if (str1 === str2) return 1;
+            if (str1.includes(str2) || str2.includes(str1)) return 0.8;
+            
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            
+            if (longer.length === 0) return 1.0;
+            
+            const editDistance = levenshteinDistance(longer, shorter);
+            return (longer.length - editDistance) / longer.length;
+        }
+        
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+        
+        // 从第一个文件智能匹配字段
+        function autoMatchFieldsFromFirstFile() {
+            if (salesFiles.length === 0 || !salesFiles[0].headers) {
+                showError('请先上传销售数据文件');
+                return;
+            }
+            
+            const rules = fieldMatchRules.sales;
+            const headers = salesFiles[0].headers;
+            
+            showLoading('正在进行智能字段匹配...');
+            
+            setTimeout(() => {
+                let matchCount = 0;
+                
+                Object.keys(rules).forEach(fieldId => {
+                    const keywords = rules[fieldId];
+                    let bestMatch = -1;
+                    let bestScore = 0;
+                    
+                    headers.forEach((header, index) => {
+                        if (!header) return;
+                        
+                        keywords.forEach(keyword => {
+                            const score = calculateSimilarity(header, keyword);
+                            if (score > bestScore && score > 0.3) {
+                                bestScore = score;
+                                bestMatch = index;
+                            }
+                        });
+                    });
+                    
+                    const select = document.getElementById(fieldId);
+                    const confidenceSpan = document.getElementById(fieldId + '_confidence');
+                    
+                    if (bestMatch !== -1 && select) {
+                        select.value = bestMatch;
+                        matchCount++;
+                        
+                        if (confidenceSpan) {
+                            let confidenceClass = 'confidence-low';
+                            let confidenceText = '低';
+                            
+                            if (bestScore > 0.8) {
+                                confidenceClass = 'confidence-high';
+                                confidenceText = '高';
+                            } else if (bestScore > 0.6) {
+                                confidenceClass = 'confidence-medium';
+                                confidenceText = '中';
+                            }
+                            
+                            confidenceSpan.className = `match-confidence ${confidenceClass}`;
+                            confidenceSpan.textContent = `${confidenceText} (${Math.round(bestScore * 100)}%)`;
+                            confidenceSpan.style.display = 'inline-block';
+                        }
+                    } else if (confidenceSpan) {
+                        confidenceSpan.style.display = 'none';
+                    }
+                });
+                
+                checkCalculateReady();
+                hideLoading();
+                showSuccess(`智能匹配完成！成功匹配 ${matchCount} 个字段`);
+            }, 500);
+        }
+        
+        // 智能匹配政策表字段
+        function autoMatchFields(type) {
+            if (type !== 'policy' || !policyData || !policyData.headers) {
+                showError('请先选择政策表工作表');
+                return;
+            }
+            
+            const rules = fieldMatchRules.policy;
+            const headers = policyData.headers;
+            
+            showLoading('正在进行智能字段匹配...');
+            
+            setTimeout(() => {
+                let matchCount = 0;
+                
+                Object.keys(rules).forEach(fieldId => {
+                    const keywords = rules[fieldId];
+                    let bestMatch = -1;
+                    let bestScore = 0;
+                    
+                    headers.forEach((header, index) => {
+                        if (!header) return;
+                        
+                        keywords.forEach(keyword => {
+                            const score = calculateSimilarity(header, keyword);
+                            if (score > bestScore && score > 0.3) {
+                                bestScore = score;
+                                bestMatch = index;
+                            }
+                        });
+                    });
+                    
+                    const select = document.getElementById(fieldId);
+                    const confidenceSpan = document.getElementById(fieldId + '_confidence');
+                    
+                    if (bestMatch !== -1 && select) {
+                        select.value = bestMatch;
+                        matchCount++;
+                        
+                        if (confidenceSpan) {
+                            let confidenceClass = 'confidence-low';
+                            let confidenceText = '低';
+                            
+                            if (bestScore > 0.8) {
+                                confidenceClass = 'confidence-high';
+                                confidenceText = '高';
+                            } else if (bestScore > 0.6) {
+                                confidenceClass = 'confidence-medium';
+                                confidenceText = '中';
+                            }
+                            
+                            confidenceSpan.className = `match-confidence ${confidenceClass}`;
+                            confidenceSpan.textContent = `${confidenceText} (${Math.round(bestScore * 100)}%)`;
+                            confidenceSpan.style.display = 'inline-block';
+                        }
+                    } else if (confidenceSpan) {
+                        confidenceSpan.style.display = 'none';
+                    }
+                });
+                
+                checkCalculateReady();
+                hideLoading();
+                showSuccess(`智能匹配完成！成功匹配 ${matchCount} 个字段`);
+            }, 500);
+        }
+        
+        // 检查是否可以开始计算
+        function checkCalculateReady() {
+            const salesReady = salesFiles.length > 0 && salesFiles.every(f => f.fieldMapping && f.mappingStatus && f.mappingStatus.complete);
+            const policyReady = policyData && 
+                document.getElementById('policyModelField').value !== '' && 
+                document.getElementById('commissionField').value !== '';
+            document.getElementById('calculateBtn').disabled = !(salesReady && policyReady);
+        }
+        
+        // 批量计算所有文件的提成
+        async function calculateAllCommissions() {
+            if (salesFiles.length === 0) {
+                showError('请上传销售数据文件');
+                return;
+            }
+            
+            // 仅保存政策表字段映射
+            fieldMapping = {
+                policy: {
+                    model: parseInt(document.getElementById('policyModelField').value),
+                    commission: parseInt(document.getElementById('commissionField').value)
+                }
+            };
+            
+            document.getElementById('progressContainer').style.display = 'block';
+            showLoading('正在读取政策数据...');
+            const policyMap = await readPolicyData();
+            
+            for (let i = 0; i < salesFiles.length; i++) {
+                const fileObj = salesFiles[i];
+                fileObj.status = 'processing';
+                updateFileList();
+                updateProgress(i, salesFiles.length);
+                try {
+                    await processFile(fileObj, policyMap, i);
+                    fileObj.status = 'completed';
+                } catch (error) {
+                    fileObj.status = 'error';
+                    console.error(`处理文件 ${fileObj.name} 时出错:`, error);
+                }
+                updateFileList();
+            }
+            
+            updateProgress(salesFiles.length, salesFiles.length);
+            hideLoading();
+            showSuccess('所有文件处理完成！');
+            displayAllResults();
+        }
+        
+        // 修改：读取政策数据，使用大小写不敏感匹配
+        async function readPolicyData() {
+            return new Promise((resolve) => {
+                const worksheet = policyData.worksheet;
+                const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                const policyMap = new Map();
+                const modelCol = fieldMapping.policy.model;
+                const commissionCol = fieldMapping.policy.commission;
+                
+                // 新增：调试信息收集
+                const debugInfo = {
+                    totalPolicyRecords: data.length - 1,
+                    validPolicyRecords: 0,
+                    policyModels: []
+                };
+                
+                for (let i = 1; i < data.length; i++) {
+                    const row = data[i];
+                    const originalModel = row[modelCol];
+                    const commission = parseFloat(row[commissionCol]) || 0;
+                    
+                    if (originalModel) {
+                        const normalizedModel = normalizeModel(originalModel);
+                        policyMap.set(normalizedModel, commission);
+                        
+                        debugInfo.validPolicyRecords++;
+                        debugInfo.policyModels.push({
+                            original: originalModel,
+                            normalized: normalizedModel,
+                            commission: commission
+                        });
+                    }
+                }
+                
+                // 保存调试信息
+                matchingDebugInfo.policy = debugInfo;
+                
+                console.log('政策数据读取完成:', debugInfo);
+                resolve(policyMap);
+            });
+        }
+        
+        // 修改：处理单个文件，使用大小写不敏感匹配
+        async function processFile(fileObj, policyMap, fileIndex) {
+            return new Promise((resolve, reject) => {
+                showLoading(`正在处理文件 ${fileObj.name}...`, `第 ${fileIndex + 1}/${salesFiles.length} 个文件`);
+                
+                if (!fileObj.workbook) {
+                    // 需要先读取文件
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const workbook = XLSX.read(e.target.result, {type: 'binary'});
+                            fileObj.workbook = workbook;
+                            fileObj.sheetName = workbook.SheetNames[0];
+                            processWorkbook();
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                    reader.readAsBinaryString(fileObj.file);
+                } else {
+                    processWorkbook();
+                }
+                
+                function processWorkbook() {
+                    const worksheet = fileObj.workbook.Sheets[fileObj.sheetName];
+                    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    const results = [];
+                    let totalCommission = 0;
+                    
+                    const fileDebugInfo = {
+                        fileName: fileObj.name,
+                        totalRecords: data.length - 1,
+                        processedRecords: 0,
+                        matchedRecords: 0,
+                        unmatchedRecords: 0,
+                        unmatchedModels: new Set(),
+                        matchDetails: []
+                    };
+                    
+                    const salesMap = fileObj.fieldMapping || {};
+                    const modelCol = salesMap.modelField;
+                    const quantityCol = salesMap.quantityField;
+                    
+                    for (let i = 1; i < data.length; i++) {
+                        const row = data[i];
+                        const originalModel = row[modelCol];
+                        const quantity = parseFloat(row[quantityCol]) || 0;
+                        
+                        fileDebugInfo.processedRecords++;
+                        
+                        const normalizedModel = normalizeModel(originalModel);
+                        const unitCommission = policyMap.get(normalizedModel) || 0;
+                        const totalItemCommission = unitCommission * quantity;
+                        totalCommission += totalItemCommission;
+                        
+                        const isMatched = unitCommission > 0;
+                        if (isMatched) {
+                            fileDebugInfo.matchedRecords++;
+                        } else {
+                            fileDebugInfo.unmatchedRecords++;
+                            if (originalModel) fileDebugInfo.unmatchedModels.add(originalModel);
+                        }
+                        
+                    results.push({
+                        date: salesMap.dateField !== undefined ? (row[salesMap.dateField] || '') : '',
+                        orderNo: salesMap.orderNoField !== undefined ? (row[salesMap.orderNoField] || '') : '',
+                        userName: salesMap.userNameField !== undefined ? (row[salesMap.userNameField] || '') : '',
+                        store: salesMap.storeField !== undefined ? (row[salesMap.storeField] || '') : '',
+                        salesPerson: salesMap.salesPersonField !== undefined ? (row[salesMap.salesPersonField] || '') : '',
+                        materialName: salesMap.materialNameField !== undefined ? (row[salesMap.materialNameField] || '') : '',
+                        model: originalModel || '',
+                        quantity: quantity,
+                        unitCommission: unitCommission,
+                        totalCommission: totalItemCommission,
+                        isMatched: isMatched,
+                        normalizedModel: normalizedModel
+                    });
+                    }
+                    
+                    fileObj.results = {
+                        data: results,
+                        totalCommission: totalCommission,
+                        recordCount: results.length,
+                        debugInfo: fileDebugInfo
+                    };
+                    
+                    allResults[fileObj.name] = fileObj.results;
+                    matchingDebugInfo[fileObj.name] = fileDebugInfo;
+                    
+                    console.log(`文件 ${fileObj.name} 处理完成:`, fileDebugInfo);
+                    resolve();
+                }
+            });
+        }
+        
+        // 修改：显示所有结果，包含调试信息
+        function displayAllResults() {
+            const resultsDiv = document.getElementById('results');
+            const tabsDiv = document.getElementById('resultsTabs');
+            const contentDiv = document.getElementById('resultsContent');
+            
+            // 清空现有内容
+            tabsDiv.innerHTML = '';
+            contentDiv.innerHTML = '';
+            
+            // 创建汇总标签
+            const summaryTab = document.createElement('button');
+            summaryTab.className = 'tab active';
+            summaryTab.textContent = '汇总';
+            summaryTab.onclick = () => showTab('summary');
+            tabsDiv.appendChild(summaryTab);
+            
+            // 创建员工汇总标签
+            const employeeSummaryTab = document.createElement('button');
+            employeeSummaryTab.className = 'tab';
+            employeeSummaryTab.textContent = '员工汇总表';
+            employeeSummaryTab.onclick = () => showTab('employee-summary');
+            tabsDiv.appendChild(employeeSummaryTab);
+            
+            // 创建调试信息标签
+            const debugTab = document.createElement('button');
+            debugTab.className = 'tab';
+            debugTab.textContent = '匹配分析';
+            debugTab.onclick = () => showTab('debug');
+            tabsDiv.appendChild(debugTab);
+            
+            // 创建汇总内容
+            const summaryContent = document.createElement('div');
+            summaryContent.id = 'tab-summary';
+            summaryContent.className = 'tab-content active';
+            
+            let totalRecords = 0;
+            let grandTotalCommission = 0;
+            let totalMatched = 0;
+            let totalUnmatched = 0;
+            
+            Object.values(allResults).forEach(result => {
+                totalRecords += result.recordCount;
+                grandTotalCommission += result.totalCommission;
+                if (result.debugInfo) {
+                    totalMatched += result.debugInfo.matchedRecords;
+                    totalUnmatched += result.debugInfo.unmatchedRecords;
+                }
+            });
+            
+            const matchRate = totalRecords > 0 ? ((totalMatched / totalRecords) * 100).toFixed(1) : 0;
+            
+            summaryContent.innerHTML = `
+                <div class="summary">
+                    <h3>📊 总体汇总</h3>
+                    <p>处理文件数：${salesFiles.length} 个</p>
+                    <p>总记录数：${totalRecords} 条</p>
+                    <p>匹配成功：${totalMatched} 条 (${matchRate}%)</p>
+                    <p>未匹配：${totalUnmatched} 条</p>
+                    <p>总提成金额：¥${grandTotalCommission.toFixed(2)}</p>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>文件名</th>
+                            <th>记录数</th>
+                            <th>匹配成功</th>
+                            <th>匹配率</th>
+                            <th>总提成</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(allResults).map(([fileName, result]) => {
+                            const fileMatchRate = result.debugInfo ? 
+                                ((result.debugInfo.matchedRecords / result.debugInfo.processedRecords) * 100).toFixed(1) : 0;
+                            return `
+                                <tr>
+                                    <td>${fileName}</td>
+                                    <td>${result.recordCount}</td>
+                                    <td>${result.debugInfo ? result.debugInfo.matchedRecords : 0}</td>
+                                    <td>${fileMatchRate}%</td>
+                                    <td>¥${result.totalCommission.toFixed(2)}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            contentDiv.appendChild(summaryContent);
+            
+            // 创建员工汇总内容
+            const employeeSummaryContent = document.createElement('div');
+            employeeSummaryContent.id = 'tab-employee-summary';
+            employeeSummaryContent.className = 'tab-content';
+            employeeSummaryContent.innerHTML = generateEmployeeSummaryHTML();
+            contentDiv.appendChild(employeeSummaryContent);
+            
+            // 创建调试信息内容
+            const debugContent = document.createElement('div');
+            debugContent.id = 'tab-debug';
+            debugContent.className = 'tab-content';
+            debugContent.innerHTML = generateDebugInfoHTML();
+            contentDiv.appendChild(debugContent);
+            
+            // 为每个文件创建标签和内容
+            salesFiles.forEach((fileObj, index) => {
+                if (fileObj.results) {
+                    // 创建标签
+                    const tab = document.createElement('button');
+                    tab.className = 'tab';
+                    tab.textContent = fileObj.name;
+                    tab.onclick = () => showTab(`file-${index}`);
+                    tabsDiv.appendChild(tab);
+                    
+                    // 创建内容
+                    const tabContent = document.createElement('div');
+                    tabContent.id = `tab-file-${index}`;
+                    tabContent.className = 'tab-content';
+                    
+                    const fileMatchRate = fileObj.results.debugInfo ? 
+                        ((fileObj.results.debugInfo.matchedRecords / fileObj.results.debugInfo.processedRecords) * 100).toFixed(1) : 0;
+                    
+                    tabContent.innerHTML = `
+                        <div class="summary">
+                            <h3>�� ${fileObj.name}</h3>
+                            <p>记录数：${fileObj.results.recordCount} 条</p>
+                            <p>匹配成功：${fileObj.results.debugInfo ? fileObj.results.debugInfo.matchedRecords : 0} 条 (${fileMatchRate}%)</p>
+                            <p>总提成：¥${fileObj.results.totalCommission.toFixed(2)}</p>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>单据编号</th>
+                                    <th>用户姓名</th>
+                                    <th>门店</th>
+                                    <th>促销员</th>
+                                    <th>物料名称</th>
+                                    <th>规格型号</th>
+                                    <th>销售数量</th>
+                                    <th>单台提成</th>
+                                    <th>总提成</th>
+                                    <th>匹配状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${fileObj.results.data.slice(0, 100).map(row => `
+                                    <tr style="${!row.isMatched ? 'background-color: #fff3cd;' : ''}">
+                                        <td>${row.date}</td>
+                                        <td>${row.orderNo}</td>
+                                        <td>${row.userName}</td>
+                                        <td>${row.store}</td>
+                                        <td>${row.salesPerson}</td>
+                                        <td>${row.materialName}</td>
+                                        <td title="标准化: ${row.normalizedModel}">${row.model}</td>
+                                        <td>${row.quantity}</td>
+                                        <td>¥${row.unitCommission.toFixed(2)}</td>
+                                        <td>¥${row.totalCommission.toFixed(2)}</td>
+                                        <td>
+                                            <span style="color: ${row.isMatched ? '#28a745' : '#dc3545'};">
+                                                ${row.isMatched ? '✓ 已匹配' : '✗ 未匹配'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        ${fileObj.results.data.length > 100 ? '<p style="text-align: center; color: #666; margin-top: 10px;">仅显示前100条记录，完整数据请导出查看</p>' : ''}
+                    `;
+                    contentDiv.appendChild(tabContent);
+                }
+              });
+            
+            resultsDiv.style.display = 'block';
+            document.getElementById('exportAllBtn').style.display = 'inline-block';
+            document.getElementById('exportSeparateBtn').style.display = 'inline-block';
+        }
+        
+        // 新增：生成员工汇总表HTML
+        function generateEmployeeSummaryHTML() {
+            // 获取门店提成系数
+            function getStoreCommissionRate(storeName) {
+                // 判断是否是杭州临平兴达店（可能的名称变体）
+                const specialStores = ['杭州临平兴达店', '临平兴达', '临平兴达店', '兴达店'];
+                for (const special of specialStores) {
+                    if (storeName.includes(special)) {
+                        return 1.1;
+                    }
+                }
+                return 1;
+            }
+            
+            // 按门店和员工汇总数据
+            const employeeSummary = {};
+            
+            salesFiles.forEach(fileObj => {
+                if (!fileObj.results || !fileObj.results.data) return;
+                
+                fileObj.results.data.forEach(row => {
+                    const storeName = row.store || '未知门店'; // 从门店字段读取
+                    const employeeName = row.salesPerson || '未知';
+                    const key = `${storeName}|||${employeeName}`; // 使用特殊分隔符
+                    
+                    if (!employeeSummary[key]) {
+                        employeeSummary[key] = {
+                            storeName: storeName,
+                            employeeName: employeeName,
+                            totalQuantity: 0,
+                            totalCommission: 0,
+                            recordCount: 0
+                        };
+                    }
+                    
+                    employeeSummary[key].totalQuantity += row.quantity || 0;
+                    employeeSummary[key].totalCommission += row.totalCommission || 0;
+                    employeeSummary[key].recordCount += 1;
+                });
+            });
+            
+            // 转换为数组并排序
+            const summaryArray = Object.values(employeeSummary).sort((a, b) => {
+                if (a.storeName !== b.storeName) {
+                    return a.storeName.localeCompare(b.storeName, 'zh-CN');
+                }
+                return a.employeeName.localeCompare(b.employeeName, 'zh-CN');
+            });
+            
+            // 计算总计
+            let grandTotalQuantity = 0;
+            let grandTotalCommission = 0;
+            let grandTotalFinal = 0;
+            
+            // 生成表格HTML
+            let html = `
+                <div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                    <h3>📋 计算说明</h3>
+                    <ul style="margin: 10px 0; line-height: 1.8;">
+                        <li><strong>门店</strong>：取自销售数据表的"门店"字段</li>
+                        <li><strong>员工姓名</strong>：取自销售数据表的"促销员"字段</li>
+                        <li><strong>销售数量</strong>：该员工在该门店的销售数量总和</li>
+                        <li><strong>总提成</strong>：该员工在该门店的提成总和</li>
+                        <li><strong>门店提成系数</strong>：杭州临平兴达店 = 1.1，其他门店 = 1.0</li>
+                        <li><strong>合计</strong>：总提成 × 门店提成系数</li>
+                        <li><strong>匹配逻辑</strong>：销售数据表的"规格型号"字段 → 政策表的"规格型号"字段 → 获取"单台提成"</li>
+                        <li><strong>匹配方式</strong>：大小写不敏感，自动去除首尾空格并转为大写进行匹配</li>
+                    </ul>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>门店</th>
+                            <th>员工姓名</th>
+                            <th>销售数量（台）</th>
+                            <th>总提成（元）</th>
+                            <th>门店提成系数</th>
+                            <th>合计（元）</th>
+                            <th>其他</th>
+                            <th>总计（元）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            summaryArray.forEach((item, index) => {
+                const rate = getStoreCommissionRate(item.storeName);
+                const total = item.totalCommission * rate;
+                const other = 0; // 暂时为0
+                const finalTotal = total + other;
+                
+                grandTotalQuantity += item.totalQuantity;
+                grandTotalCommission += item.totalCommission;
+                grandTotalFinal += finalTotal;
+                
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.storeName}</td>
+                        <td>${item.employeeName}</td>
+                        <td>${item.totalQuantity.toFixed(0)}</td>
+                        <td>¥${item.totalCommission.toFixed(2)}</td>
+                        <td>${rate}</td>
+                        <td>¥${total.toFixed(2)}</td>
+                        <td>${other > 0 ? '¥' + other.toFixed(2) : ''}</td>
+                        <td>¥${finalTotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            // 添加合计行
+            html += `
+                    <tr style="background: #f0f0f0; font-weight: bold;">
+                        <td colspan="3">合计</td>
+                        <td>${grandTotalQuantity.toFixed(0)}</td>
+                        <td>¥${grandTotalCommission.toFixed(2)}</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>¥${grandTotalFinal.toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            </table>
+            `;
+            
+            return html;
+        }
+        
+        // 新增：生成调试信息HTML
+        function generateDebugInfoHTML() {
+            let html = '<div class="debug-info">';
+            html += '<h4>🔍 匹配分析报告</h4>';
+            
+            // 政策数据统计
+            if (matchingDebugInfo.policy) {
+                const policyInfo = matchingDebugInfo.policy;
+                html += `
+                    <div class="match-stats">
+                        <div class="stat-item success">
+                            <strong>政策表记录</strong><br>
+                            总数: ${policyInfo.totalPolicyRecords}<br>
+                            有效: ${policyInfo.validPolicyRecords}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 各文件匹配统计
+            html += '<h4>📁 各文件匹配详情</h4>';
+            html += '<div class="match-stats">';
+            
+            Object.values(matchingDebugInfo).forEach(debugInfo => {
+                if (debugInfo.fileName) {
+                    const matchRate = ((debugInfo.matchedRecords / debugInfo.processedRecords) * 100).toFixed(1);
+                    html += `
+                        <div class="stat-item ${matchRate > 80 ? 'success' : matchRate > 50 ? 'warning' : 'error'}">
+                            <strong>${debugInfo.fileName}</strong><br>
+                            处理: ${debugInfo.processedRecords} 条<br>
+                            匹配: ${debugInfo.matchedRecords} 条<br>
+                            未匹配: ${debugInfo.unmatchedRecords} 条<br>
+                            匹配率: ${matchRate}%
+                        </div>
+                    `;
+                }
+            });
+            
+            html += '</div>';
+            
+            // 未匹配型号汇总
+            const allUnmatchedModels = new Set();
+            Object.values(matchingDebugInfo).forEach(debugInfo => {
+                if (debugInfo.unmatchedModels) {
+                    debugInfo.unmatchedModels.forEach(model => allUnmatchedModels.add(model));
+                }
+            });
+            
+            if (allUnmatchedModels.size > 0) {
+                html += '<h4>⚠️ 未匹配型号列表</h4>';
+                html += '<div class="unmatched-models">';
+                html += '<p>以下型号在政策表中未找到匹配项：</p>';
+                
+                Array.from(allUnmatchedModels).sort().forEach(model => {
+                    const normalized = normalizeModel(model);
+                    html += `
+                        <div class="model-comparison">
+                            <span class="model-original">原始: ${model}</span>
+                            <span class="model-normalized">标准化: ${normalized}</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            // 政策表型号预览
+            if (matchingDebugInfo.policy && matchingDebugInfo.policy.policyModels.length > 0) {
+                html += '<h4>�� 政策表型号预览 (前20个)</h4>';
+                html += '<div class="unmatched-models">';
+                
+                matchingDebugInfo.policy.policyModels.slice(0, 20).forEach(item => {
+                    html += `
+                        <div class="model-comparison">
+                            <span class="model-original">原始: ${item.original}</span>
+                            <span class="model-normalized">标准化: ${item.normalized}</span>
+                            <span style="color: #28a745;">提成: ¥${item.commission}</span>
+                        </div>
+                    `;
+                });
+                
+                if (matchingDebugInfo.policy.policyModels.length > 20) {
+                    html += `<p style="text-align: center; color: #666;">还有 ${matchingDebugInfo.policy.policyModels.length - 20} 个型号...</p>`;
+                }
+                
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+        
+        // 显示指定标签
+        function showTab(tabId) {
+            // 更新标签状态
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach((tab, index) => {
+                if ((tabId === 'summary' && index === 0) || 
+                    (tabId === 'employee-summary' && index === 1) ||
+                    (tabId === 'debug' && index === 2) ||
+                    (tabId === `file-${index - 3}`)) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // 更新内容显示
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                if (content.id === `tab-${tabId}`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+        
+        // 导出单个文件结果
+        function exportSingleResult(index) {
+            const fileObj = salesFiles[index];
+            if (!fileObj.results) {
+                showError('该文件还未计算完成');
+                return;
+            }
+            
+            const exportData = fileObj.results.data.map(row => ({
+                '日期': row.date,
+                '单据编号': row.orderNo,
+                '用户姓名': row.userName,
+                '门店': row.store,
+                '促销员': row.salesPerson,
+                '物料名称': row.materialName,
+                '规格型号': row.model,
+                '标准化型号': row.normalizedModel,
+                '销售数量': row.quantity,
+                '单台提成': row.unitCommission,
+                '总提成': row.totalCommission,
+                '匹配状态': row.isMatched ? '已匹配' : '未匹配'
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '提成计算结果');
+            
+            // 添加匹配统计工作表
+            if (fileObj.results.debugInfo) {
+                const debugInfo = fileObj.results.debugInfo;
+                const statsData = [
+                    { '统计项': '总记录数', '数值': debugInfo.processedRecords },
+                    { '统计项': '匹配成功', '数值': debugInfo.matchedRecords },
+                    { '统计项': '未匹配', '数值': debugInfo.unmatchedRecords },
+                    { '统计项': '匹配率', '数值': `${((debugInfo.matchedRecords / debugInfo.processedRecords) * 100).toFixed(1)}%` },
+                    { '统计项': '总提成金额', '数值': `¥${fileObj.results.totalCommission.toFixed(2)}` }
+                ];
+                
+                const statsWs = XLSX.utils.json_to_sheet(statsData);
+                XLSX.utils.book_append_sheet(wb, statsWs, '匹配统计');
+                
+                // 添加未匹配型号列表
+                if (debugInfo.unmatchedModels.size > 0) {
+                    const unmatchedData = Array.from(debugInfo.unmatchedModels).map(model => ({
+                        '原始型号': model,
+                        '标准化型号': normalizeModel(model)
+                    }));
+                    
+                    const unmatchedWs = XLSX.utils.json_to_sheet(unmatchedData);
+                    XLSX.utils.book_append_sheet(wb, unmatchedWs, '未匹配型号');
+                }
+            }
+            
+            const fileName = `提成计算_${fileObj.name.replace(/\.[^/.]+$/, '')}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            showSuccess(`已导出文件：${fileName}`);
+        }
+        
+        // 导出所有结果到一个文件
+        function exportAllResults() {
+            const wb = XLSX.utils.book_new();
+            
+            // 创建员工汇总表
+            function getStoreCommissionRate(storeName) {
+                const specialStores = ['杭州临平兴达店', '临平兴达', '临平兴达店', '兴达店'];
+                for (const special of specialStores) {
+                    if (storeName.includes(special)) {
+                        return 1.1;
+                    }
+                }
+                return 1;
+            }
+            
+            const employeeSummary = {};
+            salesFiles.forEach(fileObj => {
+                if (!fileObj.results || !fileObj.results.data) return;
+                fileObj.results.data.forEach(row => {
+                    const storeName = row.store || '未知门店'; // 从门店字段读取
+                    const employeeName = row.salesPerson || '未知';
+                    const key = `${storeName}|||${employeeName}`;
+                    if (!employeeSummary[key]) {
+                        employeeSummary[key] = {
+                            门店: storeName,
+                            员工姓名: employeeName,
+                            销售数量: 0,
+                            总提成: 0
+                        };
+                    }
+                    employeeSummary[key].销售数量 += row.quantity || 0;
+                    employeeSummary[key].总提成 += row.totalCommission || 0;
+                });
+            });
+            
+            const employeeSummaryArray = Object.values(employeeSummary).sort((a, b) => {
+                if (a.门店 !== b.门店) {
+                    return a.门店.localeCompare(b.门店, 'zh-CN');
+                }
+                return a.员工姓名.localeCompare(b.员工姓名, 'zh-CN');
+            });
+            
+            const employeeExportData = employeeSummaryArray.map((item, index) => {
+                const rate = getStoreCommissionRate(item.门店);
+                const total = item.总提成 * rate;
+                const other = 0;
+                const finalTotal = total + other;
+                return {
+                    '序号': index + 1,
+                    '门店': item.门店,
+                    '员工姓名': item.员工姓名,
+                    '销售数量（台）': item.销售数量,
+                    '总提成（元）': item.总提成,
+                    '门店提成系数': rate,
+                    '合计（元）': total,
+                    '其他': other > 0 ? other : '',
+                    '总计（元）': finalTotal
+                };
+            });
+            
+            const employeeWs = XLSX.utils.json_to_sheet(employeeExportData);
+            XLSX.utils.book_append_sheet(wb, employeeWs, '员工汇总表');
+            
+            // 创建计算说明工作表
+            const calculationExplanation = [
+                { '项目': '门店', '说明': '取自销售数据表的"门店"字段' },
+                { '项目': '员工姓名', '说明': '取自销售数据表的"促销员"字段' },
+                { '项目': '销售数量', '说明': '该员工在该门店的销售数量总和' },
+                { '项目': '总提成', '说明': '该员工在该门店的提成总和' },
+                { '项目': '门店提成系数', '说明': '杭州临平兴达店 = 1.1，其他门店 = 1.0' },
+                { '项目': '合计', '说明': '总提成 × 门店提成系数' },
+                { '项目': '', '说明': '' },
+                { '项目': '匹配逻辑', '说明': '销售数据表的"规格型号"字段 → 政策表的"规格型号"字段 → 获取"单台提成"' },
+                { '项目': '匹配方式', '说明': '大小写不敏感，自动去除首尾空格并转为大写进行匹配' },
+                { '项目': '提成计算', '说明': '单台提成 × 销售数量 = 该条记录的提成' }
+            ];
+            const explanationWs = XLSX.utils.json_to_sheet(calculationExplanation);
+            XLSX.utils.book_append_sheet(wb, explanationWs, '计算说明');
+            
+            // 创建总体汇总表
+            let totalRecords = 0;
+            let grandTotalCommission = 0;
+            let totalMatched = 0;
+            let totalUnmatched = 0;
+            
+            Object.values(allResults).forEach(result => {
+                totalRecords += result.recordCount;
+                grandTotalCommission += result.totalCommission;
+                if (result.debugInfo) {
+                    totalMatched += result.debugInfo.matchedRecords;
+                    totalUnmatched += result.debugInfo.unmatchedRecords;
+                }
+            });
+            
+            const overallSummaryData = [
+                { '统计项': '处理文件数', '数值': salesFiles.length },
+                { '统计项': '总记录数', '数值': totalRecords },
+                { '统计项': '匹配成功', '数值': totalMatched },
+                { '统计项': '未匹配', '数值': totalUnmatched },
+                { '统计项': '总体匹配率', '数值': `${((totalMatched / totalRecords) * 100).toFixed(1)}%` },
+                { '统计项': '总提成金额', '数值': `¥${grandTotalCommission.toFixed(2)}` }
+            ];
+            
+            const overallSummaryWs = XLSX.utils.json_to_sheet(overallSummaryData);
+            XLSX.utils.book_append_sheet(wb, overallSummaryWs, '总体汇总');
+            
+            // 创建文件汇总表
+            const summaryData = Object.entries(allResults).map(([fileName, result]) => {
+                const fileMatchRate = result.debugInfo ? 
+                    ((result.debugInfo.matchedRecords / result.debugInfo.processedRecords) * 100).toFixed(1) : 0;
+                return {
+                    '文件名': fileName,
+                    '记录数': result.recordCount,
+                    '匹配成功': result.debugInfo ? result.debugInfo.matchedRecords : 0,
+                    '未匹配': result.debugInfo ? result.debugInfo.unmatchedRecords : 0,
+                    '匹配率': `${fileMatchRate}%`,
+                    '总提成': result.totalCommission
+                };
+            });
+            
+            const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, summaryWs, '文件汇总');
+            
+            // 为每个文件创建工作表
+            salesFiles.forEach((fileObj, index) => {
+                if (fileObj.results) {
+                    const exportData = fileObj.results.data.map(row => ({
+                        '日期': row.date,
+                        '单据编号': row.orderNo,
+                        '用户姓名': row.userName,
+                        '门店': row.store,
+                        '促销员': row.salesPerson,
+                        '物料名称': row.materialName,
+                        '规格型号': row.model,
+                        '标准化型号': row.normalizedModel,
+                        '销售数量': row.quantity,
+                        '单台提成': row.unitCommission,
+                        '总提成': row.totalCommission,
+                        '匹配状态': row.isMatched ? '已匹配' : '未匹配'
+                    }));
+                    
+                    const ws = XLSX.utils.json_to_sheet(exportData);
+                    const sheetName = fileObj.name.replace(/\.[^/.]+$/, '').substring(0, 31); // Excel工作表名称限制
+                    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                }
+            });
+            
+            // 添加全部未匹配型号汇总
+            const allUnmatchedModels = new Set();
+            Object.values(matchingDebugInfo).forEach(debugInfo => {
+                if (debugInfo.unmatchedModels) {
+                    debugInfo.unmatchedModels.forEach(model => allUnmatchedModels.add(model));
+                }
+            });
+            
+            if (allUnmatchedModels.size > 0) {
+                const unmatchedData = Array.from(allUnmatchedModels).sort().map(model => ({
+                    '原始型号': model,
+                    '标准化型号': normalizeModel(model)
+                }));
+                
+                const unmatchedWs = XLSX.utils.json_to_sheet(unmatchedData);
+                XLSX.utils.book_append_sheet(wb, unmatchedWs, '全部未匹配型号');
+            }
+            
+            // 添加政策表型号列表
+            if (matchingDebugInfo.policy && matchingDebugInfo.policy.policyModels.length > 0) {
+                const policyData = matchingDebugInfo.policy.policyModels.map(item => ({
+                    '原始型号': item.original,
+                    '标准化型号': item.normalized,
+                    '单台提成': item.commission
+                }));
+                
+                const policyWs = XLSX.utils.json_to_sheet(policyData);
+                XLSX.utils.book_append_sheet(wb, policyWs, '政策表型号');
+            }
+            
+            const fileName = `批量提成计算结果_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            showSuccess(`已导出所有结果到文件：${fileName}`);
+        }
+        
+        // 分别导出每个文件的结果
+        function exportSeparateResults() {
+            let exportCount = 0;
+            
+            salesFiles.forEach((fileObj, index) => {
+                if (fileObj.results) {
+                    exportSingleResult(index);
+                    exportCount++;
+                }
+            });
+            
+            if (exportCount > 0) {
+                showSuccess(`已分别导出 ${exportCount} 个文件的计算结果`);
+            } else {
+                showError('没有可导出的结果');
+            }
+        }
+        
+        // 工具函数
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMsg');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => successDiv.style.display = 'none', 3000);
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFileUpload();
+        });
+    </script>
+    </body>
+    </html>
+
