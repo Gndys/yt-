@@ -1,510 +1,1229 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>企业工具导航门户</title>
-  <meta name="color-scheme" content="light dark">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工具导航 - A.O.史密斯业务工具平台</title>
   <style>
-    :root{
-      --brand:#4f46e5;
-      --brand-2:#7c3aed;
-      --bg:#0b1220;
-      --bg-2:#0f172a;
-      --panel:#0f1b2d;
-      --panel-soft:#0c1426;
-      --text:#e5e7eb;
-      --text-soft:#9aa4b2;
-      --border:#1f2a44;
-      --border-strong:#2a3a5d;
-      --success:#22c55e;
-      --warn:#f59e0b;
-      --danger:#ef4444;
-      --radius:14px;
-      --radius-sm:10px;
-      --radius-lg:20px;
-      --shadow: 0 10px 30px rgba(0,0,0,.45);
-      --shadow-sm: 0 6px 20px rgba(0,0,0,.35);
-      --grad: linear-gradient(135deg,rgba(79,70,229,.9),rgba(124,58,237,.9));
-      --grad-soft: linear-gradient(135deg,rgba(79,70,229,.14),rgba(124,58,237,.10));
-      --grad-cta: linear-gradient(135deg,#22c55e,#10b981);
-      --transition:.25s cubic-bezier(.4,0,.2,1);
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;height:100%}
-    body{
-      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
-      background: radial-gradient(1200px 800px at 10% -10%,rgba(79,70,229,.22),transparent 45%),
-                  radial-gradient(1000px 700px at 95% 10%,rgba(124,58,237,.18),transparent 50%),
-                  linear-gradient(180deg,var(--bg),var(--bg-2));
-      color:var(--text);
+
+    :root {
+      /* Notion 风格色彩系统 - 浅色模式 */
+      --bg-primary: #ffffff;
+      --bg-secondary: #f7f6f3;
+      --bg-hover: #f1f0ed;
+      --bg-card: #ffffff;
+      --border-light: #e9e9e7;
+      --border-medium: #d3d3d1;
+      --text-primary: #37352f;
+      --text-secondary: #787774;
+      --text-tertiary: #9b9a97;
+      
+      /* 品牌色 - 参考 Notion 的蓝色系 */
+      --accent-blue: #2383e2;
+      --accent-blue-light: #e8f3ff;
+      --accent-purple: #9065b0;
+      --accent-purple-light: #f3efff;
+      --accent-green: #0f7b6c;
+      --accent-green-light: #e6f6f4;
+      --accent-orange: #d9730d;
+      --accent-orange-light: #fef3e6;
+      --accent-red: #e03e3e;
+      --accent-red-light: #ffe2e2;
+      
+      /* 阴影系统 */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+      
+      /* 字体系统 */
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      
+      /* 圆角 */
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      
+      /* 过渡 */
+      --transition: cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .app{
-      max-width: 1280px;
+
+    /* 深色模式 */
+    [data-theme="dark"] {
+      --bg-primary: #191919;
+      --bg-secondary: #1f1f1f;
+      --bg-hover: #2a2a2a;
+      --bg-card: #252525;
+      --border-light: #3a3a3a;
+      --border-medium: #4a4a4a;
+      --text-primary: #e9e9e7;
+      --text-secondary: #9b9a97;
+      --text-tertiary: #6f6f6d;
+      --accent-blue-light: #1a3a52;
+      --accent-purple-light: #2d2438;
+      --accent-green-light: #1a3331;
+      --accent-orange-light: #3a2817;
+      --accent-red-light: #3a1f1f;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 容器 */
+    .container {
+      max-width: 1200px;
       margin: 0 auto;
-      padding: clamp(16px,2.5vw,28px);
-      display:flex;
-      flex-direction:column;
-      gap: 20px;
+      padding: 40px 24px 80px;
     }
-    .hero{
-      position:relative;
-      background: linear-gradient(180deg,rgba(255,255,255,.06),transparent),
-                  var(--grad-soft);
-      border:1px solid var(--border);
-      border-radius: 20px;
-      padding: clamp(18px,2.6vw,28px);
-      overflow:hidden;
-      box-shadow: var(--shadow);
+
+    /* 顶部导航栏 */
+    .top-nav {
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, 0.95);
     }
-    .hero::after{
-      content:"";
-      position:absolute;
-      width:520px;height:520px;
-      right:-160px;top:-180px;
-      background: radial-gradient(circle at center, rgba(124,58,237,.35), transparent 60%);
-      filter: blur(10px);
-      opacity:.6;
-      animation: float 26s linear infinite;
+
+    [data-theme="dark"] .top-nav {
+      background: rgba(25, 25, 25, 0.95);
     }
-    @keyframes float { 0%{transform:rotate(0)} 50%{transform:rotate(180deg) scale(1.03)} 100%{transform:rotate(360deg)} }
-    .brand{
-      display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+
+    .nav-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .logo{
-      width:46px;height:46px;border-radius:12px;
-      background: var(--grad);
-      display:grid;place-items:center;
-      box-shadow: 0 10px 24px -8px rgba(79,70,229,.7);
-      font-weight:700;
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
     }
-    .title{
-      display:flex;flex-direction:column;gap:4px;
+
+    .breadcrumb a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s var(--transition);
     }
-    .title h1{
-      margin:0;font-size: clamp(20px,2.2vw,28px);letter-spacing:.2px;
+
+    .breadcrumb a:hover {
+      color: var(--text-primary);
     }
-    .title .sub{
-      color: var(--text-soft);font-size: .95rem;
+
+    .breadcrumb-separator {
+      color: var(--text-tertiary);
+      user-select: none;
     }
-    .hero-actions{
-      display:flex;gap:10px;flex-wrap:wrap;margin-top:14px
+
+    .nav-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
     }
-    .btn{
-      border:none;outline:none;cursor:pointer;
-      padding: 10px 14px;border-radius: 12px;
-      font-weight:600;letter-spacing:.2px;
-      display:inline-flex;align-items:center;gap:8px;
-      transition: transform var(--transition),box-shadow var(--transition),background var(--transition),opacity var(--transition);
-      background: #1b2540;color:#e5e7eb;border:1px solid var(--border);
-    }
-    .btn:hover{ transform: translateY(-1px) }
-    .btn.primary{
-      background: var(--grad); color:#fff;
-      box-shadow: 0 10px 26px -10px rgba(79,70,229,.7);
+
+    /* 主题切换按钮 */
+    .theme-toggle {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
       border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s var(--transition);
+      font-size: 18px;
     }
-    .btn.success{ background: var(--grad-cta); color:#032312; border:none }
-    .toolbar{
-      display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto
+
+    .theme-toggle:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
     }
-    .pill{
-      padding:6px 10px;border-radius:999px;font-size:.8rem;
-      background: linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      display:inline-flex;align-items:center;gap:6px;color:#c7cfda
+
+    /* 视图切换 */
+    .view-switcher {
+      display: flex;
+      gap: 2px;
+      background: var(--bg-secondary);
+      padding: 2px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
     }
-    .layout{
-      display:grid;
-      grid-template-columns: 280px 1fr;
-      gap:18px;
-      align-items: start;
+
+    .view-btn {
+      padding: 6px 12px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .side{
-      position:sticky;top:16px;
-      background: linear-gradient(180deg,rgba(255,255,255,.03),transparent), #0b1326;
-      border:1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      min-height: 120px;
+
+    .view-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .view-btn.active {
+      background: var(--bg-primary);
+      color: var(--text-primary);
       box-shadow: var(--shadow-sm);
     }
-    .side h3{
-      margin: 4px 8px 10px;font-size: .95rem;color:#cbd5e1;letter-spacing:.3px
+
+    /* 页面标题 */
+    .page-header {
+      margin: 40px 0 32px;
     }
-    .nav{
-      display:flex;flex-direction:column;gap:6px
+
+    .page-title {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
     }
-    .nav a{
-      text-decoration:none;color:#cfd7e5;background:#0c162b;border:1px solid var(--border);
-      padding:10px 12px;border-radius: 12px;font-size:.92rem;
-      display:flex;align-items:center;gap:10px;transition:background var(--transition),transform var(--transition),border-color var(--transition)
-    }
-    .nav a:hover{ background:#111c36; transform: translateX(2px); border-color:#344368 }
-    .nav .badge{margin-left:auto;font-size:.72rem;color:#a7b3c8;background:#111a31;border:1px solid #2a3a5d;border-radius:10px;padding:2px 8px}
-    .content{
-      display:flex;flex-direction:column;gap:18px
-    }
-    .group{
-      background: linear-gradient(180deg,rgba(255,255,255,.03),transparent), #0b1326;
-      border:1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      box-shadow: var(--shadow-sm);
-    }
-    .group-header{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px
-    }
-    .group-title{
-      display:flex;align-items:center;gap:10px
-    }
-    .group-title .dot{
-      width:10px;height:10px;border-radius:50%;
-      background: linear-gradient(135deg,#60a5fa,#a78bfa);
-      box-shadow: 0 0 0 3px rgba(99,102,241,.18);
-    }
-    .group-title h2{ margin:0;font-size:1rem }
-    .cards{
-      display:grid;
-      grid-template-columns: repeat(auto-fill,minmax(260px,1fr));
-      gap:12px;
-    }
-    .card{
-      position:relative;
-      background: #0b172e;
-      border:1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      min-height: 120px;
-      overflow:hidden;
-      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition);
-    }
-    .card:hover{
-      transform: translateY(-2px);
-      box-shadow: 0 14px 30px -14px rgba(124,58,237,.55);
-      border-color: #374772;
-      background: #0d1c37;
-    }
-    .card .icon{
-      width:36px;height:36px;border-radius:10px;
-      background: var(--grad); display:grid; place-items:center; color:#fff;
-      box-shadow: 0 8px 18px -8px rgba(79,70,229,.8);
+
+    .page-subtitle {
       font-size: 16px;
+      color: var(--text-secondary);
+      font-weight: 400;
     }
-    .card h3{ margin: 10px 0 6px; font-size: 1rem; letter-spacing:.2px }
-    .card p{ margin: 0; color: var(--text-soft); font-size: .9rem; line-height: 1.45 }
-    .meta{
-      display:flex;align-items:center;gap:8px;margin-top:10px;color:#aab6c8;font-size:.8rem;flex-wrap:wrap
+
+    /* 搜索和筛选栏 */
+    .toolbar {
+      margin-bottom: 32px;
     }
-    .meta .tag{
-      padding: 4px 8px;border-radius: 999px;border:1px solid var(--border-strong);
-      background: #0b162d;color:#b9c3d6;
+
+    .search-wrapper {
+      position: relative;
+      margin-bottom: 16px;
     }
-    .meta .ok{ color: var(--success); }
-    .meta .warn{ color: var(--warn); }
-    .meta .danger{ color: var(--danger); }
-    .card a.link{
-      position:absolute;inset:0;z-index:1
+
+    .search-input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.2s var(--transition);
+      font-family: var(--font-sans);
     }
-    .footer{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
-      color:#98a4b8;font-size:.9rem;padding: 8px 2px 16px
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px var(--accent-blue-light);
     }
-    .footer .links{display:flex;gap:12px;flex-wrap:wrap}
-    .footer a{color:#c5cde0;text-decoration:none}
-    .footer a:hover{ text-decoration:underline }
-    .search-row{
-      display:flex;gap:10px;flex-wrap:wrap;margin-top:10px
+
+    .search-input::placeholder {
+      color: var(--text-tertiary);
     }
-    .search{
-      flex:1;min-width:240px;
-      background:#0c162b;border:1px solid var(--border);
-      border-radius:12px;display:flex;align-items:center;gap:8px;padding:8px 10px
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+      font-size: 16px;
+      pointer-events: none;
     }
-    .search input{
-      flex:1;border:none;outline:none;background:transparent;color:#cfd7e5;font-size:.95rem
+
+    /* 筛选标签 */
+    .filter-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
     }
-    .switch{
-      background:#0c162b;border:1px solid var(--border);color:#cfd7e5;
-      padding:8px 10px;border-radius:12px;cursor:pointer
+
+    .filter-tag {
+      padding: 6px 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s var(--transition);
+      color: var(--text-secondary);
+      user-select: none;
     }
-    .empty{ color:#7d8aa1; padding: 8px 2px }
-    @media (max-width: 980px){
-      .layout{ grid-template-columns: 1fr }
-      .side{ position:relative; top:auto }
+
+    .filter-tag:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-medium);
+    }
+
+    .filter-tag.active {
+      background: var(--accent-blue);
+      color: white;
+      border-color: var(--accent-blue);
+    }
+
+    /* 视图容器 */
+    .view-container {
+      display: none;
+    }
+
+    .view-container.active {
+      display: block;
+    }
+
+    /* 文件夹分组 */
+    .folder-section {
+      margin-bottom: 48px;
+    }
+
+    .folder-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px 0;
+    }
+
+    .folder-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .folder-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    .folder-count {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    /* 工具网格 */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    /* 工具卡片 - Notion 风格 */
+    .tool-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      transition: all 0.2s var(--transition);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .tool-card:hover {
+      border-color: var(--border-medium);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .tool-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .tool-card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      background: var(--icon-bg);
+    }
+
+    /* 不同主题的图标背景色 */
+    .folder-section[data-theme="blue"] .tool-card-icon {
+      --icon-bg: var(--accent-blue-light);
+    }
+
+    .folder-section[data-theme="purple"] .tool-card-icon {
+      --icon-bg: var(--accent-purple-light);
+    }
+
+    .folder-section[data-theme="green"] .tool-card-icon {
+      --icon-bg: var(--accent-green-light);
+    }
+
+    .folder-section[data-theme="orange"] .tool-card-icon {
+      --icon-bg: var(--accent-orange-light);
+    }
+
+    .tool-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tool-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .tool-card-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: var(--accent-green-light);
+      color: var(--accent-green);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .tool-card-status.new {
+      background: var(--accent-orange-light);
+      color: var(--accent-orange);
+    }
+
+    .tool-card-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .tool-card-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tool-tag {
+      padding: 4px 8px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* 列表视图 */
+    .tools-list {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .list-header {
+      display: grid;
+      grid-template-columns: 48px 2fr 3fr 1fr 100px 80px;
+      gap: 16px;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-light);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .list-row {
+      display: grid;
+      grid-template-columns: 48px 2fr 3fr 1fr 100px 80px;
+      gap: 16px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light);
+      cursor: pointer;
+      transition: background 0.2s var(--transition);
+      align-items: center;
+    }
+
+    .list-row:hover {
+      background: var(--bg-hover);
+    }
+
+    .list-row:last-child {
+      border-bottom: none;
+    }
+
+    .list-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: var(--icon-bg);
+    }
+
+    .list-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .list-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .list-folder {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .list-status {
+      padding: 4px 8px;
+      background: var(--accent-green-light);
+      color: var(--accent-green);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .list-action {
+      padding: 6px 12px;
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s var(--transition);
+    }
+
+    .list-action:hover {
+      background: #1a6fc9;
+    }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--text-tertiary);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-tertiary);
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 24px 16px;
+      }
+
+      .page-title {
+        font-size: 32px;
+      }
+
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .list-header {
+        display: none;
+      }
+
+      .list-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 16px;
+      }
+
+      .nav-actions {
+        gap: 8px;
+      }
+    }
+
+    /* 加载动画 */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tool-card {
+      animation: fadeIn 0.3s var(--transition) backwards;
+    }
+
+    .tool-card:nth-child(1) { animation-delay: 0.05s; }
+    .tool-card:nth-child(2) { animation-delay: 0.1s; }
+    .tool-card:nth-child(3) { animation-delay: 0.15s; }
+    .tool-card:nth-child(4) { animation-delay: 0.2s; }
+    .tool-card:nth-child(5) { animation-delay: 0.25s; }
+    .tool-card:nth-child(6) { animation-delay: 0.3s; }
+
+    /* 快捷键提示 */
+    .shortcut-hint {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--text-tertiary);
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      transition: opacity 0.3s var(--transition);
+      pointer-events: none;
+    }
+
+    .shortcut-hint.show {
+      opacity: 1;
+    }
+
+    .kbd {
+      display: inline-block;
+      padding: 2px 6px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 11px;
+      margin: 0 2px;
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <section class="hero">
-      <div class="brand">
-        <div class="logo">HQ</div>
-        <div class="title">
-          <h1>企业内部工具导航门户</h1>
-          <div class="sub">统一入口 · 提升效率 · 保证一致体验</div>
-        </div>
-        <div class="toolbar">
-          <span class="pill">版本 v1.0</span>
-          <span class="pill" id="envText">环境：内网</span>
+  <!-- 顶部导航 -->
+  <nav class="top-nav">
+    <div class="nav-content">
+      <div class="breadcrumb">
+        <a href="index.html">🏠 首页</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>完整导航</span>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+          <span class="theme-icon">🌙</span>
+        </button>
+        <div class="view-switcher">
+          <button class="view-btn active" onclick="switchView('grid')">
+            <span>📦</span>
+            <span>按文件夹</span>
+          </button>
+          <button class="view-btn" onclick="switchView('list')">
+            <span>📋</span>
+            <span>列表</span>
+          </button>
         </div>
       </div>
-      <div class="hero-actions">
-        <button class="btn primary" onclick="scrollToContent()">浏览全部模块</button>
-        <button class="btn" onclick="location.reload()">刷新</button>
-        <button class="btn success" onclick="quickStart()">快速开始</button>
-      </div>
-      <div class="search-row">
-        <div class="search">
-          <span>🔎</span>
-          <input id="searchInput" placeholder="搜索工具名称、关键词（如：提成、奖金、匹配）" />
-        </div>
-        <button class="switch" id="toggleDensity">切换布局密度</button>
-      </div>
-    </section>
+    </div>
+  </nav>
 
-    <section class="layout" id="main">
-      <aside class="side">
-        <h3>分组导航</h3>
-        <nav class="nav">
-          <a href="#group-common">💼 通用工具 <span class="badge">3 个项目</span></a>
-          <a href="#group-02">#02 专题 <span class="badge">1 个项目</span></a>
-          <a href="#group-03">#03 专题 <span class="badge">1 个项目</span></a>
-          <a href="#group-04">#04 专题 <span class="badge">3 个项目</span></a>
-        </nav>
-      </aside>
+  <div class="container">
+    <!-- 页面标题 -->
+    <header class="page-header">
+      <h1 class="page-title">工具导航</h1>
+      <p class="page-subtitle">A.O.史密斯业务工具平台 - 让数据处理更简单高效</p>
+    </header>
 
-      <div class="content">
+    <!-- 搜索和筛选 -->
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          class="search-input" 
+          id="searchInput"
+          placeholder="搜索工具或文件夹..."
+        >
+      </div>
+      <div class="filter-tags">
+        <div class="filter-tag active" data-filter="all">全部</div>
+        <div class="filter-tag" data-filter="02">💰 奖金计算</div>
+        <div class="filter-tag" data-filter="03">📈 五合一提成</div>
+        <div class="filter-tag" data-filter="04">🏪 特殊渠道</div>
+        <div class="filter-tag" data-filter="通用工具">⚡ 通用工具</div>
+      </div>
+    </div>
+
+    <!-- 网格视图 -->
+    <div class="view-container active" id="gridView">
+      <!-- 02 奖金计算 -->
+      <div class="folder-section" data-theme="blue" data-folder="02">
+        <div class="folder-header">
+          <div class="folder-icon">💰</div>
+          <h2 class="folder-title">奖金计算解决方案</h2>
+          <span class="folder-count">2 个工具</span>
+        </div>
+        <div class="tools-grid">
+          <div class="tool-card" data-keywords="奖金 计算 提成 区域" onclick="navigateTo('02/02 奖金计算.html')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">📊</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">奖金计算工具</h4>
+                <span class="tool-card-status">✓ 可用</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">支持多区域（杭州、湖州、金华）业务员提成自动核算，自动读取任务分配表和回款数据，一键生成结算报表</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">多区域</span>
+              <span class="tool-tag">Excel导入</span>
+              <span class="tool-tag">自动计算</span>
+            </div>
+          </div>
+
+          <div class="tool-card" data-keywords="数据准备 配置" onclick="alert('数据准备工具包位于：02/00-数据准备/ 文件夹')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">📋</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">数据准备工具包</h4>
+                <span class="tool-card-status">✓ 可用</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">包含任务分配表、员工信息、月回款汇总等基础数据管理工具，为奖金计算提供数据支持</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">数据管理</span>
+              <span class="tool-tag">配套工具</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 五合一提成 -->
+      <div class="folder-section" data-theme="purple" data-folder="03">
+        <div class="folder-header">
+          <div class="folder-icon">📈</div>
+          <h2 class="folder-title">五合一提成解决方案</h2>
+          <span class="folder-count">1 个工具</span>
+        </div>
+        <div class="tools-grid">
+          <div class="tool-card" data-keywords="五合一 提成 综合 多维度" onclick="navigateTo('03/03 五合一提成计算.html')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">🎯</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">五合一提成计算器</h4>
+                <span class="tool-card-status">✓ 可用</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">综合多维度指标的复杂提成计算系统，支持自定义规则引擎、满档4.5%规则配置、实时预览计算结果</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">复杂规则</span>
+              <span class="tool-tag">实时计算</span>
+              <span class="tool-tag">规则引擎</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 特殊渠道 -->
+      <div class="folder-section" data-theme="green" data-folder="04">
+        <div class="folder-header">
+          <div class="folder-icon">🏪</div>
+          <h2 class="folder-title">特殊渠道处理方案</h2>
+          <span class="folder-count">3 个工具</span>
+        </div>
+        <div class="tools-grid">
+          <div class="tool-card" data-keywords="普农 渠道 特殊" onclick="navigateTo('04/04特殊普农.html')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">🌾</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">普农渠道工具</h4>
+                <span class="tool-card-status">✓ 可用</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">普农渠道专项提成计算，自动提取型号并计算提成，支持详细说明列与快速导出</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">普农专用</span>
+              <span class="tool-tag">型号识别</span>
+            </div>
+          </div>
+
+          <div class="tool-card" data-keywords="汇德隆 渠道" onclick="navigateTo('04/04特殊汇德隆.html')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">🏷️</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">汇德隆渠道工具</h4>
+                <span class="tool-card-status">✓ 可用</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">汇德隆数据专项处理工具，对接汇德隆数据口径，格式化显示、粘性表头、高性能滚动</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">汇德隆专用</span>
+              <span class="tool-tag">高性能</span>
+            </div>
+          </div>
+
+          <div class="tool-card" data-keywords="多表 批量 通用" onclick="navigateTo('04/04通用多表.html')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">📦</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">通用多表处理器</h4>
+                <span class="tool-card-status">✓ 可用</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">批量上传多个文件，统一字段映射，任务进度可视化，适合多门店/多片区合并处理</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">批量处理</span>
+              <span class="tool-tag">多文件</span>
+              <span class="tool-tag">进度可视化</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 通用工具 -->
+      <div class="folder-section" data-theme="orange" data-folder="通用工具">
+        <div class="folder-header">
+          <div class="folder-icon">⚡</div>
+          <h2 class="folder-title">通用工具集</h2>
+          <span class="folder-count">4 个工具</span>
+        </div>
+        <div class="tools-grid">
+          <div class="tool-card" data-keywords="Excel 合并 工具" onclick="navigateTo('通用工具/Excel合并工具.html')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">📑</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">Excel合并工具</h4>
+                <span class="tool-card-status">✓ 可用</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">快速合并多个Excel文件，支持按工作表、按文件名等多种合并模式，自动处理表头</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">文件合并</span>
+              <span class="tool-tag">批量处理</span>
+            </div>
+          </div>
+
+          <div class="tool-card" data-keywords="数据 清洗 格式化" onclick="navigateTo('通用工具/数据清洗工具.html')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">🧹</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">数据清洗工具</h4>
+                <span class="tool-card-status">✓ 可用</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">去除重复数据、空值处理、格式标准化、异常值检测，让数据更干净规范</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">数据清洗</span>
+              <span class="tool-tag">质量检测</span>
+            </div>
+          </div>
+
+          <div class="tool-card" data-keywords="报表 生成 导出" onclick="navigateTo('通用工具/报表生成器.html')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">📊</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">报表生成器</h4>
+                <span class="tool-card-status new">🆕 新增</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">自定义报表模板，一键生成专业报表，支持多种导出格式（Excel、PDF、图片）</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">报表生成</span>
+              <span class="tool-tag">模板定制</span>
+            </div>
+          </div>
+
+          <div class="tool-card" data-keywords="数据 对比 差异" onclick="navigateTo('通用工具/数据对比工具.html')">
+            <div class="tool-card-header">
+              <div class="tool-card-icon">🔍</div>
+              <div class="tool-card-info">
+                <h4 class="tool-card-title">数据对比工具</h4>
+                <span class="tool-card-status">✓ 可用</span>
+              </div>
+            </div>
+            <p class="tool-card-desc">对比两份数据的差异，高亮显示不同之处，支持多列对比和差异导出</p>
+            <div class="tool-card-tags">
+              <span class="tool-tag">数据对比</span>
+              <span class="tool-tag">差异分析</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 列表视图 -->
+    <div class="view-container" id="listView">
+      <div class="tools-list">
+        <div class="list-header">
+          <div>图标</div>
+          <div>工具名称</div>
+          <div>描述</div>
+          <div>所属分类</div>
+          <div>状态</div>
+          <div>操作</div>
+        </div>
+
+        <!-- 02 奖金计算 -->
+        <div class="list-row" data-folder="02" data-keywords="奖金 计算 提成 区域" onclick="navigateTo('02/02 奖金计算.html')">
+          <div class="list-icon" style="--icon-bg: var(--accent-blue-light)">📊</div>
+          <div class="list-name">奖金计算工具</div>
+          <div class="list-desc">支持多区域业务员提成自动核算</div>
+          <div class="list-folder">💰 奖金计算</div>
+          <div class="list-status">✓ 可用</div>
+          <button class="list-action" onclick="event.stopPropagation(); navigateTo('02/02 奖金计算.html')">打开</button>
+        </div>
+
+        <div class="list-row" data-folder="02" data-keywords="数据准备 配置" onclick="alert('数据准备工具包位于：02/00-数据准备/ 文件夹')">
+          <div class="list-icon" style="--icon-bg: var(--accent-blue-light)">📋</div>
+          <div class="list-name">数据准备工具包</div>
+          <div class="list-desc">基础数据管理工具集合</div>
+          <div class="list-folder">💰 奖金计算</div>
+          <div class="list-status">✓ 可用</div>
+          <button class="list-action" onclick="event.stopPropagation(); alert('数据准备工具包位于：02/00-数据准备/ 文件夹')">查看</button>
+        </div>
+
+        <!-- 03 五合一提成 -->
+        <div class="list-row" data-folder="03" data-keywords="五合一 提成 综合 多维度" onclick="navigateTo('03/03 五合一提成计算.html')">
+          <div class="list-icon" style="--icon-bg: var(--accent-purple-light)">🎯</div>
+          <div class="list-name">五合一提成计算器</div>
+          <div class="list-desc">综合多维度指标的复杂提成计算系统</div>
+          <div class="list-folder">📈 五合一提成</div>
+          <div class="list-status">✓ 可用</div>
+          <button class="list-action" onclick="event.stopPropagation(); navigateTo('03/03 五合一提成计算.html')">打开</button>
+        </div>
+
+        <!-- 04 特殊渠道 -->
+        <div class="list-row" data-folder="04" data-keywords="普农 渠道 特殊" onclick="navigateTo('04/04特殊普农.html')">
+          <div class="list-icon" style="--icon-bg: var(--accent-green-light)">🌾</div>
+          <div class="list-name">普农渠道工具</div>
+          <div class="list-desc">普农渠道专项提成计算</div>
+          <div class="list-folder">🏪 特殊渠道</div>
+          <div class="list-status">✓ 可用</div>
+          <button class="list-action" onclick="event.stopPropagation(); navigateTo('04/04特殊普农.html')">打开</button>
+        </div>
+
+        <div class="list-row" data-folder="04" data-keywords="汇德隆 渠道" onclick="navigateTo('04/04特殊汇德隆.html')">
+          <div class="list-icon" style="--icon-bg: var(--accent-green-light)">🏷️</div>
+          <div class="list-name">汇德隆渠道工具</div>
+          <div class="list-desc">汇德隆数据专项处理工具</div>
+          <div class="list-folder">🏪 特殊渠道</div>
+          <div class="list-status">✓ 可用</div>
+          <button class="list-action" onclick="event.stopPropagation(); navigateTo('04/04特殊汇德隆.html')">打开</button>
+        </div>
+
+        <div class="list-row" data-folder="04" data-keywords="多表 批量 通用" onclick="navigateTo('04/04通用多表.html')">
+          <div class="list-icon" style="--icon-bg: var(--accent-green-light)">📦</div>
+          <div class="list-name">通用多表处理器</div>
+          <div class="list-desc">批量上传多个文件，统一字段映射</div>
+          <div class="list-folder">🏪 特殊渠道</div>
+          <div class="list-status">✓ 可用</div>
+          <button class="list-action" onclick="event.stopPropagation(); navigateTo('04/04通用多表.html')">打开</button>
+        </div>
+
         <!-- 通用工具 -->
-        <div class="group" id="group-common" data-group="通用工具">
-          <div class="group-header">
-            <div class="group-title">
-              <span class="dot"></span>
-              <h2>通用工具</h2>
-            </div>
-            <span class="empty">跨团队通用，适配多种数据结构</span>
-          </div>
-          <div class="cards">
-            <div class="card" data-keywords="智能 表格 分析 AI 数据 可视化">
-              <a class="link" href="通用工具/智能表格分析助手.html.html" target="_blank" rel="noopener"></a>
-              <div class="icon">✨</div>
-              <h3>数据表格 AI 分析助手</h3>
-              <p>智能解析与洞察，多维汇总、字段质量巡检与异常标记，支持深浅色与导出。</p>
-              <div class="meta">
-                <span class="tag">实时分析</span>
-                <span class="ok">可用</span>
-              </div>
-            </div>
-            <div class="card" data-keywords="匹配 字段 合并 映射 预览 大数据 Worker">
-              <a class="link" href="通用工具/字段匹配工具.html" target="_blank" rel="noopener"></a>
-              <div class="icon">🧩</div>
-              <h3>智能表格匹配工具</h3>
-              <p>字段映射、预览虚拟化、大数据不卡顿，支持 CSV 回退导出与进度反馈。</p>
-              <div class="meta">
-                <span class="tag">匹配</span>
-                <span class="tag">10万+ 行</span>
-                <span class="ok">可用</span>
-              </div>
-            </div>
-            <div class="card" data-keywords="多表 批量 统一入口 提成">
-              <a class="link" href="04/04通用多表.html" target="_blank" rel="noopener"></a>
-              <div class="icon">🗂️</div>
-              <h3>通用多表批量处理</h3>
-              <p>批量上传与统一字段映射，任务进度可视化，适合多门店/多片区合并处理。</p>
-              <div class="meta">
-                <span class="tag">批量</span>
-                <span class="warn">测试通过</span>
-              </div>
-            </div>
-          </div>
+        <div class="list-row" data-folder="通用工具" data-keywords="Excel 合并 工具" onclick="navigateTo('通用工具/Excel合并工具.html')">
+          <div class="list-icon" style="--icon-bg: var(--accent-orange-light)">📑</div>
+          <div class="list-name">Excel合并工具</div>
+          <div class="list-desc">快速合并多个Excel文件</div>
+          <div class="list-folder">⚡ 通用工具</div>
+          <div class="list-status">✓ 可用</div>
+          <button class="list-action" onclick="event.stopPropagation(); navigateTo('通用工具/Excel合并工具.html')">打开</button>
         </div>
 
-        <!-- 02 专题 -->
-        <div class="group" id="group-02" data-group="02">
-          <div class="group-header">
-            <div class="group-title">
-              <span class="dot"></span>
-              <h2>02 专题</h2>
-            </div>
-            <span class="empty">奖金与活动配置相关工具</span>
-          </div>
-          <div class="cards">
-            <div class="card" data-keywords="奖金 计算 活动 档位 SheetJS">
-              <a class="link" href="02/02 奖金计算.html" target="_blank" rel="noopener"></a>
-              <div class="icon">💰</div>
-              <h3>奖金计算系统</h3>
-              <p>上传基础数据，按规则计算奖金，含结果卡片与导出，流程化步骤指引。</p>
-              <div class="meta">
-                <span class="tag">奖金</span>
-                <span class="ok">可用</span>
-              </div>
-            </div>
-          </div>
+        <div class="list-row" data-folder="通用工具" data-keywords="数据 清洗 格式化" onclick="navigateTo('通用工具/数据清洗工具.html')">
+          <div class="list-icon" style="--icon-bg: var(--accent-orange-light)">🧹</div>
+          <div class="list-name">数据清洗工具</div>
+          <div class="list-desc">去除重复数据、空值处理、格式标准化</div>
+          <div class="list-folder">⚡ 通用工具</div>
+          <div class="list-status">✓ 可用</div>
+          <button class="list-action" onclick="event.stopPropagation(); navigateTo('通用工具/数据清洗工具.html')">打开</button>
         </div>
 
-        <!-- 03 专题 -->
-        <div class="group" id="group-03" data-group="03">
-          <div class="group-header">
-            <div class="group-title">
-              <span class="dot"></span>
-              <h2>03 专题</h2>
-            </div>
-            <span class="empty">五合一规则与折扣测算</span>
-          </div>
-          <div class="cards">
-            <div class="card" data-keywords="五合一 提成 折扣 活动 满档 4.5%">
-              <a class="link" href="03/03 五合一提成计算.html" target="_blank" rel="noopener"></a>
-              <div class="icon">📈</div>
-              <h3>五合一提成与折扣计算</h3>
-              <p>满档 4.5% 精简规则版，清晰展示达档与未达档边界，导出友好。</p>
-              <div class="meta">
-                <span class="tag">规则引擎</span>
-                <span class="ok">可用</span>
-              </div>
-            </div>
-          </div>
+        <div class="list-row" data-folder="通用工具" data-keywords="报表 生成 导出" onclick="navigateTo('通用工具/报表生成器.html')">
+          <div class="list-icon" style="--icon-bg: var(--accent-orange-light)">📊</div>
+          <div class="list-name">报表生成器</div>
+          <div class="list-desc">自定义报表模板，一键生成专业报表</div>
+          <div class="list-folder">⚡ 通用工具</div>
+          <div class="list-status" style="background: var(--accent-orange-light); color: var(--accent-orange)">🆕 新增</div>
+          <button class="list-action" onclick="event.stopPropagation(); navigateTo('通用工具/报表生成器.html')">打开</button>
         </div>
 
-        <!-- 04 专题 -->
-        <div class="group" id="group-04" data-group="04">
-          <div class="group-header">
-            <div class="group-title">
-              <span class="dot"></span>
-              <h2>04 专题</h2>
-            </div>
-            <span class="empty">品牌/渠道专项处理</span>
-          </div>
-          <div class="cards">
-            <div class="card" data-keywords="提成 数据 处理 型号 提取 导出">
-              <a class="link" href="04/04特殊普农.html" target="_blank" rel="noopener"></a>
-              <div class="icon">🧮</div>
-              <h3>提成数据处理工具</h3>
-              <p>自动提取型号并计算提成，支持详细说明列与一键导出，过程可控。</p>
-              <div class="meta">
-                <span class="tag">普农</span>
-                <span class="ok">可用</span>
-              </div>
-            </div>
-            <div class="card" data-keywords="汇德隆 专项 提成 表格 导入 导出">
-              <a class="link" href="04/04特殊汇德隆.html" target="_blank" rel="noopener"></a>
-              <div class="icon">🏷️</div>
-              <h3>汇德隆提成计算（专项）</h3>
-              <p>对接汇德隆数据口径，格式化显示、粘性表头与高性能滚动。</p>
-              <div class="meta">
-                <span class="tag">汇德隆</span>
-                <span class="warn">稳定</span>
-              </div>
-            </div>
-            <div class="card" data-keywords="批量 多表 统一入口 进度 管理">
-              <a class="link" href="04/04通用多表.html" target="_blank" rel="noopener"></a>
-              <div class="icon">📦</div>
-              <h3>多表批量工具（通用）</h3>
-              <p>统一入口处理多个文件，含文件级状态、失败重试与单表导出。</p>
-              <div class="meta">
-                <span class="tag">批量</span>
-                <span class="ok">可用</span>
-              </div>
-            </div>
-          </div>
+        <div class="list-row" data-folder="通用工具" data-keywords="数据 对比 差异" onclick="navigateTo('通用工具/数据对比工具.html')">
+          <div class="list-icon" style="--icon-bg: var(--accent-orange-light)">🔍</div>
+          <div class="list-name">数据对比工具</div>
+          <div class="list-desc">对比两份数据的差异，高亮显示不同之处</div>
+          <div class="list-folder">⚡ 通用工具</div>
+          <div class="list-status">✓ 可用</div>
+          <button class="list-action" onclick="event.stopPropagation(); navigateTo('通用工具/数据对比工具.html')">打开</button>
         </div>
-
-        <!-- 其他/备用：图片占位或外链 -->
-        <div class="group" id="group-assets" data-group="资产">
-          <div class="group-header">
-            <div class="group-title">
-              <span class="dot"></span>
-              <h2>资产与示意</h2>
-            </div>
-            <span class="empty">放置视觉素材与参考链接</span>
-          </div>
-          <div class="cards">
-            <div class="card" data-keywords="示意 截图 形象 图像">
-              <a class="link" href="image.png" target="_blank" rel="noopener"></a>
-              <div class="icon">🖼️</div>
-              <h3>工具分组截图（示意）</h3>
-              <p>通用工具、02、03、04 分组视图截图，供培训或汇报使用。</p>
-              <div class="meta">
-                <span class="tag">PNG</span>
-                <span class="ok">可用</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
-    </section>
 
-    <footer class="footer">
-      <div>© 2025 Company Internal. All rights reserved.</div>
-      <div class="links">
-        <a href="#" onclick="alert('请联系 IT 服务台：it-support@example.com');return false;">IT 支持</a>
-        <a href="#" onclick="alert('请在企业微信工单系统提交需求');return false;">需求与反馈</a>
-        <a href="#" onclick="toggleEnv();return false;" id="envSwitch">切换环境</a>
+      <!-- 空状态 -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">🔍</div>
+        <h3>未找到匹配的工具</h3>
+        <p>试试其他关键词或清空搜索条件</p>
       </div>
-    </footer>
+    </div>
+  </div>
+
+  <!-- 快捷键提示 -->
+  <div class="shortcut-hint" id="shortcutHint">
+    按 <span class="kbd">Ctrl</span> + <span class="kbd">K</span> 快速搜索
   </div>
 
   <script>
-    // 搜索过滤
-    const searchInput = document.getElementById('searchInput');
-    const groups = document.querySelectorAll('.group');
-    const toggleDensityBtn = document.getElementById('toggleDensity');
-
-    function filterCards(keyword){
-      const kw = (keyword||'').trim().toLowerCase();
-      let visibleCount = 0;
-      groups.forEach(g=>{
-        let groupVisible = 0;
-        const cards = g.querySelectorAll('.card');
-        cards.forEach(card=>{
-          const text = (card.querySelector('h3')?.innerText + ' ' + (card.dataset.keywords||'') + ' ' + (card.querySelector('p')?.innerText||'')).toLowerCase();
-          const show = !kw || text.includes(kw);
-          card.style.display = show ? '' : 'none';
-          groupVisible += show ? 1 : 0;
-        });
-        g.style.display = groupVisible ? '' : 'none';
-        visibleCount += groupVisible;
-      });
-      return visibleCount;
+    // 主题切换
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      
+      // 更新图标
+      const themeIcon = document.querySelector('.theme-icon');
+      themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+      
+      // 保存到本地存储
+      localStorage.setItem('theme', newTheme);
     }
 
-    searchInput?.addEventListener('input', e=>filterCards(e.target.value));
-
-    // 快速开始：滚动到第一个模块卡片并高亮
-    function quickStart(){
-      const firstCard = document.querySelector('.card a.link');
-      if(firstCard){
-        firstCard.parentElement.style.outline = '2px solid #22c55e';
-        firstCard.parentElement.style.outlineOffset = '2px';
-        setTimeout(()=>{ firstCard.parentElement.style.outline='none' }, 2000);
-        firstCard.scrollIntoView({behavior:'smooth',block:'center'});
-      }
-    }
-
-    // 滚动到内容区域
-    function scrollToContent(){
-      document.getElementById('main').scrollIntoView({behavior:'smooth',block:'start'});
-    }
-
-    // 切换布局密度（卡片紧凑模式）
-    let compact = false;
-    toggleDensityBtn?.addEventListener('click', ()=>{
-      compact = !compact;
-      document.querySelectorAll('.cards').forEach(c=>{
-        c.style.gridTemplateColumns = compact ? 'repeat(auto-fill,minmax(220px,1fr))':'repeat(auto-fill,minmax(260px,1fr))';
-      });
-      document.querySelectorAll('.card').forEach(card=>{
-        card.style.minHeight = compact ? '100px' : '120px';
-      });
-      toggleDensityBtn.innerText = compact ? '切换为舒适布局' : '切换布局密度';
+    // 页面加载时恢复主题
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const themeIcon = document.querySelector('.theme-icon');
+      themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
     });
 
-    // 环境文本模拟切换
-    function toggleEnv(){
-      const el = document.getElementById('envText');
-      el.textContent = el.textContent.includes('内网') ? '环境：预发' : '环境：内网';
+    // 视图切换
+    function switchView(viewType) {
+      // 更新按钮状态
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.closest('.view-btn').classList.add('active');
+
+      // 切换视图
+      document.querySelectorAll('.view-container').forEach(container => {
+        container.classList.remove('active');
+      });
+      
+      if (viewType === 'grid') {
+        document.getElementById('gridView').classList.add('active');
+      } else {
+        document.getElementById('listView').classList.add('active');
+      }
+
+      // 保存视图偏好
+      localStorage.setItem('viewType', viewType);
     }
-    window.toggleEnv = toggleEnv;
+
+    // 页面加载时恢复视图
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedView = localStorage.getItem('viewType') || 'grid';
+      if (savedView === 'list') {
+        document.querySelector('.view-btn:last-child').click();
+      }
+    });
+
+    // 搜索功能
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase().trim();
+      performSearch(searchTerm);
+    });
+
+    function performSearch(searchTerm) {
+      const gridView = document.getElementById('gridView');
+      const listView = document.getElementById('listView');
+      const emptyState = document.getElementById('emptyState');
+      
+      let hasResults = false;
+
+      if (searchTerm === '') {
+        // 显示所有内容
+        document.querySelectorAll('.folder-section').forEach(section => {
+          section.style.display = 'block';
+        });
+        document.querySelectorAll('.tool-card').forEach(card => {
+          card.style.display = 'block';
+        });
+        document.querySelectorAll('.list-row').forEach(row => {
+          row.style.display = 'grid';
+        });
+        emptyState.style.display = 'none';
+        return;
+      }
+
+      // 网格视图搜索
+      document.querySelectorAll('.folder-section').forEach(section => {
+        let sectionHasResults = false;
+        const cards = section.querySelectorAll('.tool-card');
+        
+        cards.forEach(card => {
+          const keywords = card.getAttribute('data-keywords') || '';
+          const title = card.querySelector('.tool-card-title').textContent;
+          const desc = card.querySelector('.tool-card-desc').textContent;
+          
+          if (keywords.includes(searchTerm) || 
+              title.toLowerCase().includes(searchTerm) || 
+              desc.toLowerCase().includes(searchTerm)) {
+            card.style.display = 'block';
+            sectionHasResults = true;
+            hasResults = true;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        
+        section.style.display = sectionHasResults ? 'block' : 'none';
+      });
+
+      // 列表视图搜索
+      document.querySelectorAll('.list-row').forEach(row => {
+        const keywords = row.getAttribute('data-keywords') || '';
+        const name = row.querySelector('.list-name').textContent;
+        const desc = row.querySelector('.list-desc').textContent;
+        
+        if (keywords.includes(searchTerm) || 
+            name.toLowerCase().includes(searchTerm) || 
+            desc.toLowerCase().includes(searchTerm)) {
+          row.style.display = 'grid';
+          hasResults = true;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // 显示/隐藏空状态
+      emptyState.style.display = hasResults ? 'none' : 'block';
+    }
+
+    // 筛选功能
+    document.querySelectorAll('.filter-tag').forEach(tag => {
+      tag.addEventListener('click', function() {
+        // 更新激活状态
+        document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        const filter = this.getAttribute('data-filter');
+        
+        if (filter === 'all') {
+          // 显示所有
+          document.querySelectorAll('.folder-section').forEach(section => {
+            section.style.display = 'block';
+          });
+          document.querySelectorAll('.list-row').forEach(row => {
+            row.style.display = 'grid';
+          });
+        } else {
+          // 按分类筛选
+          document.querySelectorAll('.folder-section').forEach(section => {
+            const folder = section.getAttribute('data-folder');
+            section.style.display = folder === filter ? 'block' : 'none';
+          });
+          
+          document.querySelectorAll('.list-row').forEach(row => {
+            const folder = row.getAttribute('data-folder');
+            row.style.display = folder === filter ? 'grid' : 'none';
+          });
+        }
+        
+        // 清空搜索
+        searchInput.value = '';
+      });
+    });
+
+    // 导航功能
+    function navigateTo(url) {
+      window.location.href = url;
+    }
+
+    // 快捷键支持
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + K 聚焦搜索框
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+      }
+      
+      // ESC 清空搜索
+      if (e.key === 'Escape' && document.activeElement === searchInput) {
+        searchInput.value = '';
+        performSearch('');
+        searchInput.blur();
+      }
+    });
+
+    // 显示快捷键提示
+    let hintTimeout;
+    searchInput.addEventListener('focus', () => {
+      clearTimeout(hintTimeout);
+      document.getElementById('shortcutHint').classList.add('show');
+    });
+
+    searchInput.addEventListener('blur', () => {
+      hintTimeout = setTimeout(() => {
+        document.getElementById('shortcutHint').classList.remove('show');
+      }, 2000);
+    });
+
+    // 统计信息
+    console.log('%c🎉 A.O.史密斯业务工具平台', 'font-size: 20px; font-weight: bold; color: #2383e2;');
+    console.log('%c✨ Notion风格设计 | 简洁高效', 'font-size: 14px; color: #787774;');
+    
+    const totalTools = document.querySelectorAll('.tool-card').length;
+    const totalFolders = document.querySelectorAll('.folder-section').length;
+    console.log(`📊 当前共有 ${totalFolders} 个分类，${totalTools} 个工具`);
   </script>
 </body>
 </html>
