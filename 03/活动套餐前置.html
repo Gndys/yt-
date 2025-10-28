@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>活动套餐提成计算工具（第一步专用 / 修复版）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body{margin:0;font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);padding:20px;color:#2c3e50;}
+    .container{max-width:1500px;margin:0 auto;background:#fff;border-radius:18px;box-shadow:0 18px 40px -12px rgba(0,0,0,.25);overflow:hidden;}
+    .header{padding:32px 34px 20px;background:linear-gradient(120deg,#4facfe,#00f2fe);color:#fff;position:relative;}
+    .header h1{margin:0;font-size:2.2em;letter-spacing:1px;text-shadow:0 4px 12px rgba(0,0,0,.25);}
+    .header p{margin:12px 0 0;font-size:.95em;opacity:.95;}
+    .priority-notice{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:16px 20px;margin:20px 0 0;backdrop-filter:blur(8px);font-size:.88em;line-height:1.5;}
+    .priority-notice h3{margin:0 0 8px;font-size:1.1em;color:#fff3cd;}
+    .nav-tabs{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;}
+    .nav-tabs button{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.4);padding:9px 18px;border-radius:30px;cursor:pointer;font-size:.82em;letter-spacing:.5px;backdrop-filter:blur(4px);transition:.25s;}
+    .nav-tabs button.active,.nav-tabs button:hover{background:#fff;color:#1976d2;box-shadow:0 6px 16px -4px rgba(0,0,0,.28);}
+    .content{padding:30px 34px 50px;}
+    .section{margin-bottom:38px;background:#f7f9fc;border:2px solid #e2e9f0;border-radius:16px;padding:24px 26px 30px;position:relative;}
+    .section h2{margin:0 0 14px;font-size:1.38em;color:#1b3955;padding-left:14px;border-left:6px solid #3498db;line-height:1.2;}
+    .mini-desc{font-size:.72em;color:#607d8b;margin:-6px 0 12px 6px;letter-spacing:.5px;}
+    .upload-area{border:3px dashed #3498db;border-radius:14px;padding:50px 26px;text-align:center;background:#fff;cursor:pointer;transition:.35s;}
+    .upload-area:hover{background:#ebf5ff;border-color:#1d7fc7;}
+    .upload-area.dragover{background:#dff7ec;border-color:#1dbf76;}
+    .file-input{display:none;}
+    .field-mapping{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-top:10px;}
+    .field-group{display:flex;flex-direction:column;}
+    .field-group label{font-size:.72em;font-weight:600;color:#455a64;margin-bottom:6px;letter-spacing:.5px;}
+    .field-group select{padding:10px 12px;border:2px solid #d6dde4;background:#fff;border-radius:10px;font-size:.78em;transition:.25s;}
+    .field-group select:focus{outline:none;border-color:#3498db;box-shadow:0 0 0 3px rgba(52,152,219,.25);}
+    .calc-buttons{margin-top:18px;display:flex;flex-wrap:wrap;gap:14px;}
+    .btn{border:none;border-radius:28px;padding:12px 26px;font-size:.78em;font-weight:600;letter-spacing:.8px;cursor:pointer;color:#fff;display:inline-flex;align-items:center;gap:6px;box-shadow:0 8px 20px -6px rgba(0,0,0,.25);background:linear-gradient(135deg,#667eea,#764ba2);transition:.3s;}
+    .btn:hover{transform:translateY(-3px);box-shadow:0 14px 28px -8px rgba(0,0,0,.35);}
+    .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+    .btn-green{background:linear-gradient(135deg,#2ecc71,#1abc9c);}
+    .btn-blue{background:linear-gradient(135deg,#3498db,#2d8ae0);}
+    .btn-orange{background:linear-gradient(135deg,#ff9800,#fb8c00);}
+    .btn-gray{background:linear-gradient(135deg,#90a4ae,#78909c);}
+    .btn-export{background:linear-gradient(135deg,#27ae60,#2ecc71);}
+    .btn-purple{background:linear-gradient(135deg,#8e44ad,#9b59b6);}
+    .error,.success{display:none;margin:14px 0 4px;padding:14px 18px;border-radius:12px;font-size:.72em;font-weight:600;letter-spacing:.5px;position:relative;}
+    .error{background:#ffebee;border:1px solid #ef9a9a;color:#c62828;}
+    .success{background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;}
+    .loading{text-align:center;padding:28px 10px;display:none;}
+    .loading-spinner{border:6px solid #f3f3f3;border-top:6px solid #3498db;width:54px;height:54px;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .results-block{margin-top:16px;background:#fff;border:1px solid #dde5ec;border-radius:16px;padding:20px 20px 26px;box-shadow:0 8px 22px -8px rgba(0,0,0,.12);}
+    .results-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px;}
+    .results-header h3{margin:0;font-size:1em;color:#1b3955;display:flex;align-items:center;gap:8px;}
+    .results-header h3 span{background:#e3f2fd;padding:4px 10px;font-size:.65em;color:#1976d2;font-weight:700;border-radius:14px;letter-spacing:.5px;}
+    .export-buttons{display:flex;flex-wrap:wrap;gap:8px;}
+    table{width:100%;border-collapse:collapse;}
+    th,td{border:1px solid #e2e8f0;padding:8px 9px;font-size:.72em;vertical-align:top;}
+    th{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;position:sticky;top:0;z-index:3;text-align:center;}
+    tbody tr:nth-child(even){background:#f4f7fa;}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:4px 0 14px;}
+    .stat-card{background:#f8fbff;border:1px solid #dce7f0;border-radius:14px;padding:14px 12px;text-align:center;position:relative;overflow:hidden;}
+    .stat-card:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 85% 18%,rgba(103,167,255,.35),transparent 70%);}
+    .stat-number{font-size:1.55em;font-weight:700;color:#1976d2;line-height:1.1;}
+    .stat-label{font-size:.58em;color:#607d8b;margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
+    .package-group{border:2px solid #e3f2fd;border-radius:10px;background:#fff;margin-bottom:8px;overflow:hidden;}
+    .package-header{background:linear-gradient(135deg,#e3f2fd,#bbdefb);padding:6px 12px;font-size:.68em;color:#1976d2;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+    .product-row{display:flex;justify-content:space-between;gap:14px;padding:8px 12px;border-top:1px solid #eef5fb;font-size:.68em;}
+    .product-row:nth-child(even){background:#f9fcfe;}
+    .commission-highlight{background:#d5f4e6;color:#20824e;padding:3px 9px;border-radius:14px;font-weight:600;font-size:.65em;}
+    .warn-box{background:#fff3e0;border:1px solid #ffcc80;padding:12px 14px;border-radius:12px;font-size:.68em;line-height:1.55;color:#8d4600;margin-top:10px;}
+    .flex-gap{display:flex;flex-wrap:wrap;gap:8px;}
+    .notice-box{background:#eef7ff;padding:14px 18px;border-radius:12px;font-size:.65em;line-height:1.5;color:#0d47a1;border:1px solid #bbdefb;margin-top:14px;}
+    .inline-note{font-size:.6em;color:#607d8b;margin-left:6px;}
+    .step-notice{background:#fff8e1;border:1px solid #ffcc02;border-radius:12px;padding:16px 20px;margin-top:14px;font-size:.75em;line-height:1.6;color:#f57f17;}
+    .step-notice h4{margin:0 0 8px;color:#e65100;font-size:1.1em;}
+    .global-export{background:#f8f4ff;border:2px solid #d1c4e9;border-radius:16px;padding:20px 24px;margin-top:24px;text-align:center;}
+    .global-export h3{margin:0 0 12px;color:#673ab7;font-size:1.2em;}
+    .global-export p{margin:0 0 16px;color:#7e57c2;font-size:.85em;}
+    @media (max-width:880px){
+      .field-mapping{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+      .results-header{flex-direction:column;align-items:flex-start;}
+      .export-buttons{justify-content:flex-start;}
+    }
+    /* 修复说明标记 */
+    .fix-badge{display:inline-block;background:#ffe0b2;color:#e65100;padding:2px 8px;border-radius:14px;font-size:.6em;font-weight:600;letter-spacing:.5px;margin-left:8px;}
+    /* 政策说明样式 */
+    .policy-explain{background:#f0f7ff;border:2px solid #b3d9ff;border-radius:16px;padding:20px 24px;margin-top:20px;}
+    .policy-explain h3{margin:0 0 16px;color:#0d47a1;font-size:1.15em;display:flex;align-items:center;gap:8px;}
+    .policy-section{margin-bottom:20px;}
+    .policy-section h4{margin:0 0 12px;color:#1565c0;font-size:1em;padding-bottom:6px;border-bottom:2px solid #64b5f6;}
+    .policy-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:10px;}
+    .policy-card{background:#fff;border:2px solid #e3f2fd;border-radius:10px;padding:12px 14px;position:relative;transition:.25s;}
+    .policy-card:hover{border-color:#2196f3;box-shadow:0 4px 12px rgba(33,150,243,.2);}
+    .policy-card .title{font-weight:700;color:#1976d2;font-size:.85em;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+    .policy-card .priority{background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:12px;font-size:.65em;margin-left:auto;}
+    .policy-card .condition{color:#455a64;font-size:.72em;line-height:1.5;margin:6px 0;}
+    .policy-card .reward{background:linear-gradient(135deg,#4caf50,#45a049);color:#fff;padding:6px 10px;border-radius:8px;font-size:.75em;font-weight:700;display:inline-block;margin-top:4px;}
+    .policy-card .note{color:#f57f17;font-size:.65em;margin-top:4px;font-style:italic;}
+    .old-package-list,.activity-model-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-top:10px;}
+    .old-package-item,.activity-model-item{background:#fff;border-left:4px solid #ff9800;padding:10px 12px;border-radius:6px;font-size:.72em;line-height:1.5;}
+    .old-package-item strong,.activity-model-item strong{color:#e65100;display:block;margin-bottom:4px;}
+    .toggle-btn{background:#2196f3;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:.75em;cursor:pointer;margin-top:8px;}
+    .toggle-btn:hover{background:#1976d2;}
+    .collapsible-content{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+    .collapsible-content.expanded{max-height:2000px;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🎯 活动套餐提成计算工具（第一步专用 · 修复版） <span class="fix-badge">旧套餐逻辑已修复</span></h1>
+    <p>专门处理活动套餐提成（最高优先级）。本版本修复"旧套餐拆散/错标"问题：确保同一套餐内所有产品统一归属。</p>
+    <div class="priority-notice">
+      <h3>⚠️ 重要说明</h3>
+      <div>• 这是第一步活动套餐计算，结果需导入主工具继续处理</div>
+      <div>• 已对【旧套餐匹配】算法进行"按客户+套餐整体占用"修复，避免同一产品被拆到不同套餐</div>
+      <div>• 同一条明细（行）只会被一个旧套餐占用</div>
+    </div>
+    <div class="nav-tabs">
+      <button class="active" onclick="scrollToAnchor('uploadSection', this)">数据上传</button>
+      <button onclick="scrollToAnchor('mappingSection', this)">字段映射</button>
+      <button onclick="scrollToAnchor('oldResultsSection', this)">旧套餐</button>
+      <button onclick="scrollToAnchor('comboResultsSection', this)">套餐政策</button>
+      <button onclick="scrollToAnchor('activityResultsSection', this)">活动机型</button>
+      <button onclick="scrollToAnchor('globalExportSection', this)">全部导出</button>
+    </div>
+  </div>
+  <div class="content">
+    <!-- 上传 -->
+    <div class="section" id="uploadSection">
+      <h2>📁 上传数据文件 <span class="inline-note">支持 .xlsx / .xls</span></h2>
+      <div class="mini-desc">推荐字段：单据编号 / 客户 / 规格型号 / 促销员 / 数量 / 大类型（品类）</div>
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()" id="uploadArea">
+        <div style="font-size:3.2em;">📄</div>
+          <p style="font-weight:600;letter-spacing:1px;">点击选择或拖拽 Excel 到此处</p>
+          <p style="color:#607d8b;font-size:.7em;margin-top:12px;">自动识别表头，可手动修正</p>
+      </div>
+      <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
+      <div class="error" id="errorMsg"></div>
+      <div class="success" id="successMsg"></div>
+      <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <div style="font-size:.72em;color:#607d8b;">正在读取数据...</div>
+      </div>
+    </div>
+
+    <!-- 映射 -->
+    <div class="section" id="mappingSection" style="display:none;">
+      <h2>🔗 字段映射设置</h2>
+      <div class="mini-desc">全部字段请完成映射。若没有"大类型"则无法计算"套餐政策 & 活动机型"。</div>
+      <div class="field-mapping">
+        <div class="field-group">
+          <label>单据编号</label>
+          <select id="orderField"><option value="">请选择...</option></select>
+        </div>
+        <div class="field-group">
+          <label>客户</label>
+          <select id="customerField"><option value="">请选择...</option></select>
+        </div>
+        <div class="field-group">
+          <label>规格型号</label>
+          <select id="modelField"><option value="">请选择...</option></select>
+        </div>
+        <div class="field-group">
+          <label>促销员</label>
+          <select id="salesmanField"><option value="">请选择...</option></select>
+        </div>
+        <div class="field-group">
+          <label>销售数量</label>
+          <select id="quantityField"><option value="">请选择...</option></select>
+        </div>
+        <div class="field-group">
+          <label>大类型（品类）</label>
+          <select id="categoryField"><option value="">请选择...</option></select>
+        </div>
+      </div>
+      <div class="calc-buttons">
+        <button class="btn btn-blue" onclick="runOldPackageCalc()">🧮 计算旧套餐提成</button>
+        <button class="btn btn-green" onclick="runComboPolicyCalc()">🧩 计算套餐政策</button>
+        <button class="btn btn-orange" onclick="runActivityPolicyCalc()">🔥 计算活动机型政策</button>
+        <button class="btn btn-gray" onclick="rebuildBaseData()">♻️ 重新解析数据</button>
+      </div>
+      <div class="warn-box">
+        说明：<br>
+        1）三个按钮互不影响，可分别多次计算与导出。<br>
+        2）套餐政策 & 活动机型政策依赖"大类型"字段。<br>
+        3）组合套餐优先级：九件套 > 五件套 > 组合套餐1（防止重复计套）。<br>
+        4）活动机型阶梯：达阈值后全量计提（非增量）。<br>
+        5）旧套餐修复：同一套餐内所有产品统一标记，不再出现"一半属于套餐1 一半属于套餐2"的错配。<br>
+      </div>
+
+      <!-- 政策详细说明 -->
+      <div class="policy-explain">
+        <h3>📋 套餐政策详细说明 <span style="font-size:.7em;color:#607d8b;font-weight:400;">（点击按钮展开查看详情）</span></h3>
+        
+        <!-- 组合套餐政策 -->
+        <div class="policy-section">
+          <h4>🧩 组合套餐政策（按优先级从高到低匹配）</h4>
+          <div class="policy-grid">
+            <div class="policy-card">
+              <div class="title">
+                <span>九件套</span>
+                <span class="priority">优先级 1</span>
+              </div>
+              <div class="condition">
+                <strong>匹配条件：</strong>烟机 + 蒸烤 + 洗碗机 + 热水器 + 净水 + 冰箱 + 洗护<br>
+                <small>（需要7个品类全部齐全）</small>
+              </div>
+              <div class="reward">💰 激励：1000元/套</div>
+            </div>
+
+            <div class="policy-card">
+              <div class="title">
+                <span>五件套</span>
+                <span class="priority">优先级 2</span>
+              </div>
+              <div class="condition">
+                <strong>匹配条件：</strong>热水器 + 净水 + 冰箱 + 洗护<br>
+                <small>（需要4个品类全部齐全）</small>
+              </div>
+              <div class="reward">💰 激励：500元/套</div>
+            </div>
+
+            <div class="policy-card">
+              <div class="title">
+                <span>组合套餐1</span>
+                <span class="priority">优先级 3</span>
+              </div>
+              <div class="condition">
+                <strong>匹配条件：</strong><br>
+                • 烟机/蒸烤/洗碗机（三选一）<br>
+                • + 净水（必须）<br>
+                • + 热水器（必须）
+              </div>
+              <div class="reward">💰 激励：300元/套</div>
+            </div>
+
+            <div class="policy-card">
+              <div class="title">
+                <span>嵌蒸套装</span>
+                <span class="priority">优先级 4</span>
+              </div>
+              <div class="condition">
+                <strong>匹配条件：</strong><br>
+                • 基础：ER1600BWi + KZQ45-M1Wi<br>
+                • 替代：ER1600BWi + KZQ45-M5Wi（补差900元）
+              </div>
+              <div class="reward">💰 激励：500元/套</div>
+            </div>
+
+            <div class="policy-card">
+              <div class="title">
+                <span>A+净热组合</span>
+                <span class="priority">优先级 5</span>
+              </div>
+              <div class="condition">
+                <strong>匹配条件：</strong><br>
+                • 烟机/蒸烤/洗碗机（三选一）<br>
+                • + 净水/热水器（二选一）
+              </div>
+              <div class="reward">💰 激励：200元/套</div>
+              <div class="note">⚠️ 爆款、特价除外</div>
+            </div>
+          </div>
+          <button class="toggle-btn" onclick="toggleSection('comboPolicyDetail')">👆 点击查看优先级说明</button>
+          <div id="comboPolicyDetail" class="collapsible-content">
+            <div class="notice-box" style="margin-top:12px;">
+              <strong>优先级说明：</strong><br>
+              • 系统按优先级从1到5依次匹配，优先级高的先消耗资源<br>
+              • 同一产品只会被计入一个套餐，不会重复计算<br>
+              • 例如：如果满足"九件套"，则不会再计算"五件套"或"组合套餐1"
+            </div>
+          </div>
+        </div>
+
+        <!-- 旧套餐规则 -->
+        <div class="policy-section">
+          <h4>📦 旧套餐匹配规则（7种固定组合）</h4>
+          <button class="toggle-btn" onclick="toggleSection('oldPackageDetail')">👆 点击展开查看所有旧套餐</button>
+          <div id="oldPackageDetail" class="collapsible-content">
+            <div class="old-package-list">
+              <div class="old-package-item">
+                <strong>套餐1：300元</strong>
+                CXW-350-Q2CWI（烟机）+ JZT-V2B2S（灶具）<br>
+                套餐价：5098元
+              </div>
+              <div class="old-package-item">
+                <strong>套餐2：400元</strong>
+                CXW-400-Z3AWi（烟机）+ JZT-V2B2S（灶具）<br>
+                套餐价：6788元
+              </div>
+              <div class="old-package-item">
+                <strong>套餐3：500元</strong>
+                CXW-350-Q2CWI（烟机）+ JZT-V2B2S（灶具）+ DWQ10-SR3HWI（洗碗机）<br>
+                套餐价：8598元
+              </div>
+              <div class="old-package-item">
+                <strong>套餐4：500元</strong>
+                CXW-350-Q2CWi（烟机）+ JZT-V2B2S（灶具）+ KZQ45-M1wi（蒸烤）<br>
+                套餐价：8798元
+              </div>
+              <div class="old-package-item">
+                <strong>套餐5：800元</strong>
+                CXW-350-Q2CWI（烟机）+ JZT-V2B2S（灶具）+ KZQ45-M1Wi（蒸烤）+ DWQ10-SR3HWI（洗碗机）<br>
+                套餐价：12898元
+              </div>
+              <div class="old-package-item">
+                <strong>套餐6：500元</strong>
+                KZQ45-M5wi（蒸烤）+ R1600DWWi（净水）<br>
+                套餐价：8299元
+              </div>
+              <div class="old-package-item">
+                <strong>套餐7：600元</strong>
+                DWQ15-R3wi（洗碗机）+ DR1600HF2（净水）<br>
+                套餐价：10598元
+              </div>
+            </div>
+            <div class="notice-box" style="margin-top:12px;">
+              <strong>旧套餐匹配逻辑：</strong><br>
+              • 按客户和型号精确匹配，同一个产品只能进入一个旧套餐<br>
+              • 套餐内所有产品统一标记，避免拆散问题<br>
+              • 如果同时满足多个旧套餐，按列表顺序优先匹配第一个
+            </div>
+          </div>
+        </div>
+
+        <!-- 活动机型政策 -->
+        <div class="policy-section">
+          <h4>🔥 活动机型专项激励（15种机型）</h4>
+          <button class="toggle-btn" onclick="toggleSection('activityModelDetail')">👆 点击展开查看所有活动机型</button>
+          <div id="activityModelDetail" class="collapsible-content">
+            <div style="margin:12px 0;padding:10px 12px;background:#fff3e0;border-radius:8px;font-size:.72em;">
+              <strong style="color:#e65100;">激励模式说明：</strong><br>
+              • <strong>直接加提（flat）：</strong>每台固定金额，不设门槛<br>
+              • <strong>阶梯制（threshold）：</strong>达到数量阈值后，全量计提（非增量）
+            </div>
+            <div class="activity-model-list">
+              <div class="activity-model-item">
+                <strong>JSQ31-VJSAI（燃热）</strong>
+                加提100元/台<br>
+                <small style="color:#607d8b;">活动期加提</small>
+              </div>
+              <div class="activity-model-item">
+                <strong>JSQ31-QJS（燃热）</strong>
+                加提100元/台 + 赠品<br>
+                <small style="color:#607d8b;">直接加提</small>
+              </div>
+              <div class="activity-model-item">
+                <strong>JSQ31-QJSAI（燃热）</strong>
+                加提100元/台 + 赠品<br>
+                <small style="color:#607d8b;">直接加提</small>
+              </div>
+              <div class="activity-model-item">
+                <strong>JSQ33-MJSX（燃热）</strong>
+                加提100元/台 + 赠品<br>
+                <small style="color:#607d8b;">直接加提</small>
+              </div>
+              <div class="activity-model-item">
+                <strong>JSQ40-SJSX（燃热）</strong>
+                加提300元/台 + 赠品<br>
+                <small style="color:#607d8b;">直接加提</small>
+              </div>
+              <div class="activity-model-item" style="border-left-color:#2196f3;">
+                <strong>R1700FWI（净水）</strong>
+                ≥5台时，全量50元/台<br>
+                <small style="color:#1976d2;">阶梯制：未达阈值=0元</small>
+              </div>
+              <div class="activity-model-item" style="border-left-color:#2196f3;">
+                <strong>DR1600HF2（净水）</strong>
+                ≥3台时，全量100元/台<br>
+                <small style="color:#1976d2;">阶梯制：未达阈值=0元</small>
+              </div>
+              <div class="activity-model-item" style="border-left-color:#2196f3;">
+                <strong>DR1800HF1（净水）</strong>
+                ≥3台时，全量100元/台<br>
+                <small style="color:#1976d2;">阶梯制：未达阈值=0元</small>
+              </div>
+              <div class="activity-model-item" style="border-left-color:#2196f3;">
+                <strong>DR1800HF2（净水）</strong>
+                ≥3台时，全量100元/台<br>
+                <small style="color:#1976d2;">阶梯制：未达阈值=0元</small>
+              </div>
+              <div class="activity-model-item" style="border-left-color:#2196f3;">
+                <strong>DR2000HF1（净水）</strong>
+                ≥3台时，全量100元/台<br>
+                <small style="color:#1976d2;">阶梯制：未达阈值=0元</small>
+              </div>
+              <div class="activity-model-item" style="border-left-color:#2196f3;">
+                <strong>DR2000HF2（净水）</strong>
+                ≥3台时，全量100元/台<br>
+                <small style="color:#1976d2;">阶梯制：未达阈值=0元</small>
+              </div>
+              <div class="activity-model-item">
+                <strong>R1800RC9（净水）</strong>
+                加提100元/台<br>
+                <small style="color:#607d8b;">直接加提</small>
+              </div>
+              <div class="activity-model-item">
+                <strong>R2300RC9（净水）</strong>
+                加提100元/台<br>
+                <small style="color:#607d8b;">直接加提</small>
+              </div>
+              <div class="activity-model-item">
+                <strong>R2500AB1AI（净水）</strong>
+                加提100元/台<br>
+                <small style="color:#607d8b;">直接加提</small>
+              </div>
+              <div class="activity-model-item">
+                <strong>R2500RC3（净水）</strong>
+                加提100元/台<br>
+                <small style="color:#607d8b;">直接加提</small>
+              </div>
+              <div class="activity-model-item">
+                <strong>CEWH-60GA（其他）</strong>
+                加提100元/台（包销）<br>
+                <small style="color:#607d8b;">直接加提</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 旧套餐结果 -->
+    <div class="section" id="oldResultsSection" style="display:none;">
+      <div class="results-block">
+        <div class="results-header">
+          <h3>📦 旧套餐匹配结果 <span id="oldCountTag">0</span></h3>
+          <div class="export-buttons">
+            <button class="btn btn-export" onclick="exportOld()">导出旧套餐结果</button>
+          </div>
+        </div>
+        <div class="stats" id="oldStats"></div>
+        <div style="max-height:520px;overflow:auto;border:1px solid #e0e6ed;border-radius:14px;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:110px;">促销员</th>
+                <th style="width:150px;">客户</th>
+                <th style="width:90px;">套餐号</th>
+                <th style="width:100px;">提成</th>
+                <th>产品组成</th>
+              </tr>
+            </thead>
+            <tbody id="oldResultsBody"></tbody>
+          </table>
+        </div>
+        <div class="notice-box">
+          修复要点：<br>
+          • 采用"资源占用"方式，同一个明细行只会进入一个旧套餐。<br>
+          • 套餐判断按"客户+所需 SKU 全部存在"一次性确立，避免拆散。<br>
+          • 若同一个组合能匹配多种旧套餐规则，按规则列表顺序优先匹配第一个并占用。<br>
+        </div>
+        <div class="step-notice">
+          <h4>📋 下一步操作</h4>
+          导出后导入主提成计算工具继续后续计算，文件已包含占用标记，避免重复计算。
+        </div>
+      </div>
+    </div>
+
+    <!-- 套餐政策结果 -->
+    <div class="section" id="comboResultsSection" style="display:none;">
+      <div class="results-block">
+        <div class="results-header">
+          <h3>🧩 组合套餐政策结果 <span id="comboCountTag">0</span></h3>
+          <div class="export-buttons">
+            <button class="btn btn-export" onclick="exportCombo()">导出套餐政策结果</button>
+          </div>
+        </div>
+        <div class="stats" id="comboStats"></div>
+        <div style="max-height:520px;overflow:auto;border:1px solid #e0e6ed;border-radius:14px;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:110px;">促销员</th>
+                <th style="width:150px;">客户</th>
+                <th style="width:110px;">套餐类型</th>
+                <th style="width:90px;">套数</th>
+                <th style="width:100px;">单套激励</th>
+                <th style="width:110px;">总激励</th>
+                <th>分类明细</th>
+              </tr>
+            </thead>
+            <tbody id="comboResultsBody"></tbody>
+          </table>
+        </div>
+        <div class="notice-box">
+          优先级：九件套 > 五件套 > 组合套餐1 > 嵌蒸套装；资源按优先级逐层消耗。
+        </div>
+        <div class="step-notice">
+          <h4>📋 下一步操作</h4>
+          导出文件后导入主工具继续处理。
+        </div>
+      </div>
+    </div>
+
+    <!-- 活动机型结果 -->
+    <div class="section" id="activityResultsSection" style="display:none;">
+      <div class="results-block">
+        <div class="results-header">
+          <h3>🔥 活动机型政策结果 <span id="activityCountTag">0</span></h3>
+          <div class="export-buttons">
+            <button class="btn btn-export" onclick="exportActivity()">导出活动机型结果</button>
+          </div>
+        </div>
+        <div class="stats" id="activityStats"></div>
+        <div style="max-height:520px;overflow:auto;border:1px solid #e0e6ed;border-radius:14px;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:110px;">促销员</th>
+                <th style="width:150px;">客户</th>
+                <th style="width:170px;">机型</th>
+                <th style="width:70px;">数量</th>
+                <th style="width:120px;">单台激励</th>
+                <th style="width:120px;">合计激励</th>
+                <th style="width:200px;">条件说明</th>
+              </tr>
+            </thead>
+            <tbody id="activityResultsBody"></tbody>
+          </table>
+        </div>
+        <div class="notice-box">
+          阶梯：达阈值全量计；未达=0。仅统计现金类激励。
+        </div>
+        <div class="step-notice">
+          <h4>📋 下一步操作</h4>
+          导出结果导入主工具。
+        </div>
+      </div>
+    </div>
+
+    <!-- 全部导出区域 -->
+    <div class="section" id="globalExportSection">
+      <div class="global-export">
+        <h3>📊 一键导出全部计算结果</h3>
+        <p>将旧套餐、套餐政策、活动机型三种计算结果合并到一个Excel文件中，避免手动合并的麻烦。</p>
+        <button class="btn btn-purple" id="exportAllBtn" onclick="exportAllResults()" disabled>
+          📋 导出全部数据
+        </button>
+        <div class="notice-box" style="margin-top:16px;">
+          说明：<br>
+          • 同一行数据如被多种规则匹配，会在不同列中显示对应的提成信息<br>
+          • 未被任何规则匹配的原始数据也会包含在内<br>
+          • 只有当至少有一种计算结果存在时，该按钮才可点击<br>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /***************** 基础数据结构与全局变量 *****************/
+  let excelData = [];
+  let baseRecords = [];
+  let fieldMapping = {};
+
+  // 计算结果缓存
+  let oldPackageResults = [];
+  let comboPolicyResults = [];
+  let activityPolicyResults = [];
+
+  /***************** 旧套餐 SKU 规则（保持原列表顺序 = 优先级） *****************/
+  const oldPackageRules = [
+    { id: 1, products: ['CXW-350-Q2CWI', 'JZT-V2B2S'], prices: {'CXW-350-Q2CWI': 5678, 'JZT-V2B2S': 3098}, packagePrice: 5098, commission: 300 },
+    { id: 2, products: ['CXW-400-Z3AWi', 'JZT-V2B2S'], prices: {'CXW-400-Z3AWi': 8288, 'JZT-V2B2S': 3098}, packagePrice: 6788, commission: 400 },
+    { id: 3, products: ['CXW-350-Q2CWI', 'JZT-V2B2S', 'DWQ10-SR3HWI'], prices: {'CXW-350-Q2CWI': 5678, 'JZT-V2B2S': 3098, 'DWQ10-SR3HWI': 6698}, packagePrice: 8598, commission: 500 },
+    { id: 4, products: ['CXW-350-Q2CWi', 'JZT-V2B2S', 'KZQ45-M1wi'], prices: {'CXW-350-Q2CWi': 5678, 'JZT-V2B2S': 3098, 'KZQ45-M1wi': 7308}, packagePrice: 8798, commission: 500 },
+    { id: 5, products: ['CXW-350-Q2CWI', 'JZT-V2B2S', 'KZQ45-M1Wi', 'DWQ10-SR3HWI'], prices: {'CXW-350-Q2CWI': 5398, 'JZT-V2B2S': 3098, 'KZQ45-M1Wi': 7308, 'DWQ10-SR3HWI': 6698}, packagePrice: 12898, commission: 800 },
+    { id: 6, products: ['KZQ45-M5wi', 'R1600DWWi'], prices: {'KZQ45-M5wi': 9098, 'R1600DWWi': 5988}, packagePrice: 8299, commission: 500 },
+    { id: 7, products: ['DWQ15-R3wi', 'DR1600HF2'], prices: {'DWQ15-R3wi': 9388, 'DR1600HF2': 7988}, packagePrice: 10598, commission: 600 }
+  ];
+
+  /***************** 组合套餐政策分类 *****************/
+  const categoryAliases = {
+    '烟机': ['烟机','油烟机'],
+    '蒸烤': ['蒸箱','蒸烤','蒸烤箱','蒸烤一体机'],
+    '洗碗机': ['洗碗机','洗碗'],
+    '热水器': ['热水器','燃热','燃气热水器'],
+    '净水': ['净水','净水机','净水器','饮水'],
+    '冰箱': ['冰箱','松下冰箱'],
+    '洗护': ['洗护','洗衣机','洗烘套装','洗烘','松下洗护']
+  };
+
+  const comboPolicyDefs = [
+    { id: '九件套', priority: 1, commissionPerSet: 1000, categoriesRequired: ['烟机','蒸烤','洗碗机','热水器','净水','冰箱','洗护'] },
+    { id: '五件套', priority: 2, commissionPerSet: 500, categoriesRequired: ['热水器','净水','冰箱','洗护'] },
+    { id: '组合套餐1', priority: 3, commissionPerSet: 300, categoriesRequired: ['GROUP_A','净水','热水器'], groupA: ['烟机','蒸烤','洗碗机'] },
+    { id: '嵌蒸套装', priority: 4, commissionPerSet: 500, specificModels: ['ER1600BWi','KZQ45-M1Wi'], alternative: { replace: 'KZQ45-M1Wi', with: 'KZQ45-M5Wi', extraDiff: 900 } },
+    { id: 'A+净热组合', priority: 5, commissionPerSet: 200, categoriesRequired: ['GROUP_A','GROUP_B'], groupA: ['烟机','蒸烤','洗碗机'], groupB: ['净水','热水器'] }
+  ];
+
+  /***************** 活动机型政策 *****************/
+  const activityModels = {
+      'JSQ31-VJSAI': { type:'燃热', mode:'flat', perUnit:100, note:'活动期加提100元/台' },
+      'JSQ31-QJS': { type:'燃热', mode:'flat', perUnit:100, note:'加提100元/台+赠品' },
+      'JSQ31-QJSAI': { type:'燃热', mode:'flat', perUnit:100, note:'加提100元/台+赠品' },
+      'JSQ33-MJSX': { type:'燃热', mode:'flat', perUnit:100, note:'加提100元/台+赠品' },
+      'JSQ40-SJSX': { type:'燃热', mode:'flat', perUnit:300, note:'加提300元/台+赠品' },
+      'R1700FWI': { type:'净水', mode:'threshold', threshold:5, perUnit:50, note:'≥5台 全量50元/台' },
+      'DR1600HF2': { type:'净水', mode:'threshold', threshold:3, perUnit:100, note:'≥3台 全量100元/台' },
+      'DR1800HF1': { type:'净水', mode:'threshold', threshold:3, perUnit:100, note:'≥3台 全量100元/台' },
+      'DR1800HF2': { type:'净水', mode:'threshold', threshold:3, perUnit:100, note:'≥3台 全量100元/台' },
+      'DR2000HF1': { type:'净水', mode:'threshold', threshold:3, perUnit:100, note:'≥3台 全量100元/台' },
+      'DR2000HF2': { type:'净水', mode:'threshold', threshold:3, perUnit:100, note:'≥3台 全量100元/台' },
+      'R1800RC9': { type:'净水', mode:'flat', perUnit:100, note:'加提100元/台' },
+      'R2300RC9': { type:'净水', mode:'flat', perUnit:100, note:'加提100元/台' },
+      'R2500AB1AI': { type:'净水', mode:'flat', perUnit:100, note:'加提100元/台' },
+      'R2500RC3': { type:'净水', mode:'flat', perUnit:100, note:'加提100元/台' },
+      'CEWH-60GA': { type:'其他', mode:'flat', perUnit:100, note:'加提100元/台（包销）' }
+    };
+
+    /***************** 初始化 *****************/
+    document.addEventListener('DOMContentLoaded', () => {
+      setupFileUpload();
+      updateExportAllButton();
+    });
+
+    function setupFileUpload(){
+      const fileInput = document.getElementById('fileInput');
+      const uploadArea = document.getElementById('uploadArea');
+      fileInput.addEventListener('change', handleFileSelect);
+      ['dragenter','dragover'].forEach(evt=>{
+        uploadArea.addEventListener(evt,e=>{
+          e.preventDefault();e.stopPropagation();
+          uploadArea.classList.add('dragover');
+        });
+      });
+      ['dragleave','drop'].forEach(evt=>{
+        uploadArea.addEventListener(evt,e=>{
+          e.preventDefault();e.stopPropagation();
+          if(evt==='drop'){
+            const files = e.dataTransfer.files;
+            if(files.length>0){ fileInput.files = files; handleFileSelect({target:{files}}); }
+          }
+          uploadArea.classList.remove('dragover');
+        });
+      });
+    }
+
+    function handleFileSelect(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      showLoading(true);
+      hideMessages();
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        try{
+          const data = new Uint8Array(ev.target.result);
+          const wb = XLSX.read(data,{type:'array'});
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          excelData = XLSX.utils.sheet_to_json(ws,{header:1});
+          if(excelData.length <2) throw new Error('数据不足：需至少1行表头+1行数据');
+          setupFieldMapping();
+          showSuccess('文件读取成功，请完成字段映射。');
+        }catch(err){
+          showError('读取失败：'+err.message);
+        }finally{
+          showLoading(false);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    /***************** 字段映射 *****************/
+    function setupFieldMapping(){
+      const headers = excelData[0];
+      const fields = ['orderField','customerField','modelField','salesmanField','quantityField','categoryField'];
+      fields.forEach(fid=>{
+        const sel = document.getElementById(fid);
+        sel.innerHTML = '<option value="">请选择...</option>';
+        headers.forEach((h,i)=>{
+          const op = document.createElement('option');
+            op.value = i;
+            op.textContent = h;
+            sel.appendChild(op);
+        });
+      });
+      autoMatch(headers);
+      document.getElementById('mappingSection').style.display='block';
+      scrollToAnchor('mappingSection');
+    }
+
+    function autoMatch(headers){
+      const mapKeys = {
+        orderField:['单据编号','单据号','单据','订单编号','订单'],
+        customerField:['客户店名','客户名称','客户'],
+        modelField:['规格型号','规格','型号','机型'],
+        salesmanField:['促销员','销售员','导购'],
+        quantityField:['销售数量','数量'],
+        categoryField:['大类型','品类']
+      };
+      
+      Object.entries(mapKeys).forEach(([fid,keys])=>{
+        const sel = document.getElementById(fid);
+        let matched = false;
+        
+        // Pass 1: Exact match
+        for(let i=0;i<headers.length;i++){
+          const h = String(headers[i]).trim();
+          if(keys.includes(h)){ sel.value = i; matched=true; break; }
+        }
+        if(matched) return;
+        
+        // Pass 2: Contains match (more restrictive)
+        for(let i=0;i<headers.length;i++){
+          const h = String(headers[i]).toLowerCase();
+          if(keys.some(k=>h.includes(k.toLowerCase()))){ sel.value = i; break; }
+        }
+      });
+    }
+
+    function collectMapping(){
+      fieldMapping = {
+        order: valNum('orderField'),
+        customer: valNum('customerField'),
+        model: valNum('modelField'),
+        salesman: valNum('salesmanField'),
+        quantity: valNum('quantityField'),
+        category: valNum('categoryField')
+      };
+    }
+    function valNum(id){
+      const v = document.getElementById(id).value;
+      return v===''?NaN:parseInt(v);
+    }
+
+    /***************** 基础数据解析 *****************/
+    function rebuildBaseData(){
+      collectMapping();
+      if(Object.values(fieldMapping).slice(0,5).some(v=>isNaN(v))){
+        showError('请先完成除"大类型"外所有字段映射。');
+        return;
+      }
+      baseRecords = [];
+      for(let i=1;i<excelData.length;i++){
+        const row = excelData[i];
+        if(!row) continue;
+        const orderNo = safeStr(row[fieldMapping.order]);
+        const customer = safeStr(row[fieldMapping.customer]);
+        const model = safeStr(row[fieldMapping.model]);
+        const salesman = safeStr(row[fieldMapping.salesman]);
+        let qty = parseFloat(row[fieldMapping.quantity]);
+        if(isNaN(qty) || qty<=0) qty = 1;
+        if(!customer || !model || !salesman) continue;
+        const categoryRaw = !isNaN(fieldMapping.category) ? safeStr(row[fieldMapping.category]) : '';
+        const normModel = normalizeModel(model);
+        const normCategory = normalizeCategory(categoryRaw);
+        baseRecords.push({
+          orderNo,
+          customer,
+          model,
+          modelNorm: normModel,
+          salesman,
+          quantity: qty,
+          categoryRaw,
+          category: normCategory,
+          originalRow: row,
+          rowIndex: i
+        });
+      }
+      showSuccess('基础数据解析完成，共 '+baseRecords.length+' 条有效记录。');
+    }
+
+    function safeStr(v){ return v===undefined || v===null ? '' : String(v).trim(); }
+    function normalizeModel(m){ return safeStr(m).toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9-]/g,''); }
+    function normalizeCategory(cat){
+      const c = safeStr(cat).toLowerCase();
+      if(!c) return '';
+      for(const std in categoryAliases){
+        if(categoryAliases[std].some(a=>c.includes(a.toLowerCase()))) return std;
+      }
+      return cat;
+    }
+
+    /***************** 旧套餐计算（修复版） *****************/
+    function runOldPackageCalc(){
+      if(!ensureBaseReady()) return;
+      oldPackageResults = calculateOldPackages();
+      renderOldPackageResults(oldPackageResults);
+      document.getElementById('oldResultsSection').style.display='block';
+      scrollToAnchor('oldResultsSection');
+      updateExportAllButton();
+    }
+
+    function calculateOldPackages(){
+      const grouped = groupByCustomer();
+      const results = [];
+
+      Object.entries(grouped).forEach(([customer, info])=>{
+        const modelPool = {};
+        info.items.forEach(rec=>{
+          const nm = rec.modelNorm;
+          if(!modelPool[nm]) modelPool[nm] = [];
+          modelPool[nm].push({ record: rec, used:false });
+        });
+
+        oldPackageRules.forEach(rule=>{
+          const needModels = [];
+          let canMatch = true;
+          const tempPick = [];
+
+            rule.products.forEach(req=>{
+              const reqNorm = normalizeModel(req);
+              const poolArr = modelPool[reqNorm];
+              if(!poolArr) { canMatch = false; return; }
+              const pick = poolArr.find(p=>!p.used);
+              if(!pick){ canMatch = false; return; }
+              tempPick.push({ required:req, norm:reqNorm, pick });
+            });
+          if(!canMatch) return;
+
+          tempPick.forEach(p=>{ p.pick.used = true; });
+
+          const productDetails = tempPick.map((p,i)=>{
+            return {
+              required: p.required,
+              model: p.pick.record.model,
+              orderNo: p.pick.record.orderNo,
+              showCommission: i===0
+            };
+          });
+
+          const relatedRecords = tempPick.map(p=>p.pick.record);
+
+          results.push({
+            salesman: info.salesman,
+            customer,
+            packageId: rule.id,
+            commission: rule.commission,
+            productDetails,
+            relatedRecords,
+            calculationType: 'old_package'
+          });
+        });
+
+      });
+      return results;
+    }
+
+    function renderOldPackageResults(list){
+      const tbody = document.getElementById('oldResultsBody');
+      tbody.innerHTML = '';
+      if(list.length===0){
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#607d8b;padding:28px 10px;">暂无匹配结果</td></tr>';
+      } else {
+        list.forEach(r=>{
+          const productsHtml = `
+            <div class="package-group">
+              <div class="package-header">
+                <span>套餐${r.packageId}</span>
+                <span style="color:#2e7d32;font-weight:600;">¥${r.commission}</span>
+              </div>
+              ${r.productDetails.map(p=>`
+                <div class="product-row">
+                  <div style="flex:1;">
+                    <div style="font-weight:600;color:#2c3e50;">${p.model}</div>
+                    <div style="color:#607d8b;font-size:.62em;">单据：${p.orderNo||'无'}</div>
+                  </div>
+                  <div>
+                    ${p.showCommission?`<span class="commission-highlight">¥${r.commission}</span>`:''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="font-weight:600;">${r.salesman}</td>
+            <td>${r.customer}</td>
+            <td style="text-align:center;">${r.packageId}</td>
+            <td style="text-align:right;font-weight:600;color:#2e7d32;">¥${r.commission}</td>
+            <td>${productsHtml}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+      document.getElementById('oldCountTag').textContent = list.length;
+      renderStats(list, 'oldStats', {
+        totalCommission: list.reduce((s,r)=>s+r.commission,0),
+        uniqueCustomers: new Set(list.map(r=>r.customer)).size,
+        uniqueSalesmen: new Set(list.map(r=>r.salesman)).size
+      });
+    }
+
+    /***************** 组合套餐政策 *****************/
+    function runComboPolicyCalc(){
+      if(!ensureBaseReady()) return;
+      if(isNaN(fieldMapping.category)){
+        showError('套餐政策计算需要"大类型"字段。');
+        return;
+      }
+      comboPolicyResults = calculateComboPolicies();
+      renderComboResults(comboPolicyResults);
+      document.getElementById('comboResultsSection').style.display='block';
+      scrollToAnchor('comboResultsSection');
+      updateExportAllButton();
+    }
+
+    function calculateComboPolicies(){
+      const grouped = groupByCustomer(true);
+      const results = [];
+      let globalGroupCounter = 0;
+      Object.entries(grouped).forEach(([customer, info])=>{
+        const categoryCount = {};
+        const categoryRecords = {};
+        info.items.forEach(it=>{
+          if(!it.category) return;
+          categoryCount[it.category] = (categoryCount[it.category]||0) + it.quantity;
+          if(!categoryRecords[it.category]) categoryRecords[it.category] = [];
+          categoryRecords[it.category].push(it);
+        });
+        const modelCount = {};
+        const modelRecords = {};
+        info.items.forEach(it=>{
+          modelCount[it.modelNorm] = (modelCount[it.modelNorm]||0) + it.quantity;
+          if(!modelRecords[it.modelNorm]) modelRecords[it.modelNorm] = [];
+          modelRecords[it.modelNorm].push(it);
+        });
+
+        let availableCat = JSON.parse(JSON.stringify(categoryCount));
+        let availableModel = JSON.parse(JSON.stringify(modelCount));
+        const customerPackages = [];
+
+        comboPolicyDefs.slice().sort((a,b)=>a.priority - b.priority).forEach(def=>{
+          if(def.specificModels){
+            const baseModelA = normalizeModel(def.specificModels[0]);
+            const baseModelB = normalizeModel(def.specificModels[1]);
+            let countA = availableModel[baseModelA]||0;
+            let countB = availableModel[baseModelB]||0;
+            let setCount = Math.min(countA, countB);
+            if(setCount>0){
+              const relatedRecords = [
+                ...(modelRecords[baseModelA]||[]).slice(0, setCount),
+                ...(modelRecords[baseModelB]||[]).slice(0, setCount)
+              ];
+              customerPackages.push({
+                type: def.id,
+                sets: setCount,
+                perCommission: def.commissionPerSet,
+                total: setCount * def.commissionPerSet,
+                detail: `ER1600BWi:${countA}台 / KZQ45-M1Wi:${countB}台`,
+                relatedRecords
+              });
+              availableModel[baseModelA]-=setCount;
+              availableModel[baseModelB]-=setCount;
+            }else{
+              if(def.alternative){
+                const altModel = normalizeModel(def.alternative.with);
+                let altCount = availableModel[altModel]||0;
+                let minAltSet = Math.min(countA, altCount);
+                if(minAltSet>0){
+                  const relatedRecords = [
+                    ...(modelRecords[baseModelA]||[]).slice(0, minAltSet),
+                    ...(modelRecords[altModel]||[]).slice(0, minAltSet)
+                  ];
+                  customerPackages.push({
+                    type: def.id,
+                    sets: minAltSet,
+                    perCommission: def.commissionPerSet,
+                    total: minAltSet * def.commissionPerSet,
+                    detail: `使用替换：ER1600BWi + KZQ45-M5Wi（补差${def.alternative.extraDiff}元/套），套数${minAltSet}`,
+                    relatedRecords
+                  });
+                  availableModel[baseModelA]-=minAltSet;
+                  availableModel[altModel]-=minAltSet;
+                }
+              }
+            }
+            return;
+          }
+
+          let canSets = Infinity;
+            if(def.categoriesRequired.includes('GROUP_A')){
+              const groupACount = (def.groupA||[]).reduce((sum,cat)=> sum + (availableCat[cat]||0), 0);
+              canSets = Math.min(canSets, groupACount);
+            }
+            if(def.categoriesRequired.includes('GROUP_B')){
+              const groupBCount = (def.groupB||[]).reduce((sum,cat)=> sum + (availableCat[cat]||0), 0);
+              canSets = Math.min(canSets, groupBCount);
+            }
+          def.categoriesRequired.forEach(cat=>{
+            if(cat==='GROUP_A' || cat==='GROUP_B') return;
+            canSets = Math.min(canSets, availableCat[cat]||0);
+          });
+          if(canSets === Infinity || canSets<=0) return;
+
+          let setsFormed = 0;
+          const usedRecords = [];
+          while(setsFormed < canSets){
+            let ok = true;
+            if(def.categoriesRequired.includes('GROUP_A')){
+              let remain = 1;
+              for(const g of def.groupA){
+                const usable = availableCat[g]||0;
+                const use = Math.min(usable, remain);
+                remain -= use;
+              }
+              if(remain>0) ok=false;
+            }
+            if(def.categoriesRequired.includes('GROUP_B')){
+              let remain = 1;
+              for(const g of def.groupB){
+                const usable = availableCat[g]||0;
+                const use = Math.min(usable, remain);
+                remain -= use;
+              }
+              if(remain>0) ok=false;
+            }
+            def.categoriesRequired.forEach(cat=>{
+              if(cat==='GROUP_A' || cat==='GROUP_B') return;
+              if((availableCat[cat]||0) <1) ok=false;
+            });
+            if(!ok) break;
+
+            if(def.categoriesRequired.includes('GROUP_A')){
+              let need = 1;
+              for(const g of def.groupA){
+                const usable = availableCat[g]||0;
+                if(usable>0 && need>0){
+                  availableCat[g] = usable -1;
+                  if(categoryRecords[g] && categoryRecords[g].length>0){
+                    usedRecords.push(categoryRecords[g].shift());
+                  }
+                  need--;
+                }
+              }
+            }
+            if(def.categoriesRequired.includes('GROUP_B')){
+              let need = 1;
+              for(const g of def.groupB){
+                const usable = availableCat[g]||0;
+                if(usable>0 && need>0){
+                  availableCat[g] = usable -1;
+                  if(categoryRecords[g] && categoryRecords[g].length>0){
+                    usedRecords.push(categoryRecords[g].shift());
+                  }
+                  need--;
+                }
+              }
+            }
+            def.categoriesRequired.forEach(cat=>{
+              if(cat==='GROUP_A' || cat==='GROUP_B') return;
+              availableCat[cat] -=1;
+              if(categoryRecords[cat] && categoryRecords[cat].length>0){
+                usedRecords.push(categoryRecords[cat].shift());
+              }
+            });
+            setsFormed++;
+          }
+          if(setsFormed>0){
+            customerPackages.push({
+              type: def.id,
+              sets: setsFormed,
+              perCommission: def.commissionPerSet,
+              total: setsFormed * def.commissionPerSet,
+              detail: buildCategoryDetail(def, categoryCount),
+              relatedRecords: usedRecords
+            });
+          }
+        });
+
+        customerPackages.forEach(p=>{
+          globalGroupCounter++;
+          const groupId = `${p.type}-${String(globalGroupCounter).padStart(3, '0')}`;
+          
+          // 构建组合明细：品类:型号
+          const productDetails = (p.relatedRecords||[]).map(rec => {
+            return `${rec.category || '未知'}:${rec.model}`;
+          }).join(' | ');
+          
+          results.push({
+            salesman: info.salesman,
+            customer,
+            packageType: p.type,
+            setCount: p.sets,
+            commissionPer: p.perCommission,
+            commissionTotal: p.total,
+            categoryDetail: p.detail,
+            relatedRecords: p.relatedRecords||[],
+            calculationType: 'combo_package',
+            groupId: groupId,
+            productDetails: productDetails
+          });
+        });
+      });
+      return results;
+    }
+
+    function buildCategoryDetail(def, catCount){
+      if(def.specificModels) return '型号配对套装';
+      let parts = def.categoriesRequired.map(c=>{
+        if(c==='GROUP_A') return 'A组(烟/蒸/洗)';
+        if(c==='GROUP_B') return 'B组(净水/热水器)';
+        return c+':' + (catCount[c]||0);
+      });
+      if(def.id === 'A+净热组合'){
+        parts.push('(爆款、特价除外)');
+      }
+      return parts.join(' | ');
+    }
+
+    function renderComboResults(list){
+      const tbody = document.getElementById('comboResultsBody');
+      tbody.innerHTML = '';
+      if(list.length===0){
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#607d8b;padding:28px 10px;">暂无匹配组合套餐</td></tr>';
+      } else {
+        list.forEach(r=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${r.salesman}</td>
+            <td>${r.customer}</td>
+            <td style="font-weight:600;">${r.packageType}</td>
+            <td style="text-align:center;">${r.setCount}</td>
+            <td style="text-align:right;">¥${r.commissionPer}</td>
+            <td style="text-align:right;font-weight:600;color:#2e7d32;">¥${r.commissionTotal}</td>
+            <td>${r.categoryDetail}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+      document.getElementById('comboCountTag').textContent = list.length;
+      renderStats(list, 'comboStats', {
+        totalCommission: list.reduce((s,r)=>s+r.commissionTotal,0),
+        uniqueCustomers: new Set(list.map(r=>r.customer)).size,
+        uniqueSalesmen: new Set(list.map(r=>r.salesman)).size
+      });
+    }
+
+    /***************** 活动机型政策计算 *****************/
+    function runActivityPolicyCalc(){
+      if(!ensureBaseReady()) return;
+      if(isNaN(fieldMapping.category)){
+        showError('活动机型政策计算需要"大类型"字段。');
+        return;
+      }
+      activityPolicyResults = calculateActivityPolicies();
+      renderActivityResults(activityPolicyResults);
+      document.getElementById('activityResultsSection').style.display='block';
+      scrollToAnchor('activityResultsSection');
+      updateExportAllButton();
+    }
+
+    function calculateActivityPolicies(){
+      const group = {};
+      baseRecords.forEach(r=>{
+        const key = r.salesman + '||' + r.customer + '||' + r.modelNorm;
+        if(!group[key]){
+          group[key] = { salesman: r.salesman, customer: r.customer, model: r.model, modelNorm: r.modelNorm, quantity:0, records: [] };
+        }
+        group[key].quantity += r.quantity;
+        group[key].records.push(r);
+      });
+      const results = [];
+      Object.values(group).forEach(g=>{
+        const rule = activityModels[g.modelNorm];
+        if(!rule) return;
+        let perUnit = 0;
+        let total = 0;
+        let note = rule.note;
+        if(rule.mode === 'flat'){
+          perUnit = rule.perUnit;
+          total = perUnit * g.quantity;
+        } else if(rule.mode === 'threshold'){
+          if(g.quantity >= rule.threshold){
+            perUnit = rule.perUnit;
+            total = perUnit * g.quantity;
+          } else {
+            perUnit = 0;
+            total = 0;
+            note += `（未达阈值${rule.threshold}台）`;
+          }
+        }
+        results.push({
+          salesman: g.salesman,
+          customer: g.customer,
+          model: g.model,
+          quantity: g.quantity,
+          perUnit,
+          totalCommission: total,
+          note,
+          relatedRecords: g.records,
+          calculationType: 'activity_package'
+        });
+      });
+      return results;
+    }
+
+    function renderActivityResults(list){
+      const tbody = document.getElementById('activityResultsBody');
+      tbody.innerHTML = '';
+      if(list.length===0){
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#607d8b;padding:28px 10px;">暂无符合活动机型</td></tr>';
+      } else {
+        list.forEach(r=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${r.salesman}</td>
+            <td>${r.customer}</td>
+            <td>${r.model}</td>
+            <td style="text-align:center;">${r.quantity}</td>
+            <td style="text-align:right;">${r.perUnit?('¥'+r.perUnit):'-'}</td>
+            <td style="text-align:right;font-weight:600;color:${r.totalCommission>0?'#2e7d32':'#888'};">${r.totalCommission>0?('¥'+r.totalCommission):'-'}</td>
+            <td>${r.note}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+      document.getElementById('activityCountTag').textContent = list.length;
+      renderStats(list, 'activityStats', {
+        totalCommission: list.reduce((s,r)=>s+r.totalCommission,0),
+        uniqueCustomers: new Set(list.map(r=>r.customer)).size,
+        uniqueSalesmen: new Set(list.map(r=>r.salesman)).size
+      });
+    }
+
+    /***************** 全部导出功能 *****************/
+    function updateExportAllButton(){
+      const btn = document.getElementById('exportAllBtn');
+      const hasResults = oldPackageResults.length > 0 || comboPolicyResults.length > 0 || activityPolicyResults.length > 0;
+      btn.disabled = !hasResults;
+    }
+
+    function exportAllResults(){
+      if(oldPackageResults.length === 0 && comboPolicyResults.length === 0 && activityPolicyResults.length === 0){
+        showError('无任何计算结果可导出');
+        return;
+      }
+
+      try {
+        const exportData = [];
+        
+        // 构建表头
+        const baseHeaders = [...excelData[0]];
+        const newHeaders = [
+          ...baseHeaders,
+          '提成计算状态',
+          '计算优先级',
+          '旧套餐提成金额',
+          '旧套餐类型',
+          '旧套餐编号',
+          '套餐政策提成金额',
+          '套餐政策类型',
+          '套餐政策套数',
+          '套餐政策组号',
+          '套餐政策组合明细',
+          '活动机型提成金额',
+          '活动机型类型',
+          '活动机型单台激励',
+          '活动机型说明'
+        ];
+        exportData.push(newHeaders);
+
+        // 创建行索引到计算结果的映射
+        const rowCalculations = {};
+
+        // 处理旧套餐结果
+        oldPackageResults.forEach(pkg => {
+          pkg.relatedRecords.forEach(record => {
+            if (!rowCalculations[record.rowIndex]) {
+              rowCalculations[record.rowIndex] = {
+                record: record,
+                oldPackage: null,
+                comboPackage: null,
+                activityPackage: null
+              };
+            }
+            rowCalculations[record.rowIndex].oldPackage = {
+              commission: pkg.commission,
+              type: '旧套餐',
+              packageId: '套餐' + pkg.packageId
+            };
+          });
+        });
+
+        // 处理套餐政策结果
+        comboPolicyResults.forEach(combo => {
+          (combo.relatedRecords || []).forEach(record => {
+            if (!rowCalculations[record.rowIndex]) {
+              rowCalculations[record.rowIndex] = {
+                record: record,
+                oldPackage: null,
+                comboPackage: null,
+                activityPackage: null
+              };
+            }
+            rowCalculations[record.rowIndex].comboPackage = {
+              commission: combo.commissionTotal,
+              type: combo.packageType,
+              setCount: combo.setCount,
+              groupId: combo.groupId || '',
+              productDetails: combo.productDetails || ''
+            };
+          });
+        });
+
+        // 处理活动机型结果
+        activityPolicyResults.forEach(activity => {
+          (activity.relatedRecords || []).forEach(record => {
+            if (!rowCalculations[record.rowIndex]) {
+              rowCalculations[record.rowIndex] = {
+                record: record,
+                oldPackage: null,
+                comboPackage: null,
+                activityPackage: null
+              };
+            }
+            rowCalculations[record.rowIndex].activityPackage = {
+              commission: activity.totalCommission,
+              type: activity.model,
+              perUnit: activity.perUnit,
+              note: activity.note
+            };
+          });
+        });
+
+        // 生成导出数据
+        for (let i = 1; i < excelData.length; i++) {
+          const row = excelData[i];
+          if (!row) continue;
+
+          const newRow = [...row];
+          const calc = rowCalculations[i];
+
+          if (calc) {
+            // 有计算结果的行
+            newRow.push('activity_package'); // 提成计算状态
+            newRow.push('1'); // 计算优先级
+
+            // 旧套餐信息
+            if (calc.oldPackage) {
+              newRow.push(calc.oldPackage.commission);
+              newRow.push(calc.oldPackage.type);
+              newRow.push(calc.oldPackage.packageId);
+            } else {
+              newRow.push('', '', '');
+            }
+
+            // 套餐政策信息
+            if (calc.comboPackage) {
+              newRow.push(calc.comboPackage.commission);
+              newRow.push(calc.comboPackage.type);
+              newRow.push(calc.comboPackage.setCount);
+              newRow.push(calc.comboPackage.groupId);
+              newRow.push(calc.comboPackage.productDetails);
+            } else {
+              newRow.push('', '', '', '', '');
+            }
+
+                        // 活动机型信息
+                        if (calc.activityPackage) {
+              newRow.push(calc.activityPackage.commission);
+              newRow.push(calc.activityPackage.type);
+              newRow.push(calc.activityPackage.perUnit);
+              newRow.push(calc.activityPackage.note);
+            } else {
+              newRow.push('', '', '', '');
+            }
+          } else {
+            // 未被任何规则匹配的原始数据
+            newRow.push('', '', '', '', '', '', '', '', '', '', '', '', '', '');
+          }
+
+          exportData.push(newRow);
+        }
+
+        // 导出文件
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(exportData);
+        
+        // 设置列宽
+        ws['!cols'] = exportData[0].map(h => ({
+          wch: Math.min(String(h).length * 2 + 6, 36)
+        }));
+
+        XLSX.utils.book_append_sheet(wb, ws, '全部计算结果');
+        
+        const now = new Date();
+        const stamp = now.getFullYear() + 
+                     String(now.getMonth() + 1).padStart(2, '0') + 
+                     String(now.getDate()).padStart(2, '0') + '_' + 
+                     String(now.getHours()).padStart(2, '0') + 
+                     String(now.getMinutes()).padStart(2, '0');
+        
+        const filename = `活动套餐提成_全部结果_${stamp}.xlsx`;
+        XLSX.writeFile(wb, filename);
+        
+        showSuccess(`导出成功：${filename}`);
+        showSuccess('文件包含所有三种计算结果，可直接导入主提成计算工具。');
+        
+      } catch (e) {
+        showError('导出失败：' + e.message);
+      }
+    }
+
+    /***************** 通用统计渲染 *****************/
+    function renderStats(resultList, containerId, override){
+      const el = document.getElementById(containerId);
+      el.innerHTML = '';
+      if(!resultList || resultList.length===0){
+        el.innerHTML = '<div style="grid-column:1/-1;font-size:.65em;color:#607d8b;text-align:center;padding:10px 0;">暂无数据</div>';
+        return;
+      }
+      const stats = override || {
+        totalCommission: resultList.reduce((s,r)=> s + (r.commission || 0),0),
+        uniqueCustomers: new Set(resultList.map(r=>r.customer)).size,
+        uniqueSalesmen: new Set(resultList.map(r=>r.salesman)).size
+      };
+      const block = [
+        { label:'记录数', value: resultList.length },
+        { label:'总激励', value: '¥'+ stats.totalCommission },
+        { label:'促销员', value: stats.uniqueSalesmen },
+        { label:'客户数', value: stats.uniqueCustomers }
+      ];
+      block.forEach(b=>{
+        const div = document.createElement('div');
+        div.className='stat-card';
+        div.innerHTML = `<div class="stat-number">${b.value}</div><div class="stat-label">${b.label}</div>`;
+        el.appendChild(div);
+      });
+    }
+
+    /***************** 导出功能（旧套餐导出修复） *****************/
+    function exportOld(){
+      if(oldPackageResults.length===0){ showError('无旧套餐数据可导出'); return; }
+      const exportData = [];
+      const headers = [...excelData[0], '提成计算状态', '计算优先级', '活动套餐提成金额', '套餐类型', '套餐编号'];
+      exportData.push(headers);
+
+      const processedRecords = new Set();
+
+      // 修复：按套餐 result.relatedRecords 统一写入
+      oldPackageResults.forEach(pkg=>{
+        pkg.relatedRecords.forEach(record=>{
+          if(processedRecords.has(record.rowIndex)) return;
+          processedRecords.add(record.rowIndex);
+          const newRow = [...record.originalRow];
+          newRow.push('activity_package'); // 状态
+          newRow.push('1');                // 优先级
+          newRow.push(pkg.commission);     // 金额（整套一致）
+          newRow.push('旧套餐');           // 类型
+          newRow.push('套餐'+pkg.packageId); // 套餐编号（规则ID）
+          exportData.push(newRow);
+        });
+      });
+
+      // 未占用数据原样附加
+      for(let i=1;i<excelData.length;i++){
+        if(!processedRecords.has(i)){
+          const newRow = [...excelData[i]];
+          newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');
+          exportData.push(newRow);
+        }
+      }
+      exportSheet(exportData,'活动套餐提成_旧套餐');
+    }
+
+    function exportCombo(){
+      if(comboPolicyResults.length===0){ showError('无套餐政策结果可导出'); return; }
+      const exportData = [];
+      const headers = [...excelData[0], '提成计算状态', '计算优先级', '活动套餐提成金额', '套餐类型', '套数', '套餐组号', '组合明细'];
+      exportData.push(headers);
+      const processed = new Set();
+      comboPolicyResults.forEach(p=>{
+        (p.relatedRecords||[]).forEach(r=>{
+          if(processed.has(r.rowIndex)) return;
+          processed.add(r.rowIndex);
+          const newRow = [...r.originalRow];
+          newRow.push('activity_package');
+          newRow.push('1');
+          newRow.push(p.commissionTotal);
+          newRow.push(p.packageType);
+          newRow.push(p.setCount);
+          newRow.push(p.groupId || '');
+          newRow.push(p.productDetails || '');
+          exportData.push(newRow);
+        });
+      });
+      for(let i=1;i<excelData.length;i++){
+        if(!processed.has(i)){
+          const newRow = [...excelData[i]];
+          newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');
+          exportData.push(newRow);
+        }
+      }
+      exportSheet(exportData,'活动套餐提成_套餐政策');
+    }
+
+    function exportActivity(){
+      if(activityPolicyResults.length===0){ showError('无活动机型结果可导出'); return; }
+      const exportData = [];
+      const headers = [...excelData[0], '提成计算状态', '计算优先级', '活动套餐提成金额', '机型', '单台激励', '说明'];
+      exportData.push(headers);
+      const processed = new Set();
+      activityPolicyResults.forEach(a=>{
+        (a.relatedRecords||[]).forEach(r=>{
+          if(processed.has(r.rowIndex)) return;
+          processed.add(r.rowIndex);
+          const newRow = [...r.originalRow];
+          newRow.push('activity_package');
+          newRow.push('1');
+          newRow.push(a.totalCommission);
+          newRow.push(a.model);
+          newRow.push(a.perUnit);
+          newRow.push(a.note);
+          exportData.push(newRow);
+        });
+      });
+      for(let i=1;i<excelData.length;i++){
+        if(!processed.has(i)){
+          const newRow = [...excelData[i]];
+          newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');
+          exportData.push(newRow);
+        }
+      }
+      exportSheet(exportData,'活动套餐提成_活动机型');
+    }
+
+    function exportSheet(data, sheetName){
+      try{
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = data[0].map(h=>({wch: Math.min(String(h).length*2 + 6, 36)}));
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        const now = new Date();
+        const stamp = now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'_'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+        XLSX.writeFile(wb, sheetName+'_'+stamp+'.xlsx');
+        showSuccess('导出成功：'+sheetName+'_'+stamp+'.xlsx');
+        showSuccess('请导入主提成计算工具继续处理。');
+      }catch(e){
+        showError('导出失败：'+e.message);
+      }
+    }
+
+    /***************** 辅助 *****************/
+    function ensureBaseReady(){
+      if(excelData.length===0){
+        showError('请先上传文件');
+        return false;
+      }
+      collectMapping();
+      if(Object.values(fieldMapping).slice(0,5).some(v=>isNaN(v))){
+        showError('请完成基本字段映射（除大类型外）并点击"重新解析数据"');
+        return false;
+      }
+      if(baseRecords.length===0){
+        rebuildBaseData();
+      }
+      if(baseRecords.length===0){
+        showError('无有效记录可计算。');
+        return false;
+      }
+      return true;
+    }
+
+    function groupByCustomer(){
+      const map = {};
+      baseRecords.forEach(r=>{
+        const key = r.customer;
+        if(!map[key]){
+          map[key] = { salesman: r.salesman, items: [] };
+        }
+        map[key].items.push(r);
+      });
+      return map;
+    }
+
+    function scrollToAnchor(id, btn){
+      const el = document.getElementById(id);
+      if(el){
+        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 12, behavior: 'smooth' });
+      }
+      document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+      if(btn) btn.classList.add('active');
+    }
+
+    function showLoading(show){
+      document.getElementById('loading').style.display = show? 'block':'none';
+    }
+    function hideMessages(){
+      document.getElementById('errorMsg').style.display='none';
+      document.getElementById('successMsg').style.display='none';
+    }
+    function showError(msg){
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.style.display='block';
+      setTimeout(()=>{ el.style.display='none'; },6000);
+    }
+    function showSuccess(msg){
+      const el = document.getElementById('successMsg');
+      el.textContent = msg;
+      el.style.display='block';
+      setTimeout(()=>{ el.style.display='none'; },6000);
+    }
+
+    /***************** 折叠展开功能 *****************/
+    function toggleSection(sectionId){
+      const section = document.getElementById(sectionId);
+      if(!section) return;
+      if(section.classList.contains('expanded')){
+        section.classList.remove('expanded');
+      } else {
+        section.classList.add('expanded');
+      }
+    }
+  </script>
+  </body>
+  </html>
+
