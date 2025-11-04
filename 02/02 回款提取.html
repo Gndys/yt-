@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>销售员回款数据转换工具 - 2025年数据版</title>
+    <link rel="stylesheet" href="../common-styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="tool-container">
+        <header class="tool-header">
+            <a href="../index.html" class="back-nav">← 返回首页</a>
+            <h1>📊 销售员回款数据转换工具</h1>
+            <p class="tool-subtitle">将原始月度回款数据转换为标准汇总表格式（提取2025年数据）</p>
+            <div class="tool-badge">
+                <span class="badge-dot"></span>
+                <span>02-1 回款提取工具</span>
+            </div>
+        </header>
+
+        <main class="tool-content">
+            <!-- 使用说明 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-icon">💡</span>
+                    <h2 class="section-title">使用说明</h2>
+                </div>
+                <ol style="margin-left: 20px; line-height: 2;">
+                    <li>上传<strong>原始回款数据文件</strong>（包含各地区工作表）</li>
+                    <li>上传<strong>员工基础信息表</strong>（用于匹配部门信息）</li>
+                    <li>点击"开始转换"按钮</li>
+                    <li>等待处理完成后下载结果文件</li>
+                </ol>
+                <div class="alert alert-warning mt-md">
+                    <strong>注意：</strong>本工具专门提取 <strong>2025年</strong> 的回款数据，会自动忽略2024年的数据。
+                </div>
+            </section>
+
+            <!-- 文件上传区域 -->
+            <section class="section">
+                <div class="flex gap-md">
+                    <div style="flex: 1;">
+                        <div class="form-group">
+                            <label class="form-label">📁 原始回款数据</label>
+                            <div class="upload-area" onclick="document.getElementById('sourceFile').click()">
+                                <div class="upload-icon">📄</div>
+                                <div class="upload-text">点击选择文件</div>
+                                <div class="upload-hint">支持 .xlsx, .xls 格式</div>
+                            </div>
+                            <input type="file" id="sourceFile" accept=".xlsx,.xls" style="display: none;" />
+                            <p id="sourceFileName" style="margin-top: 8px; font-size: 0.875rem; color: var(--text-tertiary);">未选择文件</p>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1;">
+                        <div class="form-group">
+                            <label class="form-label">👥 员工基础信息表</label>
+                            <div class="upload-area" onclick="document.getElementById('employeeFile').click()">
+                                <div class="upload-icon">📄</div>
+                                <div class="upload-text">点击选择文件</div>
+                                <div class="upload-hint">支持 .xlsx, .xls 格式</div>
+                            </div>
+                            <input type="file" id="employeeFile" accept=".xlsx,.xls" style="display: none;" />
+                            <p id="employeeFileName" style="margin-top: 8px; font-size: 0.875rem; color: var(--text-tertiary);">未选择文件</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 转换按钮 -->
+            <div class="text-center">
+                <button id="convertBtn" class="btn btn-primary btn-lg" disabled>🚀 开始转换</button>
+            </div>
+
+            <!-- 进度显示 -->
+            <section id="progressSection" class="section" style="display: none;">
+                <div class="progress-bar-container">
+                    <div id="progressFill" class="progress-bar-fill" style="width: 0%;">
+                        <span class="progress-text">0%</span>
+                    </div>
+                </div>
+                <p id="progressText" class="progress-label">准备中...</p>
+            </section>
+
+            <!-- 结果显示 -->
+            <section id="resultSection" class="section" style="display: none;">
+                <div class="section-header">
+                    <span class="section-icon">✅</span>
+                    <h2 class="section-title">转换完成！</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statEmployeeCount">-</div>
+                        <div class="stat-label">业务员数量</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotalAmount">-</div>
+                        <div class="stat-label">总回款金额（2025年）</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1-9月</div>
+                        <div class="stat-label">数据覆盖月份</div>
+                    </div>
+                </div>
+
+                <!-- 过滤信息 -->
+                <div id="filteredInfo" class="alert alert-info mt-md" style="display: none;">
+                    <h4 style="margin-bottom: 8px; font-weight: 600;">🔍 过滤统计</h4>
+                    <p>已过滤 <strong id="statFilteredCount">0</strong> 个非员工记录</p>
+                    <p style="margin-top: 4px;">过滤名单：<span id="filteredNames"></span></p>
+                </div>
+
+                <div class="mt-lg">
+                    <h3 style="margin-bottom: 12px; font-size: 1rem; font-weight: 600;">前10名业务员回款情况预览</h3>
+                    <div class="table-container">
+                        <div class="table-wrapper">
+                            <table id="previewTable" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>排名</th>
+                                        <th>销售员</th>
+                                        <th>销售部门</th>
+                                        <th>1月</th>
+                                        <th>2月</th>
+                                        <th>3月</th>
+                                        <th>参考总额</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="previewBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-lg">
+                    <button id="downloadBtn" class="btn btn-success btn-lg">📥 下载结果文件</button>
+                </div>
+            </section>
+
+            <!-- 错误提示 -->
+            <section id="errorSection" class="section" style="display: none;">
+                <div class="alert alert-danger">
+                    <h2 style="margin-bottom: 12px; font-size: 1.25rem;">❌ 转换失败</h2>
+                    <p id="errorMessage" style="line-height: 1.6;"></p>
+                    <div class="mt-md">
+                        <button class="btn btn-danger" onclick="location.reload()">🔄 重新开始</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="tool-footer">
+            <p class="footer-text">数据年份: 2025年 | 版本: Web v1.1 | 支持智能过滤</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

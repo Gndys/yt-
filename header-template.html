@@ -1,0 +1,148 @@
+<!-- 
+  统一头部模板
+  使用方法：复制此模板，替换工具名称、描述和徽章信息
+-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具标题 - A.O.史密斯业务工具平台</title>
+    
+    <!-- 统一样式文件 -->
+    <link rel="stylesheet" href="../common-styles.css">
+    
+    <!-- 如有需要，可在这里添加工具特定的样式 -->
+    <style>
+        /* 工具特定样式（可选） */
+    </style>
+    
+    <!-- 第三方库（如需要） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 头部 -->
+        <header class="tool-header">
+            <!-- 返回导航 -->
+            <a href="../index.html" class="back-nav">← 返回首页</a>
+            
+            <!-- 工具标题 -->
+            <h1>🔧 工具标题</h1>
+            
+            <!-- 工具描述 -->
+            <p class="tool-subtitle">工具的简短描述，说明主要功能和用途</p>
+            
+            <!-- 工具徽章（可选） -->
+            <div class="tool-badge">
+                <span class="badge-dot"></span>
+                <span>工具编号 / 版本信息</span>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="tool-content">
+            <!-- 这里放置工具的主要内容 -->
+            
+            <!-- 示例：说明区块 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-icon">💡</span>
+                    <h2 class="section-title">使用说明</h2>
+                </div>
+                <div class="section-description">
+                    这里是说明内容...
+                </div>
+            </section>
+
+            <!-- 示例：文件上传区块 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-icon">📁</span>
+                    <h2 class="section-title">数据上传</h2>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">选择文件</label>
+                    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-text">点击选择文件</div>
+                        <div class="upload-hint">支持 .xlsx, .xls 格式</div>
+                    </div>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;" />
+                </div>
+            </section>
+
+            <!-- 示例：操作按钮 -->
+            <div class="text-center">
+                <button class="btn btn-primary btn-lg" id="processBtn">🚀 开始处理</button>
+            </div>
+
+            <!-- 示例：进度显示 -->
+            <section class="section hidden" id="progressSection">
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: 0%;" id="progressBar">
+                        <span class="progress-text" id="progressText">0%</span>
+                    </div>
+                </div>
+                <p class="progress-label" id="progressLabel">准备中...</p>
+            </section>
+
+            <!-- 示例：结果显示 -->
+            <section class="section hidden" id="resultSection">
+                <div class="section-header">
+                    <span class="section-icon">✅</span>
+                    <h2 class="section-title">处理完成</h2>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">总数量</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statSuccess">0</div>
+                        <div class="stat-label">成功</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statFailed">0</div>
+                        <div class="stat-label">失败</div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-lg">
+                    <button class="btn btn-success btn-lg" id="downloadBtn">📥 下载结果</button>
+                </div>
+            </section>
+
+            <!-- 示例：错误提示 -->
+            <section class="section hidden" id="errorSection">
+                <div class="alert alert-danger">
+                    <h3 style="margin-bottom: 12px;">❌ 处理失败</h3>
+                    <p id="errorMessage">错误信息会显示在这里</p>
+                    <div class="mt-md">
+                        <button class="btn btn-danger" onclick="location.reload()">🔄 重新开始</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="tool-footer">
+            <p class="footer-text">版本信息 | 更新日期</p>
+            <div class="footer-links">
+                <a href="../index.html" class="footer-link">返回首页</a>
+                <a href="https://iiuzjzy3ccx.feishu.cn/wiki/PbWjwvsXmiJK38kcVdFcsnVNndd" class="footer-link">使用文档</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript 代码 -->
+    <script>
+        // 工具的功能代码
+        console.log('工具已加载');
+    </script>
+</body>
+</html>
+

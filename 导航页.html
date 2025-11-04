@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>工具导航 - A.O.史密斯业务工具平台</title>
+  <meta name="color-scheme" content="light dark" />
+  <style>
+    /* ==============
+       Design Tokens
+       ============== */
+    :root {
+      /* Base palette - 高对比浅色 */
+      --bg-page: #f5f7f9;          /* 浅灰页面背景 */
+      --bg-surface: #ffffff;       /* 白色卡片/容器 */
+      --bg-muted: #eef2f6;         /* 输入/骨架轻背景 */
+
+      --border: #d8dee6;           /* 卡片/输入边界 */
+      --border-strong: #b7c2d0;
+
+      --text-strong: #1a1f2b;      /* 主文本（≈#111820 更人性化） */
+      --text: #2b3340;
+      --text-muted: #5b6472;
+      --text-subtle: #7b8696;
+
+      --brand: #184a8c;            /* 品牌深蓝（主色） */
+      --brand-600: #16427d;
+      --brand-700: #133a6d;
+      --brand-50: #e8f1ff;         /* 浅色反馈背景，非纯白 */
+      --accent-green: #0f7b6c;
+      --accent-green-50: #e6f6f4;
+      --accent-orange: #c7640e;
+      --accent-orange-50: #fff1e3;
+
+      /* Shadows */
+      --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.06);
+      --shadow-2: 0 4px 10px rgba(16, 24, 40, 0.08);
+      --shadow-3: 0 10px 24px rgba(16, 24, 40, 0.10);
+
+      /* Radius */
+      --r-4: 4px;
+      --r-6: 6px;
+      --r-8: 8px;
+      --r-10: 10px;
+
+      /* Motion */
+      --easing: cubic-bezier(0.2, 0.6, 0.2, 1);
+      --duration-1: 120ms;
+      --duration-2: 180ms;
+      --duration-3: 240ms;
+
+      /* Typography */
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC","Hiragino Sans GB","Microsoft YaHei", Arial, sans-serif;
+
+      /* Layout */
+      --container: 1200px;
+      --gap-1: 8px;
+      --gap-2: 12px;
+      --gap-3: 16px;
+      --gap-4: 20px;
+      --gap-5: 24px;
+      --gap-6: 32px;
+    }
+
+    /* 可选暗色（保留能力，但默认亮色） */
+    [data-theme="dark"] {
+      --bg-page: #0f1217;
+      --bg-surface: #141922;
+      --bg-muted: #18202b;
+
+      --border: #243041;
+      --border-strong: #314055;
+
+      --text-strong: #e8edf6;
+      --text: #d8e0eb;
+      --text-muted: #aab6c6;
+      --text-subtle: #8996a8;
+
+      --brand: #7fb2ff;
+      --brand-600: #9cc3ff;
+      --brand-700: #c0d9ff;
+      --brand-50: #0f1a2b;
+
+      --accent-green: #7adbcf;
+      --accent-green-50: #0f2422;
+      --accent-orange: #ffb470;
+      --accent-orange-50: #281a0b;
+
+      --shadow-1: 0 1px 2px rgba(0,0,0,0.4);
+      --shadow-2: 0 4px 10px rgba(0,0,0,0.5);
+      --shadow-3: 0 10px 24px rgba(0,0,0,0.6);
+    }
+
+    html, body {
+      height: 100%;
+    }
+    body {
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: var(--bg-page);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* 跳到主内容（无障碍） */
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: auto;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+    .skip-link:focus {
+      position: fixed;
+      left: 16px;
+      top: 16px;
+      width: auto;
+      height: auto;
+      padding: 8px 12px;
+      background: var(--brand);
+      color: #fff;
+      border-radius: var(--r-6);
+      z-index: 1000;
+      box-shadow: var(--shadow-2);
+    }
+
+    /* 顶部导航：高对比 + 粘性 */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: saturate(1.1) blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+    [data-theme="dark"] .top-nav {
+      background: rgba(20,25,34,0.75);
+    }
+    .nav-content {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--gap-3);
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-subtle);
+      white-space: nowrap;
+    }
+    .breadcrumb a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .breadcrumb a:hover,
+    .breadcrumb a:focus-visible {
+      color: var(--brand);
+      outline: none;
+    }
+    .breadcrumb-sep {
+      color: var(--text-subtle);
+      user-select: none;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--r-8);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-1);
+      transition: all var(--duration-2) var(--easing);
+    }
+    .btn-icon:hover {
+      color: var(--text);
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+    .btn-icon:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    .view-switcher {
+      display: inline-flex;
+      gap: 2px;
+      padding: 4px;
+      border-radius: var(--r-8);
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+    }
+    .view-btn {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: 0;
+      border-radius: var(--r-6);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background var(--duration-2) var(--easing), color var(--duration-2) var(--easing);
+    }
+    .view-btn:hover {
+      color: var(--text);
+      background: rgba(0,0,0,0.03);
+    }
+    .view-btn.active {
+      background: var(--bg-surface);
+      color: var(--text-strong);
+      box-shadow: var(--shadow-1);
+    }
+    .view-btn:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    /* 容器与标题（F型布局） */
+    .container {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+    .page-header {
+      margin: 24px 0 20px;
+    }
+    .page-title {
+      font-size: 32px;
+      letter-spacing: -0.02em;
+      color: var(--text-strong);
+      font-weight: 750;
+      margin-bottom: 6px;
+    }
+    @media (min-width: 960px) {
+      .page-title { font-size: 40px; }
+    }
+    .page-subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    /* 工具栏（搜索 + 筛选） */
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--gap-3);
+      margin: 20px 0 24px;
+    }
+    .search {
+      position: relative;
+    }
+    .search input[type="text"] {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px 0 38px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-8);
+      background: var(--bg-surface);
+      color: var(--text);
+      font-size: 14px;
+      transition: border-color var(--duration-2) var(--easing), box-shadow var(--duration-2) var(--easing);
+    }
+    .search input::placeholder { color: var(--text-subtle); }
+    .search input:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 20%, transparent);
+    }
+    .search .icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: var(--text-subtle);
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--gap-2);
+    }
+    .chip {
+      padding: 6px 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--duration-2) var(--easing);
+      user-select: none;
+    }
+    .chip:hover { border-color: var(--border-strong); color: var(--text); }
+    .chip.active {
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand);
+    }
+    .chip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+    /* 视图容器 */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* 文件夹段落 */
+    .section {
+      margin-bottom: 36px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 8px 4px;
+    }
+    .section-icon {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      display: grid; place-items: center;
+      background: var(--bg-muted);
+      color: var(--brand);
+      font-size: 16px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-strong);
+      flex: 1;
+    }
+    .section-count {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-subtle);
+    }
+
+    /* 卡片栅格（12列响应式） */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--gap-3);
+    }
+    .col-6 { grid-column: span 6; }
+    .col-12 { grid-column: span 12; }
+    @media (max-width: 960px) { .col-6 { grid-column: span 12; } }
+
+    /* 工具卡片 */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-10);
+      padding: 16px;
+      box-shadow: var(--shadow-1);
+      transition: transform var(--duration-2) var(--easing), box-shadow var(--duration-2) var(--easing), border-color var(--duration-2) var(--easing);
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-2);
+      border-color: var(--border-strong);
+    }
+    .card:focus-within {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+    .card-header {
+      display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px;
+    }
+    .card-avatar {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      display: grid; place-items: center;
+      background: var(--brand-50);
+      color: var(--brand);
+      font-size: 20px; flex-shrink: 0;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 700; color: var(--text-strong); margin: 2px 0 4px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px;
+      background: var(--accent-green-50); color: var(--accent-green);
+    }
+    .badge.new { background: var(--accent-orange-50); color: var(--accent-orange); }
+
+    .card-desc {
+      font-size: 13.5px; color: var(--text-muted); margin: 10px 0 12px; line-height: 1.55;
+    }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      font-size: 12px; font-weight: 600;
+      color: var(--text-subtle);
+      background: var(--bg-muted);
+      border-radius: 6px;
+      padding: 4px 8px;
+    }
+
+    /* 列表视图 */
+    .list {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-10);
+      overflow: hidden;
+      box-shadow: var(--shadow-1);
+    }
+    .list-header, .list-row {
+      display: grid;
+      grid-template-columns: 48px 2fr 3fr 1fr 110px 96px;
+      gap: 12px;
+      padding: 12px 16px;
+      align-items: center;
+    }
+    .list-header {
+      background: var(--bg-muted);
+      color: var(--text-subtle);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    .list-row {
+      border-top: 1px solid var(--border);
+      cursor: pointer;
+      transition: background var(--duration-2) var(--easing);
+    }
+    .list-row:hover { background: #f0f3f7; }
+    [data-theme="dark"] .list-row:hover { background: #192230; }
+    .list-icon {
+      width: 32px; height: 32px; border-radius: 6px;
+      display: grid; place-items: center;
+      background: var(--brand-50); color: var(--brand); font-size: 18px;
+    }
+    .list-name { font-weight: 700; color: var(--text-strong); font-size: 14px; }
+    .list-desc { font-size: 13px; color: var(--text-muted); }
+    .list-folder { font-size: 12px; color: var(--text-subtle); }
+
+    .status {
+      display: inline-block;
+      min-width: 72px;
+      text-align: center;
+      padding: 4px 10px;
+      font-size: 11px; font-weight: 800;
+      border-radius: 999px;
+      background: var(--accent-green-50); color: var(--accent-green);
+    }
+    .status.new { background: var(--accent-orange-50); color: var(--accent-orange); }
+
+    .btn-primary {
+      background: var(--brand);
+      color: #fff;
+      border: 1px solid var(--brand-700);
+      padding: 8px 12px;
+      border-radius: var(--r-8);
+      font-size: 13px; font-weight: 700;
+      cursor: pointer;
+      transition: transform var(--duration-1) var(--easing), box-shadow var(--duration-2) var(--easing), background var(--duration-2) var(--easing);
+    }
+    .btn-primary:hover {
+      background: var(--brand-600);
+      box-shadow: var(--shadow-2);
+      transform: translateY(-1px);
+    }
+    .btn-primary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+    /* 空状态 */
+    .empty {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--text-subtle);
+    }
+    .empty .emoji {
+      font-size: 44px; opacity: 0.8; margin-bottom: 12px;
+    }
+    .empty h3 {
+      font-size: 18px; color: var(--text); margin-bottom: 6px; font-weight: 800;
+    }
+    .empty p { font-size: 14px; color: var(--text-subtle); }
+
+    /* 骨架屏 */
+    .skeleton {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--gap-3);
+    }
+    .sk-card {
+      grid-column: span 6;
+      height: 108px;
+      border-radius: var(--r-10);
+      background: linear-gradient(90deg, var(--bg-muted), color-mix(in oklab, var(--bg-muted) 85%, #fff) 20%, var(--bg-muted) 40%);
+      background-size: 200% 100%;
+      animation: shimmer 1200ms var(--easing) infinite;
+      border: 1px solid var(--border);
+    }
+    @media (max-width: 960px){ .sk-card{ grid-column: span 12; } }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* 快捷键提示 */
+    .shortcut {
+      position: fixed;
+      right: 24px; bottom: 24px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-subtle);
+      border-radius: var(--r-8);
+      box-shadow: var(--shadow-2);
+      padding: 8px 12px;
+      font-size: 12px;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--duration-3) var(--easing);
+    }
+    .shortcut.show { opacity: 1; }
+    .kbd {
+      display: inline-block;
+      padding: 2px 6px;
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 11px; margin: 0 2px;
+      color: var(--text);
+    }
+
+    /* 响应式：列表在移动端一列显示 */
+    @media (max-width: 768px) {
+      .list-header { display: none; }
+      .list-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .nav-content { padding: 12px 16px; }
+      .container { padding: 24px 16px 64px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主内容</a>
+
+  <!-- 顶部导航 -->
+  <nav class="top-nav" role="navigation" aria-label="主导航">
+    <div class="nav-content">
+      <div class="breadcrumb" aria-label="面包屑">
+        <a href="index.html">首页</a>
+        <span class="breadcrumb-sep">/</span>
+        <span aria-current="page">完整导航</span>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-icon" id="themeToggle" type="button" aria-label="切换主题" title="切换主题">◐</button>
+        <div class="view-switcher" role="tablist" aria-label="视图切换">
+          <button class="view-btn active" role="tab" aria-selected="true" data-view="grid">
+            <span>按文件夹</span>
+          </button>
+          <button class="view-btn" role="tab" aria-selected="false" data-view="list">
+            <span>列表</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main" class="container">
+    <!-- 标题区 -->
+    <header class="page-header">
+      <h1 class="page-title">工具导航</h1>
+      <p class="page-subtitle">A.O.史密斯业务工具平台 · 高效、清晰、可读性优先</p>
+    </header>
+
+    <!-- 工具栏 -->
+    <div class="toolbar" role="search">
+      <div class="search">
+        <span class="icon">⌕</span>
+        <input id="searchInput" type="text" placeholder="搜索工具或文件夹..." aria-label="搜索工具或文件夹" />
+      </div>
+      <div class="filters" role="listbox" aria-label="分类筛选">
+        <button class="chip active" data-filter="all" aria-pressed="true">全部</button>
+        <button class="chip" data-filter="02" aria-pressed="false">奖金计算</button>
+        <button class="chip" data-filter="03" aria-pressed="false">五合一提成</button>
+        <button class="chip" data-filter="04" aria-pressed="false">特殊渠道</button>
+        <button class="chip" data-filter="通用工具" aria-pressed="false">通用工具</button>
+      </div>
+    </div>
+
+    <!-- 骨架屏（加载时显示，数据就绪后隐藏） -->
+    <section id="skeleton" class="skeleton" aria-hidden="true">
+      <div class="sk-card"></div>
+      <div class="sk-card"></div>
+      <div class="sk-card"></div>
+      <div class="sk-card"></div>
+    </section>
+
+    <!-- 网格视图 -->
+    <section id="gridView" class="view active" aria-label="网格视图">
+      <!-- 02 奖金计算 -->
+      <div class="section" data-folder="02">
+        <div class="section-header">
+          <div class="section-icon">$</div>
+          <h2 class="section-title">奖金计算解决方案</h2>
+          <span class="section-count">2 个工具</span>
+        </div>
+        <div class="grid">
+          <article class="card col-6" tabindex="0" data-keywords="奖金 计算 提成 区域" onclick="navigateTo('02/02 奖金计算.html')">
+            <div class="card-header">
+              <div class="card-avatar">■</div>
+              <div>
+                <div class="card-title">奖金计算工具</div>
+                <span class="badge">可用</span>
+              </div>
+            </div>
+            <p class="card-desc">支持杭州、湖州、金华等多区域业务员提成自动核算；自动读取任务分配与回款数据，一键生成结算报表。</p>
+            <div class="tag-row">
+              <span class="tag">多区域</span>
+              <span class="tag">Excel导入</span>
+              <span class="tag">自动计算</span>
+            </div>
+          </article>
+
+          <article class="card col-6" tabindex="0" data-keywords="数据准备 配置" onclick="alert('数据准备工具包位于：02/00-数据准备/ 文件夹')">
+            <div class="card-header">
+              <div class="card-avatar">■</div>
+              <div>
+                <div class="card-title">数据准备工具包</div>
+                <span class="badge">可用</span>
+              </div>
+            </div>
+            <p class="card-desc">包含任务分配表、员工信息、月回款汇总等基础数据管理工具，为奖金计算提供标准化数据输入。</p>
+            <div class="tag-row">
+              <span class="tag">数据管理</span>
+              <span class="tag">配套工具</span>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- 03 五合一提成 -->
+      <div class="section" data-folder="03">
+        <div class="section-header">
+          <div class="section-icon">▲</div>
+          <h2 class="section-title">五合一提成解决方案</h2>
+          <span class="section-count">1 个工具</span>
+        </div>
+        <div class="grid">
+          <article class="card col-6" tabindex="0" data-keywords="五合一 提成 综合 多维度" onclick="navigateTo('03/03 五合一提成计算.html')">
+            <div class="card-header">
+              <div class="card-avatar">●</div>
+              <div>
+                <div class="card-title">五合一提成计算器</div>
+                <span class="badge">可用</span>
+              </div>
+            </div>
+            <p class="card-desc">综合多维度指标的复杂提成计算系统，支持规则引擎、满档4.5%规则配置与结果实时预览。</p>
+            <div class="tag-row">
+              <span class="tag">复杂规则</span>
+              <span class="tag">实时计算</span>
+              <span class="tag">规则引擎</span>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- 04 特殊渠道 -->
+      <div class="section" data-folder="04">
+        <div class="section-header">
+          <div class="section-icon">◆</div>
+          <h2 class="section-title">特殊渠道处理方案</h2>
+          <span class="section-count">3 个工具</span>
+        </div>
+        <div class="grid">
+          <article class="card col-6" tabindex="0" data-keywords="普农 渠道 特殊" onclick="navigateTo('04/04特殊普农.html')">
+            <div class="card-header">
+              <div class="card-avatar">■</div>
+              <div>
+                <div class="card-title">普农渠道工具</div>
+                <span class="badge">可用</span>
+              </div>
+            </div>
+            <p class="card-desc">普农渠道专项提成计算，自动提取型号并生成明细说明，支持一键导出。</p>
+            <div class="tag-row">
+              <span class="tag">普农专用</span>
+              <span class="tag">型号识别</span>
+            </div>
+          </article>
+
+          <article class="card col-6" tabindex="0" data-keywords="汇德隆 渠道" onclick="navigateTo('04/04特殊汇德隆.html')">
+            <div class="card-header">
+              <div class="card-avatar">■</div>
+              <div>
+                <div class="card-title">汇德隆渠道工具</div>
+                <span class="badge">可用</span>
+              </div>
+            </div>
+            <p class="card-desc">对接汇德隆数据口径，提供格式化显示、粘性表头与高性能滚动体验。</p>
+            <div class="tag-row">
+              <span class="tag">汇德隆专用</span>
+              <span class="tag">高性能</span>
+            </div>
+          </article>
+
+          <article class="card col-6" tabindex="0" data-keywords="多表 批量 通用" onclick="navigateTo('04/04通用多表.html')">
+            <div class="card-header">
+              <div class="card-avatar">■</div>
+              <div>
+                <div class="card-title">通用多表处理器</div>
+                <span class="badge">可用</span>
+              </div>
+            </div>
+            <p class="card-desc">批量上传多文件，统一字段映射，任务进度可视化；适合多门店/多片区合并处理。</p>
+            <div class="tag-row">
+              <span class="tag">批量处理</span>
+              <span class="tag">多文件</span>
+              <span class="tag">进度可视化</span>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- 通用工具 -->
+      <div class="section" data-folder="通用工具">
+        <div class="section-header">
+          <div class="section-icon">★</div>
+          <h2 class="section-title">通用工具集</h2>
+          <span class="section-count">3 个工具</span>
+        </div>
+        <div class="grid">
+          <article class="card col-6" tabindex="0" data-keywords="智能 表格 分析 AI" onclick="navigateTo('通用工具/智能表格分析助手.html.html')">
+            <div class="card-header">
+              <div class="card-avatar">■</div>
+              <div>
+                <div class="card-title">智能表格分析助手</div>
+                <span class="badge">可用</span>
+              </div>
+            </div>
+            <p class="card-desc">AI 驱动的智能表格分析工具，支持数据自动识别、智能清洗与高级分析，10万+行大数据处理。</p>
+            <div class="tag-row">
+              <span class="tag">AI分析</span>
+              <span class="tag">智能处理</span>
+            </div>
+          </article>
+
+          <article class="card col-6" tabindex="0" data-keywords="字段 匹配 映射" onclick="navigateTo('通用工具/字段匹配工具.html')">
+            <div class="card-header">
+              <div class="card-avatar">■</div>
+              <div>
+                <div class="card-title">字段匹配工具</div>
+                <span class="badge">可用</span>
+              </div>
+            </div>
+            <p class="card-desc">智能字段映射与匹配，自动识别列名对应关系，支持多表联合与批量处理。</p>
+            <div class="tag-row">
+              <span class="tag">字段映射</span>
+              <span class="tag">智能匹配</span>
+            </div>
+          </article>
+
+          <article class="card col-6" tabindex="0" data-keywords="Excel 筛选 AI 数据处理" onclick="alert('此工具需要本地运行，请打开文件夹：通用工具/AI 数据处理:一步到位/')">
+            <div class="card-header">
+              <div class="card-avatar">■</div>
+              <div>
+                <div class="card-title">Excel 筛选工具</div>
+                <span class="badge">可用</span>
+              </div>
+            </div>
+            <p class="card-desc">本地运行的 AI 数据处理工具，支持 Excel 文件智能筛选、批量处理与自动化操作。</p>
+            <div class="tag-row">
+              <span class="tag">本地工具</span>
+              <span class="tag">批量筛选</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 列表视图 -->
+    <section id="listView" class="view" aria-label="列表视图">
+      <div class="list" role="table" aria-label="工具列表">
+        <div class="list-header" role="row">
+          <div>图标</div>
+          <div>工具名称</div>
+          <div>描述</div>
+          <div>所属分类</div>
+          <div>状态</div>
+          <div>操作</div>
+        </div>
+
+        <!-- rows -->
+        <div class="list-row" role="row" data-folder="02" data-keywords="奖金 计算 提成 区域" onclick="navigateTo('02/02 奖金计算.html')">
+          <div class="list-icon">■</div>
+          <div class="list-name">奖金计算工具</div>
+          <div class="list-desc">支持多区域业务员提成自动核算</div>
+          <div class="list-folder">奖金计算</div>
+          <div><span class="status">可用</span></div>
+          <div><button class="btn-primary" onclick="event.stopPropagation(); navigateTo('02/02 奖金计算.html')">打开</button></div>
+        </div>
+
+        <div class="list-row" role="row" data-folder="02" data-keywords="数据准备 配置" onclick="alert('数据准备工具包位于：02/00-数据准备/ 文件夹')">
+          <div class="list-icon">■</div>
+          <div class="list-name">数据准备工具包</div>
+          <div class="list-desc">基础数据管理工具集合</div>
+          <div class="list-folder">奖金计算</div>
+          <div><span class="status">可用</span></div>
+          <div><button class="btn-primary" onclick="event.stopPropagation(); alert('数据准备工具包位于：02/00-数据准备/ 文件夹')">查看</button></div>
+        </div>
+
+        <div class="list-row" role="row" data-folder="03" data-keywords="五合一 提成 综合 多维度" onclick="navigateTo('03/03 五合一提成计算.html')">
+          <div class="list-icon">●</div>
+          <div class="list-name">五合一提成计算器</div>
+          <div class="list-desc">综合多维度指标的复杂提成计算系统</div>
+          <div class="list-folder">五合一提成</div>
+          <div><span class="status">可用</span></div>
+          <div><button class="btn-primary" onclick="event.stopPropagation(); navigateTo('03/03 五合一提成计算.html')">打开</button></div>
+        </div>
+
+        <div class="list-row" role="row" data-folder="04" data-keywords="普农 渠道 特殊" onclick="navigateTo('04/04特殊普农.html')">
+          <div class="list-icon">■</div>
+          <div class="list-name">普农渠道工具</div>
+          <div class="list-desc">普农渠道专项提成计算</div>
+          <div class="list-folder">特殊渠道</div>
+          <div><span class="status">可用</span></div>
+          <div><button class="btn-primary" onclick="event.stopPropagation(); navigateTo('04/04特殊普农.html')">打开</button></div>
+        </div>
+
+        <div class="list-row" role="row" data-folder="04" data-keywords="汇德隆 渠道" onclick="navigateTo('04/04特殊汇德隆.html')">
+          <div class="list-icon">■</div>
+          <div class="list-name">汇德隆渠道工具</div>
+          <div class="list-desc">汇德隆数据专项处理工具</div>
+          <div class="list-folder">特殊渠道</div>
+          <div><span class="status">可用</span></div>
+          <div><button class="btn-primary" onclick="event.stopPropagation(); navigateTo('04/04特殊汇德隆.html')">打开</button></div>
+        </div>
+
+        <div class="list-row" role="row" data-folder="04" data-keywords="多表 批量 通用" onclick="navigateTo('04/04通用多表.html')">
+          <div class="list-icon">■</div>
+          <div class="list-name">通用多表处理器</div>
+          <div class="list-desc">批量上传多个文件，统一字段映射</div>
+          <div class="list-folder">特殊渠道</div>
+          <div><span class="status">可用</span></div>
+          <div><button class="btn-primary" onclick="event.stopPropagation(); navigateTo('04/04通用多表.html')">打开</button></div>
+        </div>
+
+        <div class="list-row" role="row" data-folder="通用工具" data-keywords="智能 表格 分析 AI" onclick="navigateTo('通用工具/智能表格分析助手.html.html')">
+          <div class="list-icon">■</div>
+          <div class="list-name">智能表格分析助手</div>
+          <div class="list-desc">AI 驱动的智能表格分析工具，支持大数据处理</div>
+          <div class="list-folder">通用工具</div>
+          <div><span class="status">可用</span></div>
+          <div><button class="btn-primary" onclick="event.stopPropagation(); navigateTo('通用工具/智能表格分析助手.html.html')">打开</button></div>
+        </div>
+
+        <div class="list-row" role="row" data-folder="通用工具" data-keywords="字段 匹配 映射" onclick="navigateTo('通用工具/字段匹配工具.html')">
+          <div class="list-icon">■</div>
+          <div class="list-name">字段匹配工具</div>
+          <div class="list-desc">智能字段映射与匹配，自动识别列名对应关系</div>
+          <div class="list-folder">通用工具</div>
+          <div><span class="status">可用</span></div>
+          <div><button class="btn-primary" onclick="event.stopPropagation(); navigateTo('通用工具/字段匹配工具.html')">打开</button></div>
+        </div>
+
+        <div class="list-row" role="row" data-folder="通用工具" data-keywords="Excel 筛选 AI 数据处理" onclick="alert('此工具需要本地运行，请打开文件夹：通用工具/AI 数据处理:一步到位/')">
+          <div class="list-icon">■</div>
+          <div class="list-name">Excel 筛选工具</div>
+          <div class="list-desc">本地运行的 AI 数据处理工具，支持智能筛选</div>
+          <div class="list-folder">通用工具</div>
+          <div><span class="status">可用</span></div>
+          <div><button class="btn-primary" onclick="event.stopPropagation(); alert('此工具需要本地运行，请打开文件夹：通用工具/AI 数据处理:一步到位/')">查看</button></div>
+        </div>
+      </div>
+
+      <div class="empty" id="emptyState" style="display:none;">
+        <div class="emoji">⌕</div>
+        <h3>未找到匹配的工具</h3>
+        <p>试试其他关键词或清空筛选条件</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- 快捷键提示 -->
+  <div id="shortcutHint" class="shortcut" aria-hidden="true">
+    按 <span class="kbd">Ctrl</span> + <span class="kbd">K</span> 快速搜索
+  </div>
+
+  <script>
+    // 初始：隐藏骨架屏
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const sk = document.getElementById('skeleton');
+        if (sk) sk.style.display = 'none';
+      }, 300); // 模拟数据就绪
+    });
+
+    // 主题切换
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlEl = document.documentElement;
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme) htmlEl.setAttribute('data-theme', savedTheme);
+    themeToggle.textContent = (htmlEl.getAttribute('data-theme') === 'dark') ? '◑' : '◐';
+
+    themeToggle.addEventListener('click', () => {
+      const cur = htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      htmlEl.setAttribute('data-theme', cur);
+      localStorage.setItem('theme', cur);
+      themeToggle.textContent = (cur === 'dark') ? '◑' : '◐';
+    });
+
+    // 视图切换
+    const viewBtns = document.querySelectorAll('.view-btn');
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+
+    const savedView = localStorage.getItem('viewType') || 'grid';
+    switchView(savedView);
+
+    viewBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        viewBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        switchView(btn.dataset.view);
+        localStorage.setItem('viewType', btn.dataset.view);
+      });
+    });
+
+    function switchView(type) {
+      if (type === 'list') {
+        gridView.classList.remove('active');
+        listView.classList.add('active');
+      } else {
+        listView.classList.remove('active');
+        gridView.classList.add('active');
+      }
+    }
+
+    // 搜索与筛选
+    const searchInput = document.getElementById('searchInput');
+    const chips = document.querySelectorAll('.chip');
+    const emptyState = document.getElementById('emptyState');
+
+    searchInput.addEventListener('input', e => {
+      const term = e.target.value.toLowerCase().trim();
+      performFilter(term, getActiveFilter());
+    });
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => { c.classList.remove('active'); c.setAttribute('aria-pressed', 'false'); });
+        chip.classList.add('active'); chip.setAttribute('aria-pressed', 'true');
+        performFilter(searchInput.value.toLowerCase().trim(), getActiveFilter());
+      });
+    });
+
+    function getActiveFilter() {
+      const active = document.querySelector('.chip.active');
+      return active ? active.getAttribute('data-filter') : 'all';
+    }
+
+    function performFilter(term, filter) {
+      let has = false;
+
+      // 网格视图
+      document.querySelectorAll('#gridView .section').forEach(section => {
+        const folder = section.getAttribute('data-folder');
+        let visibleInSection = 0;
+
+        section.querySelectorAll('.card').forEach(card => {
+          const kw = (card.getAttribute('data-keywords') || '').toLowerCase();
+          const title = card.querySelector('.card-title').textContent.toLowerCase();
+          const desc = card.querySelector('.card-desc').textContent.toLowerCase();
+
+          const passText = !term || kw.includes(term) || title.includes(term) || desc.includes(term);
+          const passFolder = (filter === 'all') || (folder === filter);
+
+          const show = passText && passFolder;
+          card.style.display = show ? 'block' : 'none';
+          if (show) { visibleInSection++; has = true; }
+        });
+
+        section.style.display = visibleInSection ? 'block' : 'none';
+      });
+
+      // 列表视图
+      document.querySelectorAll('#listView .list-row').forEach(row => {
+        const folder = row.getAttribute('data-folder');
+        const kw = (row.getAttribute('data-keywords') || '').toLowerCase();
+        const name = row.querySelector('.list-name').textContent.toLowerCase();
+        const desc = row.querySelector('.list-desc').textContent.toLowerCase();
+
+        const passText = !term || kw.includes(term) || name.includes(term) || desc.includes(term);
+        const passFolder = (filter === 'all') || (folder === filter);
+
+        const show = passText && passFolder;
+        row.style.display = show ? 'grid' : 'none';
+        if (show) has = true;
+      });
+
+      if (emptyState) emptyState.style.display = has ? 'none' : 'block';
+    }
+
+    // 快捷键：Ctrl/Cmd + K 聚焦搜索；Esc 清空
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+        showShortcutHint(true);
+      }
+      if (e.key === 'Escape' && document.activeElement === searchInput) {
+        searchInput.value = '';
+        performFilter('', getActiveFilter());
+        searchInput.blur();
+      }
+    });
+
+    // 快捷键提示显示/隐藏
+    const hintEl = document.getElementById('shortcutHint');
+    let hintTimer;
+    function showShortcutHint(show) {
+      clearTimeout(hintTimer);
+      if (show) {
+        hintEl.classList.add('show');
+        hintTimer = setTimeout(() => hintEl.classList.remove('show'), 2000);
+      } else {
+        hintEl.classList.remove('show');
+      }
+    }
+    searchInput.addEventListener('focus', () => showShortcutHint(true));
+    searchInput.addEventListener('blur', () => showShortcutHint(false));
+
+    // 导航
+    function navigateTo(url) { window.location.href = url; }
+    window.navigateTo = navigateTo;
+
+    // 指标日志
+    console.log('%cA.O.史密斯业务工具平台', 'font-size:16px;font-weight:700;color:#184a8c');
+    const totalTools = document.querySelectorAll('.card').length;
+    const totalFolders = document.querySelectorAll('.section').length;
+    console.log(`当前共有 ${totalFolders} 个分类，${totalTools} 个工具`);
+  </script>
+</body>
+</html>

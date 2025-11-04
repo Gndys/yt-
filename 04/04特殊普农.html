@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>普农提成数据处理工具 - A.O.史密斯业务工具平台</title>
+    
+    <!-- 统一样式文件 -->
+    <link rel="stylesheet" href="../common-styles.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* 工具特定样式 - 普农专用 */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-md);
+            margin-top: var(--space-md);
+        }
+        .group-title {
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-top: var(--space-md);
+            margin-bottom: var(--space-sm);
+        }
+        .upload-item {
+            border: 2px dashed var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            text-align: left;
+            transition: all var(--transition-normal) var(--transition);
+            background: var(--bg-primary);
+        }
+        .upload-item:hover { 
+            border-color: var(--accent-gold); 
+            background: var(--accent-gold-light); 
+        }
+        .upload-item.uploaded { 
+            border-color: var(--color-success); 
+            background: var(--color-success-light); 
+        }
+        .upload-item h3 { 
+            color: var(--text-primary); 
+            margin-bottom: var(--space-sm); 
+            font-size: 1em; 
+        }
+        .upload-item input[type="file"] {
+            margin: var(--space-sm) 0;
+            padding: var(--space-sm);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-sm);
+            width: 100%;
+            background: var(--bg-card);
+        }
+        .status { 
+            font-size: 0.875rem; 
+            margin-top: var(--space-sm); 
+            padding: var(--space-xs) var(--space-md); 
+            border-radius: var(--radius-sm); 
+        }
+        .status.success { 
+            background: var(--color-success-light); 
+            color: #065F46; 
+            border: 1px solid var(--color-success); 
+        }
+        .status.error { 
+            background: var(--color-danger-light); 
+            color: #991B1B; 
+            border: 1px solid var(--color-danger); 
+        }
+        .controls { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: var(--space-md); 
+            align-items: center; 
+        }
+        .btn-toggle {
+            background: var(--color-success); 
+            color: white; 
+            border: none; 
+            padding: var(--space-md) var(--space-lg); 
+            border-radius: var(--radius-md); 
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--transition);
+        }
+        .btn-toggle:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .btn-toggle.disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+            transform: none;
+            box-shadow: none;
+        }
+        .explanation-column { 
+            background: #fff7da; 
+            font-size: 0.875rem; 
+            max-width: 260px; 
+            word-wrap: break-word; 
+        }
+        .error-cell { 
+            background: var(--color-danger-light); 
+            color: #991B1B; 
+        }
+        .success-cell { 
+            background: var(--color-success-light); 
+            color: #065F46; 
+        }
+        .hint { 
+            color: var(--text-tertiary); 
+            font-size: 0.875rem; 
+            margin-top: var(--space-sm); 
+        }
+        
+        /* 模态对话框样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+        }
+        .modal-content.large {
+            max-width: 1200px;
+        }
+        .modal-header {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+            color: var(--text-primary);
+        }
+        .modal-body {
+            margin-bottom: var(--space-lg);
+        }
+        .sheet-list {
+            list-style: none;
+            padding: 0;
+        }
+        .sheet-item {
+            padding: var(--space-md);
+            margin: var(--space-sm) 0;
+            border: 2px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--transition);
+        }
+        .sheet-item:hover {
+            border-color: var(--accent-gold);
+            background: var(--accent-gold-light);
+        }
+        .sheet-item.selected {
+            border-color: var(--accent-blue);
+            background: var(--accent-blue-light);
+        }
+        .sheet-item input[type="radio"] {
+            margin-right: var(--space-sm);
+        }
+        .field-mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--space-md) 0;
+        }
+        .field-mapping-table th,
+        .field-mapping-table td {
+            padding: var(--space-md);
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .field-mapping-table th {
+            background: var(--bg-primary);
+            font-weight: 600;
+        }
+        .field-mapping-table select {
+            width: 100%;
+            padding: var(--space-sm);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            font-size: 0.95em;
+        }
+        .field-mapping-table .required {
+            color: var(--color-danger);
+            font-weight: bold;
+        }
+        .header-row-selector {
+            background: var(--accent-gold-light);
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+            border-left: 4px solid var(--accent-gold);
+        }
+        .header-row-selector label {
+            display: inline-block;
+            margin-right: var(--space-lg);
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .header-row-selector input[type="radio"] {
+            margin-right: var(--space-xs);
+        }
+        .data-preview {
+            background: var(--bg-primary);
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            margin: var(--space-md) 0;
+            max-height: 200px;
+            overflow: auto;
+        }
+        .data-preview h4 {
+            margin-bottom: var(--space-sm);
+            color: var(--text-tertiary);
+            font-size: 0.95em;
+        }
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+        .preview-table th,
+        .preview-table td {
+            padding: 6px 8px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-card);
+        }
+        .preview-table th {
+            background: var(--accent-blue-light);
+            font-weight: 600;
+        }
+        .modal-footer {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: flex-end;
+        }
+        .modal-btn {
+            padding: var(--space-md) var(--space-lg);
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all var(--transition-normal) var(--transition);
+        }
+        .modal-btn-primary {
+            background: var(--accent-gold);
+            color: var(--text-primary);
+        }
+        .modal-btn-primary:hover {
+            background: var(--accent-gold-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .modal-btn-secondary {
+            background: var(--text-tertiary);
+            color: white;
+        }
+        .modal-btn-secondary:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 头部 -->
+        <header class="tool-header">
+            <a href="../index.html" class="back-nav">← 返回首页</a>
+            <h1>🧮 普农提成数据处理工具</h1>
+            <p class="tool-subtitle">上传Excel文件，自动提取型号并计算提成，支持详细说明的显示与导出</p>
+            <div class="tool-badge">
+                <span class="badge-dot"></span>
+                <span>04 - 特殊渠道工具</span>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="tool-content">
+        <section class="section">
+            <h2>📂 文件上传</h2>
+            <div class="group-title">基础表（3个文件）</div>
+            <div class="upload-grid">
+                <div class="upload-item" id="upload_policy">
+                    <h3>渠道政策表.xlsx</h3>
+                    <input type="file" id="file_policy" accept=".xlsx,.xls" />
+                    <div class="status" id="status_policy"></div>
+                </div>
+                <div class="upload-item" id="upload_janit">
+                    <h3>各店佳尼特标准.xlsx</h3>
+                    <input type="file" id="file_janit" accept=".xlsx,.xls" />
+                    <div class="status" id="status_janit"></div>
+                </div>
+                <div class="upload-item" id="upload_roster">
+                    <h3>渠道名单.xlsx</h3>
+                    <input type="file" id="file_roster" accept=".xlsx,.xls" />
+                    <div class="status" id="status_roster"></div>
+                </div>
+            </div>
+
+            <div class="group-title" style="margin-top:12px;">各门店明细表（2个文件）</div>
+            <div class="upload-grid">
+                <div class="upload-item" id="upload_main">
+                    <h3>普农明细.xlsx</h3>
+                    <input type="file" id="file_main" accept=".xlsx,.xls" />
+                    <div class="status" id="status_main"></div>
+                    <div class="hint">将作为主表进行扩展与计算</div>
+                </div>
+                <div class="upload-item" id="upload_bonus">
+                    <h3>普农加提邮件审批.xls</h3>
+                    <input type="file" id="file_bonus" accept=".xlsx,.xls" />
+                    <div class="status" id="status_bonus"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据处理区块 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-icon">⚙️</span>
+                <h2 class="section-title">数据处理</h2>
+            </div>
+            <div class="controls">
+                <button class="btn btn-primary btn-lg" id="processBtn" onclick="processData()" disabled>开始处理数据</button>
+                <button class="btn-toggle btn-lg" id="toggleBtn" onclick="toggleExplanations()" disabled>显示/隐藏说明列</button>
+            </div>
+            <div class="loading-section hidden" id="loading">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">正在处理数据，请稍候...</p>
+            </div>
+        </section>
+
+        <!-- 结果显示区块 -->
+        <section class="section hidden" id="resultsSection">
+            <div class="section-header">
+                <span class="section-icon">📊</span>
+                <h2 class="section-title">处理结果</h2>
+            </div>
+            <div class="alert alert-info" id="debugInfo"></div>
+            <div id="summary"></div>
+            <div class="table-container">
+                <div class="table-wrapper">
+                    <table class="data-table" id="resultsTable">
+                        <thead id="tableHeader"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="text-center mt-xl" id="exportSection">
+                <button class="btn btn-success btn-lg" onclick="exportToExcel()">📥 导出Excel文件</button>
+            </div>
+        </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="tool-footer">
+            <p class="footer-text">普农提成数据处理工具 | 更新日期: 2025-11-04</p>
+            <div class="footer-links">
+                <a href="../index.html" class="footer-link">返回首页</a>
+                <a href="https://iiuzjzy3ccx.feishu.cn/wiki/PbWjwvsXmiJK38kcVdFcsnVNndd" class="footer-link">使用文档</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Sheet选择模态框 -->
+    <div class="modal-overlay" id="sheetSelectorModal">
+        <div class="modal-content">
+            <div class="modal-header">选择工作表</div>
+            <div class="modal-body">
+                <p style="color: #666; margin-bottom: 12px;">检测到文件包含多个工作表，请选择要处理的数据表：</p>
+                <ul class="sheet-list" id="sheetList"></ul>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="cancelSheetSelection()">取消</button>
+                <button class="modal-btn modal-btn-primary" onclick="confirmSheetSelection()">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 字段映射模态框 -->
+    <div class="modal-overlay" id="fieldMappingModal">
+        <div class="modal-content large">
+            <div class="modal-header">字段映射配置</div>
+            <div class="modal-body">
+                <!-- 表头行选择 -->
+                <div class="header-row-selector">
+                    <strong>🔍 表头位置：</strong>
+                    <label>
+                        <input type="radio" name="headerRow" value="0" checked onchange="updateHeaderRow()">
+                        第1行是表头
+                    </label>
+                    <label>
+                        <input type="radio" name="headerRow" value="1" onchange="updateHeaderRow()">
+                        第2行是表头（第1行是合并单元格）
+                    </label>
+                </div>
+                
+                <!-- 数据预览 -->
+                <div class="data-preview">
+                    <h4>📋 数据预览（前3行）：</h4>
+                    <div id="dataPreviewContent"></div>
+                </div>
+                
+                <p style="color: #666; margin-bottom: 12px;">请将Excel列映射到对应字段（<span class="required">*</span>为必需字段）：</p>
+                <table class="field-mapping-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">字段名称</th>
+                            <th style="width: 65%;">Excel列</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fieldMappingBody">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="cancelFieldMapping()">取消</button>
+                <button class="modal-btn modal-btn-primary" onclick="confirmFieldMapping()">确认配置</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局数据
+        let uploadedFiles = {};
+        let processedData = null;
+        let showExplanations = true;
+        let debugMaps = {};
+        let headerCache = {}; // 各表头缓存
+        let currentWorkbook = null; // 当前处理的workbook（用于sheet选择）
+        let currentFileKey = null; // 当前处理的文件key
+        let selectedSheetName = null; // 选中的sheet名称
+        let rawSheetData = null; // 原始sheet数据（包含所有行，用于表头行选择）
+        let currentHeaderRowIndex = 0; // 当前选择的表头行索引（0或1）
+
+        // 事件绑定
+        document.getElementById('file_policy').addEventListener('change', (e) => handleFileUpload(e, '政策', 'policy'));
+        document.getElementById('file_janit').addEventListener('change', (e) => handleFileUpload(e, '佳尼特标准', 'janit'));
+        document.getElementById('file_roster').addEventListener('change', (e) => handleFileUpload(e, '渠道名单', 'roster'));
+        document.getElementById('file_main').addEventListener('change', (e) => handleFileUpload(e, '普农明细', 'main'));
+        document.getElementById('file_bonus').addEventListener('change', (e) => handleFileUpload(e, '普农加提', 'bonus'));
+
+        // Sheet选择相关函数
+        function showSheetSelector(workbook, fileKey) {
+            currentWorkbook = workbook;
+            currentFileKey = fileKey;
+            const sheetNames = workbook.SheetNames;
+            const sheetList = document.getElementById('sheetList');
+            sheetList.innerHTML = '';
+            
+            sheetNames.forEach((name, index) => {
+                const li = document.createElement('li');
+                li.className = 'sheet-item';
+                if (index === 0) {
+                    li.classList.add('selected');
+                    selectedSheetName = name;
+                }
+                li.innerHTML = `
+                    <label style="cursor: pointer; display: block;">
+                        <input type="radio" name="sheet" value="${name}" ${index === 0 ? 'checked' : ''}>
+                        ${name}
+                    </label>
+                `;
+                li.onclick = function() {
+                    document.querySelectorAll('.sheet-item').forEach(item => item.classList.remove('selected'));
+                    this.classList.add('selected');
+                    this.querySelector('input[type="radio"]').checked = true;
+                    selectedSheetName = name;
+                };
+                sheetList.appendChild(li);
+            });
+            
+            document.getElementById('sheetSelectorModal').classList.add('show');
+        }
+
+        function cancelSheetSelection() {
+            document.getElementById('sheetSelectorModal').classList.remove('show');
+            currentWorkbook = null;
+            currentFileKey = null;
+            selectedSheetName = null;
+            // 清空文件输入
+            if (currentFileKey) {
+                document.getElementById('file_' + currentFileKey).value = '';
+            }
+        }
+
+        function confirmSheetSelection() {
+            if (!selectedSheetName || !currentWorkbook || !currentFileKey) return;
+            
+            document.getElementById('sheetSelectorModal').classList.remove('show');
+            
+            // 读取选中的sheet数据
+            const worksheet = currentWorkbook.Sheets[selectedSheetName];
+            const data = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+            
+            // 进入字段映射流程
+            showFieldMapping(data, currentFileKey);
+        }
+
+        // 字段映射相关函数
+        function showFieldMapping(data, fileKey) {
+            // 保存原始数据
+            rawSheetData = data;
+            currentFileKey = fileKey;
+            currentHeaderRowIndex = 0; // 默认第1行是表头
+            
+            // 重置表头行选择
+            document.querySelector('input[name="headerRow"][value="0"]').checked = true;
+            
+            // 渲染界面
+            renderFieldMapping();
+            
+            document.getElementById('fieldMappingModal').classList.add('show');
+        }
+        
+        // 更新表头行选择
+        function updateHeaderRow() {
+            const selected = document.querySelector('input[name="headerRow"]:checked');
+            currentHeaderRowIndex = parseInt(selected.value);
+            renderFieldMapping();
+        }
+        
+        // 渲染字段映射界面
+        function renderFieldMapping() {
+            if (!rawSheetData) return;
+            
+            // 根据选择的表头行提取headers和数据
+            const headers = rawSheetData[currentHeaderRowIndex] || [];
+            const dataRows = rawSheetData.slice(currentHeaderRowIndex + 1);
+            
+            // 渲染数据预览
+            renderDataPreview(rawSheetData, currentHeaderRowIndex);
+            
+            // 渲染字段映射表
+            const fieldMappingBody = document.getElementById('fieldMappingBody');
+            fieldMappingBody.innerHTML = '';
+            
+            // 根据文件类型定义字段配置
+            let fields = [];
+            if (currentFileKey === 'main') {
+                fields = [
+                    { key: 'quantity', label: '数量', required: true, keywords: ['数量', '销售数量'] },
+                    { key: 'productName', label: '物料名称/商品名称', required: true, keywords: ['物料名称', '商品名称'] },
+                    { key: 'model', label: '型号', required: false, keywords: ['型号'] },
+                    { key: 'department', label: '部门', required: true, keywords: ['部门'] },
+                    { key: 'originalCommission', label: '单台提成（原始）', required: false, keywords: ['单台提成', '单体提成'] },
+                    { key: 'originalBonus', label: '加提（原始）', required: false, keywords: ['加提'] },
+                    { key: 'originalTotal', label: '提成小计（原始）', required: false, keywords: ['小计', '合计', '提成小计'] }
+                ];
+            } else if (currentFileKey === 'bonus') {
+                fields = [
+                    { key: 'model', label: '型号', required: true, keywords: ['型号'] },
+                    { key: 'bonusAmount', label: '导购加提', required: true, keywords: ['导购加提', '加提'] }
+                ];
+            }
+            
+            fields.forEach(field => {
+                const tr = document.createElement('tr');
+                
+                // 智能匹配：找到包含关键字的列
+                let matchedIndex = -1;
+                for (let i = 0; i < headers.length; i++) {
+                    const header = (headers[i] || '').toString();
+                    for (const keyword of field.keywords) {
+                        if (header.includes(keyword)) {
+                            matchedIndex = i;
+                            break;
+                        }
+                    }
+                    if (matchedIndex >= 0) break;
+                }
+                
+                const labelHTML = field.required ? `${field.label} <span class="required">*</span>` : field.label;
+                
+                const selectHTML = `
+                    <select id="field_${field.key}" data-required="${field.required}">
+                        <option value="">-- 请选择 --</option>
+                        ${headers.map((h, i) => `<option value="${i}" ${i === matchedIndex ? 'selected' : ''}>${h || '(空列)'}</option>`).join('')}
+                    </select>
+                `;
+                
+                tr.innerHTML = `<td>${labelHTML}</td><td>${selectHTML}</td>`;
+                fieldMappingBody.appendChild(tr);
+            });
+        }
+        
+        // 渲染数据预览
+        function renderDataPreview(data, headerRowIndex) {
+            const previewContent = document.getElementById('dataPreviewContent');
+            
+            // 显示前3行（包括表头）
+            const previewRows = data.slice(0, Math.min(headerRowIndex + 4, data.length));
+            
+            let html = '<table class="preview-table"><thead><tr>';
+            
+            // 第一行（可能是合并单元格或表头）
+            const maxCols = Math.max(...previewRows.map(row => row.length));
+            for (let i = 0; i < maxCols; i++) {
+                html += `<th>列${i + 1}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            
+            // 数据行
+            previewRows.forEach((row, rowIdx) => {
+                const isHeaderRow = rowIdx === headerRowIndex;
+                html += '<tr>';
+                for (let i = 0; i < maxCols; i++) {
+                    const cellValue = row[i] !== undefined ? row[i] : '';
+                    const style = isHeaderRow ? 'background: #fff3cd; font-weight: bold;' : '';
+                    html += `<td style="${style}">${cellValue}</td>`;
+                }
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            previewContent.innerHTML = html;
+        }
+
+        function cancelFieldMapping() {
+            document.getElementById('fieldMappingModal').classList.remove('show');
+            rawSheetData = null;
+            const key = currentFileKey;
+            currentFileKey = null;
+            // 清空文件输入
+            if (key) {
+                document.getElementById('file_' + key).value = '';
+            }
+        }
+
+        function confirmFieldMapping() {
+            if (!rawSheetData || !currentFileKey) return;
+            
+            const fileKey = currentFileKey;
+            
+            // 根据选择的表头行重新组织数据
+            const headers = rawSheetData[currentHeaderRowIndex] || [];
+            const rows = rawSheetData.slice(currentHeaderRowIndex + 1);
+            
+            // 根据文件类型收集字段映射
+            const mapping = {};
+            let fieldKeys = [];
+            
+            if (fileKey === 'main') {
+                fieldKeys = ['quantity', 'productName', 'model', 'department', 'originalCommission', 'originalBonus', 'originalTotal'];
+            } else if (fileKey === 'bonus') {
+                fieldKeys = ['model', 'bonusAmount'];
+            }
+            
+            let hasError = false;
+            fieldKeys.forEach(field => {
+                const select = document.getElementById('field_' + field);
+                if (!select) return; // 字段不存在，跳过
+                
+                const value = select.value;
+                const isRequired = select.getAttribute('data-required') === 'true';
+                
+                if (isRequired && value === '') {
+                    alert(`请选择必需字段：${select.closest('tr').querySelector('td').textContent}`);
+                    hasError = true;
+                    return;
+                }
+                
+                mapping[field] = value === '' ? -1 : parseInt(value);
+            });
+            
+            if (hasError) return;
+            
+            // 保存数据和映射（使用正确的表头行）
+            const finalData = [headers].concat(rows);
+            uploadedFiles[fileKey] = {
+                data: finalData,
+                headers: headers,
+                rows: rows,
+                fieldMapping: mapping,
+                configured: true
+            };
+            headerCache[fileKey] = headers;
+            
+            const statusElement = document.getElementById('status_' + fileKey);
+            const uploadElement = document.getElementById('upload_' + fileKey);
+            statusElement.textContent = `✅ 已配置 (${rows.length} 行数据)`;
+            statusElement.className = 'status success';
+            uploadElement.classList.add('uploaded');
+            
+            document.getElementById('fieldMappingModal').classList.remove('show');
+            rawSheetData = null;
+            currentFileKey = null;
+            
+            checkAllFilesUploaded();
+        }
+
+        function handleFileUpload(event, label, key) {
+            const file = event.target.files[0];
+            const statusElement = document.getElementById('status_' + key);
+            const uploadElement = document.getElementById('upload_' + key);
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const workbook = XLSX.read(e.target.result, {type: 'binary'});
+                        
+                        // 对于普农明细表和普农加提表，需要特殊处理：sheet选择 + 字段映射
+                        if (key === 'main' || key === 'bonus') {
+                            const sheetNames = workbook.SheetNames;
+                            if (sheetNames.length > 1) {
+                                // 多个sheet，显示选择界面
+                                showSheetSelector(workbook, key);
+                            } else {
+                                // 只有一个sheet，直接进入字段映射
+                                const worksheet = workbook.Sheets[sheetNames[0]];
+                                const data = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                                showFieldMapping(data, key);
+                            }
+                        } else {
+                            // 其他文件保持原有逻辑
+                            const firstSheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[firstSheetName];
+                            const data = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                            uploadedFiles[key] = {
+                                data: data,
+                                headers: data[0] || [],
+                                rows: data.slice(1)
+                            };
+                            headerCache[key] = data[0] || [];
+                            statusElement.textContent = `✅ 已上传 (${Math.max(0, data.length - 1)} 行)`;
+                            statusElement.className = 'status success';
+                            uploadElement.classList.add('uploaded');
+                            console.log(label + ' 表头:', data[0]);
+                            checkAllFilesUploaded();
+                        }
+                    } catch (error) {
+                        statusElement.textContent = `❌ 文件读取失败: ${error.message}`;
+                        statusElement.className = 'status error';
+                    }
+                };
+                reader.readAsBinaryString(file);
+            }
+        }
+
+        function checkAllFilesUploaded() {
+            const required = ['policy','janit','roster','main','bonus'];
+            const uploadedCount = required.filter(k => uploadedFiles[k]).length;
+            
+            // 特别检查：main和bonus文件必须完成字段映射配置
+            const mainConfigured = uploadedFiles['main'] && uploadedFiles['main'].configured === true;
+            const bonusConfigured = uploadedFiles['bonus'] && uploadedFiles['bonus'].configured === true;
+            const allReady = uploadedCount === required.length && mainConfigured && bonusConfigured;
+            
+            document.getElementById('processBtn').disabled = !allReady;
+            document.getElementById('toggleBtn').disabled = !allReady;
+            if (allReady) {
+                document.getElementById('toggleBtn').classList.remove('disabled');
+            }
+        }
+
+        // 型号提取：支持单段与多段（含连字符）的型号，保留原大小写
+        function extractModel(productName) {
+            if (!productName) return '';
+            const str = String(productName).trim();
+
+            // 去除尾部说明性文字（如：注意.../中间.../备注.../说明...）
+            // 不要求前面必须有空白符，以处理"WI注意"这种紧连的情况
+            const cleaned = str
+                .replace(/(?:注意|备注|说明|中间).*$/i, '')
+                .trim();
+
+            // 查找所有可能的型号片段（字母数字与连字符的组合）
+            const allMatches = cleaned.match(/[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*/g);
+            
+            if (allMatches && allMatches.length) {
+                // 1) 优先选择同时包含字母和数字的片段（真正的型号通常都有字母+数字）
+                const withDigits = allMatches.filter(m => /[A-Za-z]/.test(m) && /[0-9]/.test(m));
+                if (withDigits.length) {
+                    return withDigits[withDigits.length - 1]; // 返回最后一个
+                }
+                
+                // 2) 如果没有同时包含字母和数字的，返回最后一个包含字母的
+                const withLetters = allMatches.filter(m => /[A-Za-z]/.test(m));
+                if (withLetters.length) {
+                    return withLetters[withLetters.length - 1];
+                }
+                
+                // 3) 返回最后一个匹配
+                return allMatches[allMatches.length - 1];
+            }
+
+            // 最后兜底：取最后一个短横线后的段
+            const parts = cleaned.split('-');
+            return parts.length ? parts[parts.length - 1].trim() : cleaned;
+        }
+
+        // 型号键统一：大小写脱敏（全部转大写做key），比较时忽略大小写
+        function keyOf(model) {
+            return (model || '').toString().trim().toUpperCase();
+        }
+
+        // 构建映射：渠道政策（型号 -> 提成 或 “以渠道备案提成为准”）
+        // 约定列：型号列名含“型号”，提成列名含“提成”
+        function buildPolicyMap(policyData) {
+            const map = new Map();
+            const headers = policyData.headers || [];
+            // 动态识别列
+            const idxModel = headers.findIndex(h => (h||'').toString().includes('型号'));
+            const idxCommission = headers.findIndex(h => (h||'').toString().includes('提成'));
+            policyData.rows.forEach((row, i) => {
+                const model = row[idxModel];
+                const commissionRaw = row[idxCommission];
+                if (!model) return;
+                const key = keyOf(model);
+                const isText = typeof commissionRaw === 'string';
+                const isJanit = isText && commissionRaw.includes('以渠道备案提成为准');
+                const commissionValue = isJanit ? commissionRaw : parseFloat(commissionRaw) || 0;
+                map.set(key, {
+                    commission: commissionValue,
+                    isJanit: !!isJanit,
+                    sourceRow: i + 2
+                });
+            });
+            return { map, idxModel, idxCommission };
+        }
+
+        // 构建映射：普农加提（型号 -> 导购加提）
+        // 支持字段映射配置或自动识别
+        function buildBonusMap(bonusData) {
+            const map = new Map();
+            const headers = bonusData.headers || [];
+            
+            let idxModel, idxBonus;
+            
+            // 优先使用字段映射配置
+            if (bonusData.fieldMapping && bonusData.configured) {
+                idxModel = bonusData.fieldMapping.model;
+                idxBonus = bonusData.fieldMapping.bonusAmount;
+            } else {
+                // 兼容旧版：自动识别
+                idxModel = headers.findIndex(h => (h||'').toString().includes('型号'));
+                idxBonus = headers.findIndex(h => (h||'').toString().includes('导购加提'));
+                // 兼容：若没找到，尝试"加提"
+                if (idxBonus < 0) idxBonus = headers.findIndex(h => (h||'').toString().includes('加提'));
+            }
+            
+            bonusData.rows.forEach((row, i) => {
+                const model = row[idxModel];
+                const bonus = idxBonus >= 0 ? row[idxBonus] : undefined;
+                if (!model || bonus === undefined || bonus === '') return;
+                map.set(keyOf(model), {
+                    value: parseFloat(bonus) || 0,
+                    sourceRow: i + 2,
+                    sourceColumn: idxBonus + 1
+                });
+            });
+            return { map, idxModel, idxBonus };
+        }
+
+        // 构建映射：佳尼特标准（店铺=普农，型号 -> 导购提成）
+        // 约定列：店铺列名含“店铺”或“门店”，型号列名含“型号”，导购提成列名含“提成”
+        function buildJanitMap(janitData) {
+            const map = new Map();
+            const headers = janitData.headers || [];
+            const idxShop = headers.findIndex(h => (h||'').toString().match(/店铺|门店/));
+            const idxModel = headers.findIndex(h => (h||'').toString().includes('型号'));
+            const idxCommission = headers.findIndex(h => (h||'').toString().includes('提成'));
+            janitData.rows.forEach((row, i) => {
+                const shop = row[idxShop];
+                const model = row[idxModel];
+                const commission = row[idxCommission];
+                if ((shop === '普农') && model && commission !== undefined) {
+                    map.set(keyOf(model), {
+                        value: parseFloat(commission) || 0,
+                        sourceRow: i + 2
+                    });
+                }
+            });
+            return { map, idxShop, idxModel, idxCommission };
+        }
+
+        // 构建映射：渠道名单（部门 -> 门店/导购人员1/导购人员2）
+        // 约定列：部门列名含“部门”，门店列名含“门店”，导购人员列名含“导购人员”
+        function buildRosterMap(rosterData) {
+            const map = new Map();
+            const headers = rosterData.headers || [];
+            const idxDept = headers.findIndex(h => (h||'').toString().includes('部门'));
+            const idxStore = headers.findIndex(h => (h||'').toString().includes('门店'));
+            const idxGuide1 = headers.findIndex(h => (h||'').toString().includes('导购人员') && (h||'').toString().includes('1'));
+            const idxGuide2 = headers.findIndex(h => (h||'').toString().includes('导购人员') && (h||'').toString().includes('2'));
+            rosterData.rows.forEach((row, i) => {
+                const dept = (row[idxDept] || '').toString().trim();
+                if (!dept) return;
+                map.set(dept, {
+                    store: row[idxStore] || '',
+                    guide1: row[idxGuide1] || '',
+                    guide2: row[idxGuide2] || '',
+                    sourceRow: i + 2
+                });
+            });
+            return { map, idxDept, idxStore, idxGuide1, idxGuide2 };
+        }
+
+        function processData() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('processBtn').disabled = true;
+
+            setTimeout(() => {
+                try {
+                    const mainData = uploadedFiles['main'];
+                    const policyData = uploadedFiles['policy'];
+                    const bonusData = uploadedFiles['bonus'];
+                    const janitData = uploadedFiles['janit'];
+                    const rosterData = uploadedFiles['roster'];
+
+                    // 构建映射
+                    const policy = buildPolicyMap(policyData);
+                    const bonus = buildBonusMap(bonusData);
+                    const janit = buildJanitMap(janitData);
+                    const roster = buildRosterMap(rosterData);
+                    debugMaps = { policy, bonus, janit, roster };
+
+                    // 处理主数据
+                    const results = processMainData(mainData, policy, bonus, janit, roster);
+
+                    processedData = results;
+                    displayResults(results);
+                    showDebugInfo();
+
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('resultsSection').classList.remove('hidden');
+                    document.getElementById('toggleBtn').disabled = false;
+                } catch (error) {
+                    alert('处理数据时出错: ' + error.message);
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('processBtn').disabled = false;
+                }
+            }, 100);
+        }
+
+        // 主处理逻辑
+        function processMainData(mainData, policy, bonus, janit, roster) {
+            const headers = mainData.headers || [];
+            const rows = mainData.rows || [];
+
+            // 使用用户配置的字段映射（优先）或自动识别（兼容旧逻辑）
+            const mapping = mainData.fieldMapping || {};
+            
+            let idxQty, idxProduct, idxModelOriginal, idxDept, idxOrigCommission, idxOrigBonus, idxOrigTotal;
+            
+            if (mapping && Object.keys(mapping).length > 0) {
+                // 使用用户配置的映射
+                idxQty = mapping.quantity;
+                idxProduct = mapping.productName;
+                idxModelOriginal = mapping.model;
+                idxDept = mapping.department;
+                idxOrigCommission = mapping.originalCommission;
+                idxOrigBonus = mapping.originalBonus;
+                idxOrigTotal = mapping.originalTotal;
+            } else {
+                // 兼容旧版本：自动识别（但现在main文件必须配置，这段代码作为后备）
+                idxQty = headers.findIndex(h => (h||'').toString().match(/数量|销售数量/));
+                idxProduct = headers.findIndex(h => (h||'').toString().match(/物料名称|商品名称/));
+                idxModelOriginal = headers.findIndex(h => (h||'').toString().match(/型号/));
+                idxDept = headers.findIndex(h => (h||'').toString().match(/部门/));
+                idxOrigCommission = headers.findIndex(h => (h||'').toString().match(/单台提成|单体提成/));
+                idxOrigBonus = headers.findIndex(h => (h||'').toString().match(/加提/));
+                idxOrigTotal = headers.findIndex(h => (h||'').toString().match(/小计|合计|提成小计/));
+            }
+
+            const results = [];
+            rows.forEach((row, index) => {
+                if (!row || row.length === 0) return;
+
+                const dept = (row[idxDept] || '').toString().trim();
+
+                const productName = row[idxProduct] || '';
+                const originalModel = row[idxModelOriginal] || '';
+                const extractedModel = originalModel ? String(originalModel) : extractModel(productName);
+                const modelKey = keyOf(extractedModel);
+
+                const quantity = parseFloat(row[idxQty]) || 0;
+
+                // 特殊型号规则检查
+                let newCommission = 0;
+                let commissionExplanation = '';
+                let matchSource = '';
+                let newBonus = 0;
+                let bonusExplanation = '';
+
+                if (modelKey === 'PF25C1') {
+                    // 特殊规则：PF25C1 固定提成30，加提0
+                    newCommission = 30;
+                    newBonus = 0;
+                    commissionExplanation = `型号"${extractedModel}"采用特殊规则，固定单台提成=30`;
+                    bonusExplanation = `型号"${extractedModel}"采用特殊规则，固定加提=0`;
+                    matchSource = '特殊规则';
+                } else {
+                    // 渠道政策匹配
+                    const pol = policy.map.get(modelKey);
+                    if (pol) {
+                        if (pol.isJanit) {
+                            // 佳尼特标准（店铺=普农）
+                            const jm = janit.map.get(modelKey);
+                            if (jm) {
+                                newCommission = jm.value;
+                                commissionExplanation = `渠道政策第${pol.sourceRow}行提示"以渠道备案提成为准"；转至佳尼特标准（普农）第${jm.sourceRow}行匹配型号"${extractedModel}"，导购提成=${jm.value}`;
+                                matchSource = '佳尼特标准';
+                            } else {
+                                commissionExplanation = `渠道政策第${pol.sourceRow}行提示"以渠道备案提成为准"，但佳尼特标准中未找到店铺"普农"的型号"${extractedModel}"`;
+                                matchSource = '未匹配';
+                            }
+                        } else {
+                            newCommission = parseFloat(pol.commission) || 0;
+                            commissionExplanation = `渠道政策第${pol.sourceRow}行匹配型号"${extractedModel}"，单台提成=${newCommission}`;
+                            matchSource = '渠道政策';
+                        }
+                    } else {
+                        commissionExplanation = `渠道政策表中未找到型号"${extractedModel}"的记录`;
+                        matchSource = '未匹配';
+                    }
+
+                    // 加提匹配
+                    const bm = bonus.map.get(modelKey);
+                    if (bm) {
+                        newBonus = bm.value;
+                        bonusExplanation = `普农加提邮件审批第${bm.sourceRow}行第${bm.sourceColumn}列匹配型号"${extractedModel}"，导购加提=${newBonus}`;
+                    } else {
+                        bonusExplanation = `普农加提邮件审批中未找到型号"${extractedModel}"的导购加提记录`;
+                    }
+                }
+
+                // 渠道名单匹配（部门 -> 门店/导购1/导购2）
+                let store = '', guide1 = '', guide2 = '';
+                let rosterExplanation = '';
+                if (dept) {
+                    const rm = roster.map.get(dept);
+                    if (rm) {
+                        store = rm.store || '';
+                        guide1 = rm.guide1 || '';
+                        guide2 = rm.guide2 || '';
+                        rosterExplanation = `渠道名单第${rm.sourceRow}行按部门“${dept}”匹配：门店="${store}"，导购人员1="${guide1}"，导购人员2="${guide2}"`;
+                    } else {
+                        rosterExplanation = `渠道名单中未找到部门“${dept}”的匹配记录`;
+                    }
+                } else {
+                    rosterExplanation = `主表部门为空，无法在渠道名单中匹配门店与导购人员`;
+                }
+
+                // 特殊情况：导购1和2都为空 => 不计算提成，相关字段保持空
+                let newTotal = null;
+                let totalExplanation = '';
+                let commissionFinal = null;
+                let bonusFinal = null;
+                let skipByNoGuides = (!guide1 && !guide2);
+                if (skipByNoGuides) {
+                    commissionFinal = '';
+                    bonusFinal = '';
+                    newTotal = '';
+                    totalExplanation = '导购人员1与2均为空，本行不计算提成，相关字段留空';
+                } else {
+                    commissionFinal = newCommission;
+                    bonusFinal = newBonus;
+                    newTotal = quantity * newCommission + newBonus * quantity;
+                    totalExplanation = `复核提成 = 销售数量(${quantity}) × 单台提成(${newCommission}) + 加提(${newBonus}) × 销售数量(${quantity}) = ${newTotal}`;
+                }
+
+                // 原始列（若存在）仅用于对比显示
+                const originalCommission = (idxOrigCommission >= 0) ? (parseFloat(row[idxOrigCommission]) || 0) : null;
+                const originalBonus = (idxOrigBonus >= 0) ? (parseFloat(row[idxOrigBonus]) || 0) : null;
+                const originalTotal = (idxOrigTotal >= 0) ? (parseFloat(row[idxOrigTotal]) || 0) : null;
+
+                // 说明：型号提取
+                const modelExplanation = originalModel
+                    ? `使用主表原型号“${originalModel}”`
+                    : `从“${productName}”中提取型号“${extractedModel}”`;
+
+                // 前后对比：原单体/单台提成 vs 核对单台提成（不一致时说明）
+                let diffExplanation = '';
+                if (commissionFinal !== '' && originalCommission != null) {
+                    const newC = parseFloat(commissionFinal);
+                    const oldC = parseFloat(originalCommission);
+                    if (newC !== oldC) {
+                        diffExplanation = `原单体提成=${oldC}，核对单台提成=${newC}，不一致`;
+                    }
+                }
+
+                results.push({
+                    rowIndex: index + 1,
+                    originalData: row.slice(),
+                    extractedModel,
+                    newCommission: commissionFinal,
+                    newBonus: bonusFinal,
+                    newTotal,
+                    commissionExplanation,
+                    bonusExplanation,
+                    totalExplanation,
+                    rosterExplanation,
+                    modelExplanation,
+                    matchSource,
+                    quantity,
+                    originalCommission,
+                    originalBonus,
+                    originalTotal,
+                    store,
+                    guide1,
+                    guide2,
+                    diffExplanation,
+                    department: dept  // 保存部门信息用于筛选
+                });
+            });
+
+            return results;
+        }
+
+        function showDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+
+            const pH = headerCache['policy'] || [];
+            const bH = headerCache['bonus'] || [];
+            const jH = headerCache['janit'] || [];
+            const rH = headerCache['roster'] || [];
+            const mH = headerCache['main'] || [];
+
+            const info = `
+                <h4>🔎 数据表结构分析</h4>
+                <p><strong>普农明细:</strong> 自动识别列 → 数量/销售数量, 物料名称/商品名称, 型号, 部门, 单台提成, 加提, 提成小计</p>
+                <p><strong>渠道政策表:</strong> 识别“型号”列与“提成”列；若提成=“以渠道备案提成为准”，转查佳尼特（普农）</p>
+                <p><strong>普农加提邮件审批:</strong> 识别“型号”列与“导购加提”列</p>
+                <p><strong>各店佳尼特标准:</strong> 店铺=“普农”，识别“型号”与“提成”</p>
+                <p><strong>渠道名单:</strong> 识别“部门”→“门店/导购人员1/导购人员2”</p>
+                <p><strong>表头示例:</strong></p>
+                <ul>
+                    <li>普农明细: ${JSON.stringify(mH)}</li>
+                    <li>渠道政策: ${JSON.stringify(pH)}</li>
+                    <li>普农加提: ${JSON.stringify(bH)}</li>
+                    <li>佳尼特标准: ${JSON.stringify(jH)}</li>
+                    <li>渠道名单: ${JSON.stringify(rH)}</li>
+                </ul>
+                <p><strong>映射规模:</strong>
+                  渠道政策 ${debugMaps.policy.map.size} 条；
+                  加提 ${debugMaps.bonus.map.size} 条；
+                  佳尼特（普农）${debugMaps.janit.map.size} 条；
+                  渠道名单 ${debugMaps.roster.map.size} 条
+                </p>
+            `;
+            debugInfo.innerHTML = info;
+        }
+
+        function displayResults(results) {
+            const headers = uploadedFiles['main'].headers;
+            const tableHeader = document.getElementById('tableHeader');
+            const tableBody = document.getElementById('tableBody');
+
+            // 部门筛选：只保留指定部门的记录
+            const allowedDepartments = ['广场厨卫柜组', '江山厨卫柜组1'];
+            const filteredResults = results.filter(r => allowedDepartments.includes(r.department));
+
+            // 新增字段列
+            const addedHeaders = [
+                '型号', '单台提成(核对)', '加提(核对)', '提成(核对)', '门店', '导购人员 1', '导购人员 2',
+                '型号说明', '提成说明', '加提说明', '门店/导购说明', '计算说明', '前后对比'
+            ];
+
+            let headerHTML = '<tr>';
+            headers.forEach(h => { headerHTML += `<th>${h}</th>`; });
+            addedHeaders.forEach(h => {
+                const isExplain = ['型号说明','提成说明','加提说明','门店/导购说明','计算说明','前后对比'].includes(h);
+                headerHTML += `<th class="${isExplain ? 'explanation-column' : ''}">${h}</th>`;
+            });
+            headerHTML += '</tr>';
+            tableHeader.innerHTML = headerHTML;
+
+            let bodyHTML = '';
+            let totalRows = filteredResults.length;
+            let matchedRows = 0;
+            let totalDifference = 0;
+
+            filteredResults.forEach(r => {
+                bodyHTML += '<tr>';
+
+                // 对齐原始列长度
+                for (let i = 0; i < headers.length; i++) {
+                    bodyHTML += `<td>${r.originalData[i] ?? ''}</td>`;
+                }
+
+                // 新增列：型号
+                bodyHTML += `<td>${r.extractedModel || ''}</td>`;
+
+                // 新增列：单台提成(核对)
+                let commissionClass = '';
+                if (r.newCommission === '') {
+                    commissionClass = ''; // 跳过计算的情况
+                } else if (r.originalCommission != null) {
+                    commissionClass = (parseFloat(r.newCommission) === parseFloat(r.originalCommission)) ? 'success-cell' : 'error-cell';
+                }
+                bodyHTML += `<td class="${commissionClass}">${r.newCommission === '' ? '' : r.newCommission}</td>`;
+
+                // 新增列：加提(核对)
+                let bonusClass = '';
+                if (r.newBonus === '') {
+                    bonusClass = '';
+                } else if (r.originalBonus != null) {
+                    bonusClass = (parseFloat(r.newBonus) === parseFloat(r.originalBonus)) ? 'success-cell' : 'error-cell';
+                }
+                bodyHTML += `<td class="${bonusClass}">${r.newBonus === '' ? '' : r.newBonus}</td>`;
+
+                // 新增列：提成(核对)
+                let totalClass = '';
+                if (r.newTotal === '') {
+                    totalClass = '';
+                    bodyHTML += `<td class="">${''}</td>`;
+                } else {
+                    const newTotalFixed = (parseFloat(r.newTotal || 0)).toFixed(2);
+                    if (r.originalTotal != null) {
+                        totalClass = (Math.abs(parseFloat(newTotalFixed) - parseFloat(r.originalTotal || 0)) <= 0.01) ? 'success-cell' : 'error-cell';
+                        totalDifference += Math.abs(parseFloat(newTotalFixed) - parseFloat(r.originalTotal || 0));
+                    }
+                    bodyHTML += `<td class="${totalClass}">${newTotalFixed}</td>`;
+                }
+
+                // 门店/导购列
+                bodyHTML += `<td>${r.store || ''}</td>`;
+                bodyHTML += `<td>${r.guide1 || ''}</td>`;
+                bodyHTML += `<td>${r.guide2 || ''}</td>`;
+
+                // 说明列
+                bodyHTML += `<td class="explanation-column">${r.modelExplanation}</td>`;
+                bodyHTML += `<td class="explanation-column">${r.commissionExplanation}</td>`;
+                bodyHTML += `<td class="explanation-column">${r.bonusExplanation}</td>`;
+                bodyHTML += `<td class="explanation-column">${r.rosterExplanation}</td>`;
+                bodyHTML += `<td class="explanation-column">${r.totalExplanation}</td>`;
+                bodyHTML += `<td class="explanation-column">${r.diffExplanation || ''}</td>`;
+
+                bodyHTML += '</tr>';
+
+                if (r.matchSource && r.matchSource !== '未匹配') matchedRows++;
+            });
+
+            tableBody.innerHTML = bodyHTML;
+
+            // 汇总
+            const summary = document.getElementById('summary');
+            const matchedRate = totalRows ? (matchedRows/totalRows*100).toFixed(1) : '0.0';
+            summary.innerHTML = `
+                <h3>📈 处理汇总</h3>
+                <p><strong>原始总行数:</strong> ${results.length}</p>
+                <p><strong>筛选后行数:</strong> ${totalRows} (仅显示部门为"广场厨卫柜组"或"江山厨卫柜组1"的记录)</p>
+                <p><strong>成功匹配(政策/佳尼特):</strong> ${matchedRows} 行 (${matchedRate}%)</p>
+                <p><strong>提成差异总额(与原小计对比):</strong> ${totalDifference.toFixed(2)} 元</p>
+                <p class="hint">提示：如主表没有"原单台提成/原加提/提成小计"列，则不显示对比着色。</p>
+            `;
+        }
+
+        function toggleExplanations() {
+            showExplanations = !showExplanations;
+            const explanationColumns = document.querySelectorAll('.explanation-column');
+            explanationColumns.forEach(col => {
+                col.style.display = showExplanations ? 'table-cell' : 'none';
+            });
+        }
+
+        function exportToExcel() {
+            if (!processedData) return;
+
+            // 部门筛选：只导出指定部门的记录
+            const allowedDepartments = ['广场厨卫柜组', '江山厨卫柜组1'];
+            const filteredData = processedData.filter(r => allowedDepartments.includes(r.department));
+
+            const headers = uploadedFiles['main'].headers.concat([
+                '型号', '单台提成(核对)', '加提(核对)', '提成(核对)', '门店', '导购人员 1', '导购人员 2',
+                '型号说明', '提成说明', '加提说明', '门店/导购说明', '计算说明', '前后对比'
+            ]);
+
+            const exportData = [headers];
+
+            filteredData.forEach(r => {
+                const originalDataAligned = [];
+                for (let i = 0; i < uploadedFiles['main'].headers.length; i++) {
+                    originalDataAligned.push(r.originalData[i] || '');
+                }
+                const row = originalDataAligned.concat([
+                    r.extractedModel || '',
+                    r.newCommission === '' ? '' : r.newCommission,
+                    r.newBonus === '' ? '' : r.newBonus,
+                    r.newTotal === '' ? '' : r.newTotal,
+                    r.store || '',
+                    r.guide1 || '',
+                    r.guide2 || '',
+                    r.modelExplanation || '',
+                    r.commissionExplanation || '',
+                    r.bonusExplanation || '',
+                    r.rosterExplanation || '',
+                    r.totalExplanation || '',
+                    r.diffExplanation || ''
+                ]);
+                exportData.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "处理结果");
+
+            const fileName = `提成数据处理结果_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+    </script>
+</body>
+</html>

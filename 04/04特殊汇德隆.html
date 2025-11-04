@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汇德隆提成计算工具 - A.O.史密斯业务工具平台</title>
+    
+    <!-- 统一样式文件 -->
+    <link rel="stylesheet" href="../common-styles.css">
+    
+    <style>
+        /* 工具特定样式 - 汇德隆专用 */
+        .model-column {
+            background: #e3f2fd;
+        }
+
+        .commission-column {
+            background: #f3e5f5;
+        }
+
+        .explanation-column {
+            background: #fff3e0;
+            max-width: 200px;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+
+        .kitchen-appliance {
+            background: #ffebee;
+        }
+
+        .upload-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+
+        .upload-item {
+            background: var(--bg-card);
+            padding: var(--space-lg);
+            border-radius: var(--radius-md);
+            border: 2px dashed var(--border-medium);
+            text-align: center;
+            transition: all var(--transition-normal) var(--transition);
+        }
+
+        .upload-item:hover {
+            border-color: var(--accent-gold);
+            background: var(--accent-gold-light);
+        }
+
+        .upload-item input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            display: block;
+            cursor: pointer;
+            padding: var(--space-md);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .upload-label:hover {
+            color: var(--accent-blue);
+        }
+
+        .file-info {
+            margin-top: var(--space-md);
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: var(--space-md);
+            align-items: center;
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            margin: 5% auto;
+            padding: var(--space-xl);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 2px solid var(--accent-blue);
+        }
+
+        .modal-header h2 {
+            color: var(--accent-blue);
+            margin: 0;
+        }
+
+        .close {
+            color: var(--text-tertiary);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color var(--transition-normal);
+        }
+
+        .close:hover {
+            color: var(--text-primary);
+        }
+
+        .mapping-section {
+            margin-bottom: var(--space-lg);
+        }
+
+        .mapping-section h3 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-md);
+        }
+
+        .mapping-item {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: var(--space-md);
+            align-items: center;
+            margin-bottom: var(--space-md);
+            padding: var(--space-md);
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+        }
+
+        .mapping-item label {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .mapping-item select {
+            padding: var(--space-sm);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            cursor: pointer;
+        }
+
+        .sheet-selector {
+            margin-bottom: var(--space-lg);
+        }
+
+        .sheet-selector select {
+            width: 100%;
+            padding: var(--space-md);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+        }
+
+        .header-row-selector {
+            margin-bottom: var(--space-lg);
+        }
+
+        .header-row-selector label {
+            display: block;
+            margin-bottom: var(--space-sm);
+            font-weight: 600;
+        }
+
+        .header-row-selector input {
+            width: 100%;
+            padding: var(--space-sm);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-sm);
+        }
+
+        .preview-section {
+            margin-top: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+
+        .preview-section h3 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-md);
+        }
+
+        .preview-table-container {
+            max-height: 300px;
+            overflow: auto;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+
+        .preview-table th,
+        .preview-table td {
+            padding: 6px 8px;
+            border: 1px solid var(--border-light);
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .preview-table th {
+            background: var(--bg-primary);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .preview-table tr:hover {
+            background: var(--bg-primary);
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-content {
+            background: var(--bg-card);
+            padding: var(--space-2xl);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .preview-info {
+            padding: var(--space-md);
+            background: var(--color-info-light);
+            border-left: 4px solid var(--color-info);
+            margin-bottom: var(--space-md);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 头部 -->
+        <header class="tool-header">
+            <a href="../index.html" class="back-nav">← 返回首页</a>
+            <h1>🏪 汇德隆提成计算工具</h1>
+            <p class="tool-subtitle">自动匹配型号、计算提成、匹配导购人员，支持佳尼特特殊规则和厨电邮件审批</p>
+            <div class="tool-badge">
+                <span class="badge-dot"></span>
+                <span>04 - 特殊渠道工具</span>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="tool-content">
+            <!-- 文件上传区块 -->
+            <section class="section">
+            <div class="upload-group">
+                <div class="upload-item">
+                    <label for="detailFile" class="upload-label">
+                        <strong>📊 汇德隆销售业绩明细表</strong><br>
+                        点击选择Excel文件
+                    </label>
+                    <input type="file" id="detailFile" accept=".xlsx,.xls,.csv">
+                    <div class="file-info" id="detailFileInfo">未选择文件</div>
+                </div>
+
+                <div class="upload-item">
+                    <label for="policyFile" class="upload-label">
+                        <strong>📋 渠道政策表</strong><br>
+                        点击选择Excel文件
+                    </label>
+                    <input type="file" id="policyFile" accept=".xlsx,.xls,.csv">
+                    <div class="file-info" id="policyFileInfo">未选择文件</div>
+                </div>
+
+                <div class="upload-item">
+                    <label for="janitFile" class="upload-label">
+                        <strong>🏪 各店佳尼特标准表</strong><br>
+                        点击选择Excel文件
+                    </label>
+                    <input type="file" id="janitFile" accept=".xlsx,.xls,.csv">
+                    <div class="file-info" id="janitFileInfo">未选择文件</div>
+                </div>
+
+                <div class="upload-item">
+                    <label for="staffFile" class="upload-label">
+                        <strong>👥 门店导购人员表</strong><br>
+                        点击选择Excel文件
+                    </label>
+                    <input type="file" id="staffFile" accept=".xlsx,.xls,.csv">
+                    <div class="file-info" id="staffFileInfo">未选择文件</div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-md items-center mt-lg">
+                <button class="btn btn-primary btn-lg" onclick="processData()">🔄 开始处理</button>
+                <button class="btn btn-success btn-lg" onclick="exportResults()" id="exportBtn" disabled>📥 导出结果</button>
+                
+                <div class="toggle-group">
+                    <div class="toggle">
+                        <input type="checkbox" id="showExplanation" checked onchange="toggleColumns()">
+                        <label for="showExplanation">显示说明列</label>
+                    </div>
+                    <div class="toggle">
+                        <input type="checkbox" id="showOriginal" onchange="toggleColumns()">
+                        <label for="showOriginal">显示原始提成</label>
+                    </div>
+                </div>
+            </div>
+            </section>
+
+            <!-- 状态和结果区块 -->
+            <div id="statusInfo"></div>
+            <div id="summary" class="stats-grid hidden"></div>
+            
+            <div class="table-container">
+                <div class="table-wrapper">
+                    <table class="data-table" id="resultsTable">
+                        <thead id="tableHeader"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="tool-footer">
+            <p class="footer-text">汇德隆提成计算工具 | 更新日期: 2025-11-04</p>
+            <div class="footer-links">
+                <a href="../index.html" class="footer-link">返回首页</a>
+                <a href="https://iiuzjzy3ccx.feishu.cn/wiki/PbWjwvsXmiJK38kcVdFcsnVNndd" class="footer-link">使用文档</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 字段映射模态框 -->
+    <div id="mappingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 销售明细字段映射</h2>
+                <span class="close" onclick="closeMappingModal()">&times;</span>
+            </div>
+
+            <div class="sheet-selector">
+                <label for="sheetSelect"><strong>选择工作表：</strong></label>
+                <select id="sheetSelect" onchange="updateSheetPreview()">
+                    <option value="">-- 请选择工作表 --</option>
+                </select>
+            </div>
+
+            <div class="header-row-selector">
+                <label for="headerRowInput"><strong>字段所在行号（如果第一行是标题，字段在第二行，请输入2）：</strong></label>
+                <input type="number" id="headerRowInput" value="1" min="1" max="10">
+                <button class="btn btn-secondary" onclick="updateHeaderRow()" style="margin-top: 10px;">刷新字段</button>
+            </div>
+
+            <div class="mapping-section">
+                <h3>请映射以下必需字段：</h3>
+                <div id="mappingFields"></div>
+            </div>
+
+            <div class="preview-section">
+                <h3>数据预览（前10行）：</h3>
+                <div class="preview-info" id="previewInfo">
+                    正在加载预览...
+                </div>
+                <div class="preview-table-container">
+                    <table class="preview-table" id="previewTable">
+                        <thead id="previewHeader"></thead>
+                        <tbody id="previewBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-success" onclick="confirmMapping()">✓ 确认映射</button>
+                <button class="btn btn-secondary" onclick="closeMappingModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载覆盖层 -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div id="loadingText">正在处理数据，请稍候...</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        let detailData = [];
+        let policyData = [];
+        let janitData = [];
+        let staffData = [];
+        let processedData = [];
+        
+        // 临时存储工作簿和映射配置
+        let tempWorkbook = null;
+        let currentFileType = null;
+        let fieldMapping = {};
+        
+        // 必需字段定义
+        const requiredFields = {
+            'detail': [
+                { key: '商品名称', label: '商品名称', description: '用于提取型号，商品名称为空的记录将被过滤' },
+                { key: '销售数量', label: '销售数量', description: '用于计算总提成' },
+                { key: '部门', label: '部门/门店名称', description: '用于匹配导购人员（可选）', optional: true }
+            ]
+        };
+
+        // 文件上传处理
+        document.getElementById('detailFile').addEventListener('change', (e) => handleFileUpload(e, 'detail'));
+        document.getElementById('policyFile').addEventListener('change', (e) => handleFileUpload(e, 'policy'));
+        document.getElementById('janitFile').addEventListener('change', (e) => handleFileUpload(e, 'janit'));
+        document.getElementById('staffFile').addEventListener('change', (e) => handleFileUpload(e, 'staff'));
+
+        function handleFileUpload(event, type) {
+            const file = event.target.files[0];
+            const infoElement = document.getElementById(type + 'FileInfo');
+            
+            if (file) {
+                infoElement.textContent = `已选择: ${file.name} (${(file.size/1024).toFixed(1)}KB)`;
+                
+                // 对于销售明细文件，显示映射模态框
+                if (type === 'detail') {
+                    currentFileType = type;
+                    readExcelFileForMapping(file);
+                } else {
+                    readExcelFile(file, type);
+                }
+            } else {
+                infoElement.textContent = '未选择文件';
+            }
+        }
+
+        // 读取Excel文件用于字段映射
+        function readExcelFileForMapping(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    tempWorkbook = XLSX.read(data, {type: 'array'});
+                    
+                    // 填充工作表选择器
+                    const sheetSelect = document.getElementById('sheetSelect');
+                    sheetSelect.innerHTML = '<option value="">-- 请选择工作表 --</option>';
+                    tempWorkbook.SheetNames.forEach((name, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = name;
+                        sheetSelect.appendChild(option);
+                    });
+                    
+                    // 默认选择第一个工作表
+                    if (tempWorkbook.SheetNames.length > 0) {
+                        sheetSelect.value = 0;
+                        updateSheetPreview();
+                    }
+                    
+                    // 显示映射模态框
+                    document.getElementById('mappingModal').style.display = 'block';
+                } catch (error) {
+                    showStatus(`文件读取失败: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 更新工作表预览和字段
+        function updateSheetPreview() {
+            updateHeaderRow();
+        }
+
+        // 更新字段行
+        function updateHeaderRow() {
+            const sheetIndex = parseInt(document.getElementById('sheetSelect').value);
+            const headerRowNum = parseInt(document.getElementById('headerRowInput').value) || 1;
+            
+            if (isNaN(sheetIndex) || !tempWorkbook) return;
+            
+            const worksheet = tempWorkbook.Sheets[tempWorkbook.SheetNames[sheetIndex]];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
+            
+            // 获取字段行（索引从0开始，所以要减1）
+            const headerRow = jsonData[headerRowNum - 1] || [];
+            const availableFields = headerRow.filter(h => h && h.toString().trim() !== '');
+            
+            // 生成映射字段UI
+            const mappingFieldsDiv = document.getElementById('mappingFields');
+            const fields = requiredFields[currentFileType] || [];
+            
+            let html = '';
+            fields.forEach(field => {
+                html += `
+                    <div class="mapping-item">
+                        <label>${field.label}${field.optional ? '（可选）' : ''}:</label>
+                        <span>→</span>
+                        <select id="mapping_${field.key}" data-field="${field.key}">
+                            <option value="">-- 不映射 --</option>
+                            ${availableFields.map(f => {
+                                const selected = (f === field.key || f.includes(field.label.split('/')[0])) ? 'selected' : '';
+                                return `<option value="${f}" ${selected}>${f}</option>`;
+                            }).join('')}
+                        </select>
+                    </div>
+                    ${field.description ? `<div style="font-size: 12px; color: #6c757d; margin-top: -8px; margin-bottom: 10px; padding-left: 10px;">说明：${field.description}</div>` : ''}
+                `;
+            });
+            
+            mappingFieldsDiv.innerHTML = html;
+            
+            // 更新预览
+            updatePreview(jsonData, headerRow, headerRowNum);
+        }
+
+        // 更新数据预览
+        function updatePreview(jsonData, headerRow, headerRowNum) {
+            const previewHeader = document.getElementById('previewHeader');
+            const previewBody = document.getElementById('previewBody');
+            const previewInfo = document.getElementById('previewInfo');
+            
+            // 过滤出有效数据行（至少有一个非空单元格）
+            const dataRows = jsonData.slice(headerRowNum).filter(row => 
+                row && row.some(cell => cell !== undefined && cell !== null && cell !== '' && cell.toString().trim() !== '')
+            );
+            
+            const totalRows = dataRows.length;
+            const previewRows = dataRows.slice(0, 10); // 只显示前10行
+            
+            // 更新信息
+            previewInfo.innerHTML = `
+                📊 总数据行数：<strong>${totalRows}</strong> 行（已自动过滤空白行）<br>
+                👀 当前显示前 <strong>${Math.min(10, totalRows)}</strong> 行预览
+            `;
+            
+            // 生成表头
+            let headerHTML = '<tr>';
+            headerRow.forEach(header => {
+                if (header && header.toString().trim() !== '') {
+                    headerHTML += `<th>${header}</th>`;
+                }
+            });
+            headerHTML += '</tr>';
+            previewHeader.innerHTML = headerHTML;
+            
+            // 生成预览数据
+            let bodyHTML = '';
+            previewRows.forEach(row => {
+                bodyHTML += '<tr>';
+                headerRow.forEach((header, index) => {
+                    if (header && header.toString().trim() !== '') {
+                        const cellValue = row[index] !== undefined && row[index] !== null ? row[index] : '';
+                        bodyHTML += `<td>${cellValue}</td>`;
+                    }
+                });
+                bodyHTML += '</tr>';
+            });
+            previewBody.innerHTML = bodyHTML;
+        }
+
+        // 确认映射
+        function confirmMapping() {
+            const sheetIndex = parseInt(document.getElementById('sheetSelect').value);
+            const headerRowNum = parseInt(document.getElementById('headerRowInput').value) || 1;
+            
+            if (isNaN(sheetIndex)) {
+                showStatus('请选择工作表', 'error');
+                return;
+            }
+            
+            // 获取映射配置
+            fieldMapping = {};
+            const fields = requiredFields[currentFileType] || [];
+            let hasRequiredFields = true;
+            
+            fields.forEach(field => {
+                const select = document.getElementById(`mapping_${field.key}`);
+                if (select && select.value) {
+                    fieldMapping[field.key] = select.value;
+                } else if (!field.optional) {
+                    hasRequiredFields = false;
+                }
+            });
+            
+            if (!hasRequiredFields) {
+                showStatus('请映射所有必需字段', 'error');
+                return;
+            }
+            
+            showLoading('正在加载数据...');
+            
+            // 使用setTimeout让加载动画有时间显示
+            setTimeout(() => {
+                try {
+                    // 读取数据
+                    const worksheet = tempWorkbook.Sheets[tempWorkbook.SheetNames[sheetIndex]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
+                    
+                    // 获取字段行和数据行，严格过滤空白行
+                    const sourceHeaders = jsonData[headerRowNum - 1] || [];
+                    const dataRows = jsonData.slice(headerRowNum).filter(row => {
+                        // 确保行存在且至少有一个有效单元格
+                        if (!row || !Array.isArray(row)) return false;
+                        return row.some(cell => {
+                            if (cell === undefined || cell === null || cell === '') return false;
+                            const cellStr = cell.toString().trim();
+                            return cellStr !== '';
+                        });
+                    });
+                    
+                    console.log(`原始数据行数: ${jsonData.length - headerRowNum}, 过滤后: ${dataRows.length}`);
+                    
+                    // 转换为映射后的对象数组
+                    const objectData = dataRows.map(row => {
+                        const obj = {};
+                        
+                        // 应用字段映射
+                        Object.keys(fieldMapping).forEach(targetField => {
+                            const sourceField = fieldMapping[targetField];
+                            const sourceIndex = sourceHeaders.indexOf(sourceField);
+                            if (sourceIndex >= 0) {
+                                const value = row[sourceIndex];
+                                obj[targetField] = (value !== undefined && value !== null) ? value : '';
+                            }
+                        });
+                        
+                        // 保留所有原始字段
+                        sourceHeaders.forEach((header, index) => {
+                            if (header && header.toString().trim() !== '') {
+                                const value = row[index];
+                                obj[header] = (value !== undefined && value !== null) ? value : '';
+                            }
+                        });
+                        
+                        return obj;
+                    });
+                    
+                    // 过滤掉商品名称为空的记录（只检查"商品名称"字段）
+                    const beforeFilter = objectData.length;
+                    const filteredData = objectData.filter(row => {
+                        const productName = String(row['商品名称'] || '').trim();
+                        return productName !== '';
+                    });
+                    const filteredOutCount = beforeFilter - filteredData.length;
+                    
+                    console.log(`加载时过滤: 原始${beforeFilter}条, 过滤后${filteredData.length}条, 已过滤商品名称为空的${filteredOutCount}条`);
+                    
+                    // 存储数据
+                    detailData = filteredData;
+                    
+                    // 关闭模态框
+                    closeMappingModal();
+                    hideLoading();
+                    
+                    let statusMsg = `销售明细表加载成功，共${filteredData.length}条有效记录`;
+                    if (filteredOutCount > 0) {
+                        statusMsg += `（已自动过滤${filteredOutCount}条商品名称为空的记录）`;
+                    }
+                    showStatus(statusMsg, 'success');
+                } catch (error) {
+                    hideLoading();
+                    showStatus(`数据加载失败: ${error.message}`, 'error');
+                    console.error('数据加载错误:', error);
+                }
+            }, 100);
+        }
+
+        // 关闭映射模态框
+        function closeMappingModal() {
+            document.getElementById('mappingModal').style.display = 'none';
+            tempWorkbook = null;
+        }
+
+        function readExcelFile(file, type) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
+                    
+                    // 转换为对象数组，严格过滤空白行
+                    const headers = jsonData[0];
+                    const rows = jsonData.slice(1).filter(row => {
+                        // 确保行存在且至少有一个有效单元格
+                        if (!row || !Array.isArray(row)) return false;
+                        return row.some(cell => {
+                            if (cell === undefined || cell === null || cell === '') return false;
+                            const cellStr = cell.toString().trim();
+                            return cellStr !== '';
+                        });
+                    });
+                    
+                    const objectData = rows.map(row => {
+                        const obj = {};
+                        headers.forEach((header, index) => {
+                            if (header && header.toString().trim() !== '') {
+                                const value = row[index];
+                                obj[header] = (value !== undefined && value !== null) ? value : '';
+                            }
+                        });
+                        return obj;
+                    });
+
+                    switch(type) {
+                        case 'detail':
+                            detailData = objectData;
+                            break;
+                        case 'policy':
+                            policyData = objectData;
+                            break;
+                        case 'janit':
+                            janitData = objectData;
+                            break;
+                        case 'staff':
+                            staffData = objectData;
+                            break;
+                    }
+
+                    const typeName = type === 'detail' ? '销售明细' : 
+                                    type === 'policy' ? '渠道政策' : 
+                                    type === 'janit' ? '佳尼特标准' : 
+                                    type === 'staff' ? '门店导购人员' : '未知';
+                    showStatus(`${typeName}表加载成功，共${objectData.length}条有效记录`, 'success');
+                } catch (error) {
+                    showStatus(`文件读取失败: ${error.message}`, 'error');
+                    console.error(`${type} 文件读取错误:`, error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 提取型号的函数
+        function extractModel(productName) {
+            if (!productName) return '';
+
+            // 统一清洗：去掉品牌/品类等中文词汇，保留字母/数字/连接符
+            let cleaned = String(productName)
+                // 品牌
+                .replace(/A\.?\s*O\.?\s*史密斯|A\.O史密斯|史密斯/gi, ' ')
+                // 常见品类词
+                .replace(/净水机|电热水器|电热|燃热|油烟机|燃气灶|灶具|洗碗机|蒸烤一体机|空气能热水器|空净|天然气强排热水器|佳尼特电热水器/gi, ' ')
+                // 括号、中文标点等
+                .replace(/[（）()\[\]【】、，；：]/g, ' ');
+
+            // 非法字符替换为空格，仅保留字母数字与 - _ . 三种连接符
+            cleaned = cleaned.replace(/[^A-Za-z0-9\-_.]/g, ' ');
+
+            // 提取所有候选：至少1个字母开头，包含字母数字，允许通过 - _ . 连接
+            const candidates = cleaned.match(/[A-Za-z][A-Za-z0-9]*(?:[\-_.][A-Za-z0-9]+)*/g);
+            if (!candidates) return '';
+
+            // 优先包含数字的，并选择去除连接符后的最长者（避免只取到 J1、HC1 这类后缀）
+            let filtered = candidates.filter(s => /\d/.test(s));
+            if (filtered.length === 0) filtered = candidates;
+
+            const best = filtered.reduce((prev, curr) => {
+                const p = prev.replace(/[\-_.]/g, '');
+                const c = curr.replace(/[\-_.]/g, '');
+                return c.length > p.length ? curr : prev;
+            });
+
+            // 保留原始大小写，统一下划线为连字符
+            return best.replace(/_/g, '-');
+        }
+
+        // 判断是否为厨电
+        function isKitchenAppliance(productName) {
+            if (!productName) return false;
+            // 确保转换为字符串
+            const productStr = String(productName);
+            const kitchenKeywords = ['油烟机', '灶具', '洗碗机', '蒸烤一体机', '燃气灶', 'CXW', 'JZT', 'DWQ', 'KZQ'];
+            return kitchenKeywords.some(keyword => productStr.includes(keyword));
+        }
+
+        // 模糊匹配型号（大小写不敏感）
+        function findModelMatch(targetModel, dataArray, modelField) {
+            if (!targetModel) return null;
+            
+            const targetStr = String(targetModel).trim();
+            if (!targetStr) return null;
+            
+            // 精确匹配
+            let match = dataArray.find(item => {
+                if (!item[modelField]) return false;
+                const itemModel = String(item[modelField]).trim();
+                return itemModel.toUpperCase() === targetStr.toUpperCase();
+            });
+            
+            if (match) return match;
+            
+            // 模糊匹配（去除特殊字符）
+            const cleanTarget = targetStr.replace(/[-_]/g, '').toUpperCase();
+            match = dataArray.find(item => {
+                if (!item[modelField]) return false;
+                const itemModel = String(item[modelField]).trim();
+                const cleanModel = itemModel.replace(/[-_]/g, '').toUpperCase();
+                return cleanModel === cleanTarget;
+            });
+            
+            return match;
+        }
+
+        // 显示加载动画
+        function showLoading(message = '正在处理数据，请稍候...') {
+            const overlay = document.getElementById('loadingOverlay');
+            const text = document.getElementById('loadingText');
+            text.textContent = message;
+            overlay.style.display = 'flex';
+        }
+
+        // 隐藏加载动画
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'none';
+        }
+
+        // 处理数据的主函数
+        function processData() {
+            if (!detailData.length || !policyData.length) {
+                showStatus('请先上传销售明细表和渠道政策表', 'error');
+                return;
+            }
+
+            showLoading(`正在处理 ${detailData.length} 条数据，请稍候...`);
+            
+            // 使用setTimeout让UI有时间更新
+            setTimeout(() => {
+                try {
+                    processedData = detailData.map((row, index) => {
+                const result = {...row};
+                
+                // 匹配导购人员（如果有门店导购人员表）
+                const storeName = String(row['部门'] || row['门店'] || row['门店名称'] || row['店铺'] || row['销售订单中门店名称'] || '').trim();
+                if (staffData.length > 0 && storeName) {
+                    const staffMatch = staffData.find(item => {
+                        // 尝试多个字段进行匹配
+                        const dept = String(item['部门'] || '').trim();
+                        const store = String(item['门店'] || item['门店名称'] || item['店铺'] || '').trim();
+                        const orderStore = String(item['销售订单中门店名称'] || '').trim();
+                        
+                        return dept === storeName || store === storeName || orderStore === storeName;
+                    });
+                    
+                    if (staffMatch) {
+                        // 支持带空格和不带空格的列名
+                        result['导购人员1'] = staffMatch['导购人员 1'] || staffMatch['导购人员1'] || staffMatch['导购1'] || '';
+                        result['导购人员2'] = staffMatch['导购人员 2'] || staffMatch['导购人员2'] || staffMatch['导购2'] || '';
+                    } else {
+                        result['导购人员1'] = '';
+                        result['导购人员2'] = '';
+                    }
+                } else {
+                    result['导购人员1'] = '';
+                    result['导购人员2'] = '';
+                }
+                
+                // 提取型号（只从"商品名称"字段获取）
+                const productName = row['商品名称'] || '';
+                const productStr = String(productName);
+                result['型号'] = extractModel(productStr);
+                result['型号提取说明'] = `从"${productStr}"中提取型号${result['型号']}`;
+                
+                // 判断是否为厨电
+                const isKitchen = isKitchenAppliance(productStr);
+                result['是否厨电'] = isKitchen ? '是' : '否';
+                
+                if (isKitchen) {
+                    result['单台提成（核对）'] = '需邮件审批';
+                    result['提成（核对）'] = '需邮件审批';
+                    result['匹配说明'] = '汇德隆厨电需邮件审批';
+                    return result;
+                }
+                
+                // 在政策表中查找匹配
+                const policyMatch = findModelMatch(result['型号'], policyData, '型号');
+                
+                if (policyMatch) {
+                    const commission = policyMatch['提成'];
+                    
+                    if (commission === '以渠道备案提成为准') {
+                        // 查找佳尼特标准
+                        if (janitData.length > 0) {
+                            const resultModel = String(result['型号'] || '').trim().toUpperCase();
+                            const janitMatch = janitData.find(item => {
+                                const shop = String(item['店铺'] || '').trim();
+                                const model = String(item['型号'] || '').trim().toUpperCase();
+                                return shop === '汇德隆' && model && model === resultModel;
+                            });
+                            
+                            if (janitMatch) {
+                                result['单台提成（核对）'] = parseFloat(janitMatch['导购提成']) || 0;
+                                result['匹配说明'] = `佳尼特特殊规则，从佳尼特标准表匹配到提成${janitMatch['导购提成']}`;
+                            } else {
+                                result['单台提成（核对）'] = 0;
+                                result['匹配说明'] = '佳尼特特殊规则，但在佳尼特标准表中未找到匹配';
+                            }
+                        } else {
+                            result['单台提成（核对）'] = 0;
+                            result['匹配说明'] = '佳尼特特殊规则，但未上传佳尼特标准表';
+                        }
+                    } else {
+                        result['单台提成（核对）'] = parseFloat(commission) || 0;
+                        result['匹配说明'] = `从渠道政策表匹配到提成${commission}`;
+                    }
+                } else {
+                    result['单台提成（核对）'] = 0;
+                    result['匹配说明'] = `型号"${result['型号']}"在渠道政策表中未找到匹配`;
+                }
+                
+                // 计算总提成
+                const quantityValue = row['销售数量'];
+                const quantity = parseFloat(quantityValue) || 0;
+                const unitCommission = parseFloat(result['单台提成（核对）']) || 0;
+                
+                // 如果单台提成是字符串"需邮件审批"，总提成也是
+                if (result['单台提成（核对）'] === '需邮件审批') {
+                    result['提成（核对）'] = '需邮件审批';
+                } else {
+                    result['提成（核对）'] = (quantity * unitCommission).toFixed(2);
+                }
+                
+                return result;
+                    });
+
+                    // 二次过滤：确保没有商品名称为空的记录（双重保险，只检查"商品名称"字段）
+                    const beforeFilterCount = processedData.length;
+                    processedData = processedData.filter(row => {
+                        const productName = String(row['商品名称'] || '').trim();
+                        return productName !== '';
+                    });
+                    const afterFilterCount = processedData.length;
+                    const filteredCount = beforeFilterCount - afterFilterCount;
+
+                    if (filteredCount > 0) {
+                        console.warn(`处理时又过滤了${filteredCount}条商品名称为空的记录（这些记录应该在加载时已被过滤）`);
+                    }
+                    console.log(`最终有效记录数: ${afterFilterCount}`);
+
+                    displayResults();
+                    showSummary();
+                    document.getElementById('exportBtn').disabled = false;
+                    hideLoading();
+                    showStatus('数据处理完成！', 'success');
+                } catch (error) {
+                    hideLoading();
+                    showStatus(`数据处理失败: ${error.message}`, 'error');
+                    console.error('处理错误:', error);
+                }
+            }, 100);
+        }
+
+        // 显示结果表格
+        function displayResults() {
+            const table = document.getElementById('resultsTable');
+            const header = document.getElementById('tableHeader');
+            const body = document.getElementById('tableBody');
+            
+            if (processedData.length === 0) return;
+            
+            // 构建表头
+            const originalColumns = Object.keys(processedData[0]).filter(key => 
+                !['导购人员1', '导购人员2', '型号', '单台提成（核对）', '提成（核对）', '型号提取说明', '匹配说明', '是否厨电'].includes(key)
+            );
+            
+            const staffColumns = ['导购人员1', '导购人员2'];
+            const newColumns = ['型号', '单台提成（核对）', '提成（核对）'];
+            const explanationColumns = ['型号提取说明', '匹配说明'];
+            
+            let headerHTML = '<tr>';
+            
+            // 原始列
+            originalColumns.forEach(col => {
+                headerHTML += `<th class="${document.getElementById('showOriginal').checked ? '' : 'hidden'}">${col}</th>`;
+            });
+            
+            // 导购人员列
+            staffColumns.forEach(col => {
+                headerHTML += `<th style="background: #e8f5e9;">${col}</th>`;
+            });
+            
+            // 新增列
+            newColumns.forEach(col => {
+                const className = col.includes('型号') ? 'model-column' : 'commission-column';
+                headerHTML += `<th class="${className}">${col}</th>`;
+            });
+            
+            // 说明列
+            explanationColumns.forEach(col => {
+                headerHTML += `<th class="explanation-column ${document.getElementById('showExplanation').checked ? '' : 'hidden'}">${col}</th>`;
+            });
+            
+            headerHTML += '<th>是否厨电</th></tr>';
+            header.innerHTML = headerHTML;
+            
+            // 构建表体
+            let bodyHTML = '';
+            processedData.forEach(row => {
+                const isKitchen = row['是否厨电'] === '是';
+                bodyHTML += `<tr class="${isKitchen ? 'kitchen-appliance' : ''}">`;
+                
+                // 原始列
+                originalColumns.forEach(col => {
+                    bodyHTML += `<td class="${document.getElementById('showOriginal').checked ? '' : 'hidden'}">${row[col] || ''}</td>`;
+                });
+                
+                // 导购人员列
+                staffColumns.forEach(col => {
+                    bodyHTML += `<td style="background: #e8f5e9;">${row[col] || ''}</td>`;
+                });
+                
+                // 新增列
+                newColumns.forEach(col => {
+                    const className = col.includes('型号') ? 'model-column' : 'commission-column';
+                    bodyHTML += `<td class="${className}">${row[col] || ''}</td>`;
+                });
+                
+                // 说明列
+                explanationColumns.forEach(col => {
+                    bodyHTML += `<td class="explanation-column ${document.getElementById('showExplanation').checked ? '' : 'hidden'}">${row[col] || ''}</td>`;
+                });
+                
+                bodyHTML += `<td>${row['是否厨电']}</td></tr>`;
+            });
+            
+            body.innerHTML = bodyHTML;
+        }
+
+        // 显示汇总信息
+        function showSummary() {
+            const summaryDiv = document.getElementById('summary');
+            const totalRows = processedData.length;
+            const matchedRows = processedData.filter(row => 
+                parseFloat(row['单台提成（核对）']) > 0 || row['单台提成（核对）'] === '需邮件审批'
+            ).length;
+            const kitchenRows = processedData.filter(row => row['是否厨电'] === '是').length;
+            const totalCommission = processedData.reduce((sum, row) => {
+                const commission = parseFloat(row['提成（核对）']);
+                return sum + (isNaN(commission) ? 0 : commission);
+            }, 0);
+            
+            summaryDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${totalRows}</div>
+                    <div class="stat-label">总记录数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${matchedRows}</div>
+                    <div class="stat-label">匹配成功</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${kitchenRows}</div>
+                    <div class="stat-label">厨电产品</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalCommission.toFixed(2)}</div>
+                    <div class="stat-label">总提成金额</div>
+                </div>
+            `;
+            summaryDiv.classList.remove('hidden');
+        }
+
+        // 切换列显示
+        function toggleColumns() {
+            displayResults();
+        }
+
+        // 导出结果
+        function exportResults() {
+            if (processedData.length === 0) {
+                showStatus('没有数据可导出', 'error');
+                return;
+            }
+            
+            const ws = XLSX.utils.json_to_sheet(processedData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '提成计算结果');
+            
+            const fileName = `汇德隆提成计算结果_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            showStatus('导出成功！', 'success');
+        }
+
+        // 显示状态信息
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusInfo');
+            statusDiv.className = `alert alert-${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                    statusDiv.textContent = '';
+                    statusDiv.className = '';
+                }, 3000);
+            }
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('mappingModal');
+            if (event.target === modal) {
+                closeMappingModal();
+            }
+        }
+    </script>
+</body>
+</html>

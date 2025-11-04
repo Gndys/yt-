@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A.O.史密斯 - 业务工具平台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* 深蓝金黄配色系统 */
+      --bg-primary: #F8F9FA;
+      --bg-secondary: #E9ECEF;
+      --bg-hover: #DEE2E6;
+      --text-primary: #001F5C;
+      --text-secondary: #003D7A;
+      --text-tertiary: #6C757D;
+      --border-light: #DEE2E6;
+      --border-medium: #CED4DA;
+      
+      /* 品牌强调色 */
+      --accent-blue: #001F5C;
+      --accent-blue-hover: #003D7A;
+      --accent-blue-light: #E7EEF5;
+      --accent-gold: #FFC107;
+      --accent-gold-hover: #FFB300;
+      --accent-gold-light: #FFF8E1;
+      --accent-green: #10B981;
+      --accent-green-light: #D1FAE5;
+      --accent-red: #EF4444;
+      --accent-red-light: #FEE2E2;
+      
+      /* 阴影系统 - 中性灰色 */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+      --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+      
+      /* 动画 */
+      --transition: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 顶部导航 */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border-light);
+      z-index: 100;
+    }
+
+    .navbar-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: opacity 0.2s var(--transition);
+    }
+
+    .brand:hover {
+      opacity: 0.7;
+    }
+
+    .brand-logo {
+      height: 34px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .brand-icon {
+      font-size: 20px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-link {
+      padding: 6px 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      border-radius: 6px;
+      transition: all 0.2s var(--transition);
+    }
+
+    .nav-link:hover {
+      background: var(--bg-hover);
+      color: var(--accent-gold);
+    }
+
+    .nav-btn {
+      padding: 6px 14px;
+      background: var(--accent-gold);
+      color: var(--text-primary);
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s var(--transition);
+      margin-left: 8px;
+    }
+
+    .nav-btn:hover {
+      background: var(--accent-gold-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Hero 区域 */
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 120px 48px 80px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .hero-logos {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 48px;
+      margin: 32px 0 24px;
+    }
+
+    .hero-logo {
+      height: 70px;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.95;
+      transition: opacity 0.3s var(--transition);
+    }
+
+    .hero-logo:hover {
+      opacity: 1;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+
+    .hero-subtitle {
+      font-size: 20px;
+      color: var(--text-secondary);
+      max-width: 680px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s var(--transition);
+    }
+
+    .btn-primary {
+      background: var(--accent-gold);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-gold-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-medium);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+      border-color: var(--text-tertiary);
+    }
+
+    /* 主内容区 */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 48px 120px;
+    }
+
+    /* 搜索栏 */
+    .search-section {
+      margin-bottom: 64px;
+    }
+
+    .search-wrapper {
+      position: relative;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+      font-size: 18px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 16px 14px 48px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      font-size: 15px;
+      color: var(--text-primary);
+      transition: all 0.2s var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px var(--accent-gold-light);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    /* 区块标题 */
+    .section-header {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .section-description {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    /* 解决方案网格 */
+    .solutions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 24px;
+      margin-bottom: 64px;
+    }
+
+    /* 解决方案卡片 */
+    .solution-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 32px;
+      transition: all 0.3s var(--transition);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .solution-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent-color);
+      opacity: 0;
+      transition: opacity 0.3s var(--transition);
+    }
+
+    .solution-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--border-medium);
+    }
+
+    .solution-card:hover::before {
+      opacity: 1;
+    }
+
+    .solution-card[data-theme="blue"] {
+      --accent-color: var(--accent-blue);
+      --accent-bg: var(--accent-blue-light);
+    }
+
+    .solution-card[data-theme="gold"] {
+      --accent-color: var(--accent-gold);
+      --accent-bg: var(--accent-gold-light);
+    }
+
+    .solution-card[data-theme="green"] {
+      --accent-color: var(--accent-green);
+      --accent-bg: var(--accent-green-light);
+    }
+
+    .solution-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .solution-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--accent-bg);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+      transition: transform 0.3s var(--transition);
+    }
+
+    .solution-card:hover .solution-icon {
+      transform: scale(1.05);
+    }
+
+    .solution-info {
+      flex: 1;
+    }
+
+    .solution-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .solution-folder {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+    }
+
+    .solution-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .tool-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .tool-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: transparent;
+      border-radius: 6px;
+      transition: all 0.2s var(--transition);
+      text-decoration: none;
+      color: var(--text-primary);
+      border: 1px solid transparent;
+    }
+
+    .tool-item:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-light);
+      transform: translateX(4px);
+    }
+
+    .tool-item-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .tool-item-name {
+      font-size: 14px;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .tool-item-badge {
+      padding: 3px 8px;
+      background: var(--accent-bg);
+      color: var(--accent-color);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tool-item-arrow {
+      color: var(--accent-gold);
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.2s var(--transition);
+    }
+
+    .tool-item:hover .tool-item-arrow {
+      opacity: 1;
+    }
+
+    /* 客户标志区域 */
+    .clients-section {
+      text-align: center;
+      padding: 64px 0;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .clients-title {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-bottom: 32px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .clients-grid {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 64px;
+      flex-wrap: wrap;
+      opacity: 0.7;
+    }
+
+    .client-logo {
+      height: 55px;
+      width: auto;
+      object-fit: contain;
+      filter: grayscale(30%);
+      transition: all 0.3s var(--transition);
+    }
+
+    .client-logo:hover {
+      opacity: 1;
+      filter: grayscale(0%);
+      transform: scale(1.05);
+    }
+
+    /* 页脚 */
+    .footer {
+      margin-top: 80px;
+      padding: 48px 0;
+      border-top: 1px solid var(--border-light);
+      text-align: center;
+    }
+
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s var(--transition);
+    }
+
+    .footer-link:hover {
+      color: var(--accent-gold);
+    }
+
+    .footer-copyright {
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 1024px) {
+      .solutions-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar-content {
+        padding: 12px 24px;
+      }
+
+      .brand-logo {
+        height: 28px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding: 80px 24px 60px;
+      }
+
+      .hero-logos {
+        flex-direction: column;
+        gap: 24px;
+        margin: 24px 0 20px;
+      }
+
+      .hero-logo {
+        height: 50px;
+      }
+
+      .hero h1 {
+        font-size: 40px;
+      }
+
+      .hero-subtitle {
+        font-size: 18px;
+      }
+
+      .container {
+        padding: 0 24px 80px;
+      }
+
+      .solution-card {
+        padding: 24px;
+      }
+
+      .solutions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .clients-grid {
+        gap: 32px;
+      }
+
+      .client-logo {
+        height: 40px;
+      }
+    }
+
+    /* 加载动画 */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .solution-card {
+      animation: fadeInUp 0.5s var(--transition) backwards;
+    }
+
+    .solution-card:nth-child(1) { animation-delay: 0.05s; }
+    .solution-card:nth-child(2) { animation-delay: 0.1s; }
+    .solution-card:nth-child(3) { animation-delay: 0.15s; }
+    .solution-card:nth-child(4) { animation-delay: 0.2s; }
+  </style>
+</head>
+
+<body>
+  <!-- 顶部导航 -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="#" class="brand">
+        <img src="img/e7825ab5cc9735a14b4c7388643c12ef-removebg-preview.png" alt="A.O.史密斯" class="brand-logo">
+        <!-- <span>提成计算定制</span> -->
+      </a>
+      <div class="nav-links">
+        <a href="#solutions" class="nav-link">解决方案</a>
+        <a href="导航页.html" class="nav-link">完整导航</a>
+        <a href="https://iiuzjzy3ccx.feishu.cn/wiki/PbWjwvsXmiJK38kcVdFcsnVNndd?fromScene=spaceOverview" class="nav-link">文档</a>
+        <button class="nav-btn" onclick="scrollToSolutions()">开始使用</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero 区域 -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      <span>企业级业务工具平台 v2.0</span>
+    </div>
+    <div class="hero-logos">
+      <img src="img/e7825ab5cc9735a14b4c7388643c12ef-removebg-preview.png" alt="A.O.史密斯" class="hero-logo">
+      <img src="img/45be8d4887bad4d059939fe17b3bb15a-removebg-preview.png" alt="中冠电器" class="hero-logo">
+    </div>
+    <h1>专业的业务数据<br>处理解决方案</h1>
+    <p class="hero-subtitle">为 A.O.史密斯量身打造的企业级工具套件，涵盖提成计算、数据处理、智能分析等核心业务场景，助力业务效率提升 80%</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="scrollToSolutions()">
+        <span>探索解决方案</span>
+        <span>→</span>
+      </button>
+      <a href="导航页.html" class="btn btn-secondary">
+        <span>完整导航</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- 主内容区 -->
+  <div class="container">
+    <!-- 搜索栏 -->
+    <div class="search-section" id="solutions">
+      <div class="search-wrapper">
+        <span class="search-icon">⌕</span>
+        <input 
+          type="text" 
+          class="search-input" 
+          id="searchInput"
+          placeholder="搜索解决方案或工具..."
+        >
+      </div>
+    </div>
+
+    <!-- 解决方案区块 -->
+    <div class="section-header">
+      <h2 class="section-title">业务解决方案</h2>
+      <p class="section-description">选择适合您业务场景的专业工具包</p>
+    </div>
+
+    <div class="solutions-grid">
+      <!-- 奖金计算解决方案 -->
+      <div class="solution-card" data-theme="blue" data-keywords="奖金 计算 提成 区域 回款">
+        <div class="solution-header">
+          <div class="solution-icon">$</div>
+          <div class="solution-info">
+            <h3 class="solution-name">02 奖金计算解决方案</h3>
+            <div class="solution-folder">02/</div>
+          </div>
+        </div>
+        <p class="solution-desc">完整的奖金提成计算体系，支持多区域业务员提成自动核算、任务分配管理、回款数据汇总，一站式解决月度结算问题</p>
+        <div class="tool-list">
+         
+          <a href="02/02 回款提取.html" class="tool-item">
+            <span class="tool-item-icon">■</span>
+            <span class="tool-item-name">02-1 回款提取工具</span>
+            <span class="tool-item-badge">配套</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+          <a href="02/02 奖金计算.html" class="tool-item">
+            <span class="tool-item-icon">■</span>
+            <span class="tool-item-name">02-2 奖金计算工具</span>
+            <span class="tool-item-badge">核心</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 六合一提成解决方案 -->
+      <div class="solution-card" data-theme="gold" data-keywords="六合一 提成 综合 多维度 复杂规则">
+        <div class="solution-header">
+          <div class="solution-icon">▲</div>
+          <div class="solution-info">
+            <h3 class="solution-name">03 提成解决方案</h3>
+            <div class="solution-folder">03/</div>
+          </div>
+        </div>
+        <p class="solution-desc">综合多维度指标的复杂提成计算系统，支持自定义规则引擎、满档4.5%规则配置、实时预览计算结果，精准高效</p>
+        <div class="tool-list">
+          
+          <a href="03/匹配工具/匹配工具.html" class="tool-item">
+            <span class="tool-item-icon">●</span>
+            <span class="tool-item-name">03-1 政策匹配工具</span>
+            <span class="tool-item-badge">配套</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+          <a href="03/活动套餐前置.html" class="tool-item">
+            <span class="tool-item-icon">●</span>
+            <span class="tool-item-name">03-2 活动套餐前置工具</span>
+            <span class="tool-item-badge">配套</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+          <a href="03/六合一提成计算.html" class="tool-item">
+            <span class="tool-item-icon">●</span>
+            <span class="tool-item-name">03-3 提成计算器</span>
+            <span class="tool-item-badge">核心</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 特殊渠道解决方案 -->
+      <div class="solution-card" data-theme="green" data-keywords="渠道 特殊 普农 汇德隆 多表 批量">
+        <div class="solution-header">
+          <div class="solution-icon">◆</div>
+          <div class="solution-info">
+            <h3 class="solution-name">04 特殊渠道处理方案</h3>
+            <div class="solution-folder">04/</div>
+          </div>
+        </div>
+        <p class="solution-desc">针对普农、汇德隆等特殊渠道的专项数据处理工具，支持批量多表处理、型号自动识别、格式化显示，灵活应对复杂场景</p>
+        <div class="tool-list">
+          <a href="04/04通用多表.html" class="tool-item">
+            <span class="tool-item-icon">■</span>
+            <span class="tool-item-name">04-1 通用多表处理器</span>
+            <span class="tool-item-badge">通用</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+          <a href="04/04特殊普农.html" class="tool-item">
+            <span class="tool-item-icon">■</span>
+            <span class="tool-item-name">04-2 普农渠道工具</span>
+            <span class="tool-item-badge">专项</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+          <a href="04/04特殊汇德隆.html" class="tool-item">
+            <span class="tool-item-icon">■</span>
+            <span class="tool-item-name">04-3 汇德隆渠道工具</span>
+            <span class="tool-item-badge">专项</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+          
+        </div>
+      </div>
+
+      <!-- 智能数据处理工具包 -->
+      <div class="solution-card" data-theme="gold" data-keywords="AI 智能 数据处理 字段匹配 表格分析">
+        <div class="solution-header">
+          <div class="solution-icon">★</div>
+          <div class="solution-info">
+            <h3 class="solution-name">智能数据处理工具包</h3>
+            <div class="solution-folder">通用工具/</div>
+          </div>
+        </div>
+        <p class="solution-desc">AI驱动的通用数据处理工具集，包含智能表格分析、字段匹配、Excel筛选等强大功能，支持10万+行大数据处理，高效智能</p>
+        <div class="tool-list">
+          <a href="通用工具/智能表格分析助手.html.html" class="tool-item">
+            <span class="tool-item-icon">■</span>
+            <span class="tool-item-name">智能表格分析助手</span>
+            <span class="tool-item-badge">AI</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+          <a href="通用工具/字段匹配工具.html" class="tool-item">
+            <span class="tool-item-icon">■</span>
+            <span class="tool-item-name">字段匹配工具</span>
+            <span class="tool-item-badge">智能</span>
+            <span class="tool-item-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 客户标志区域 -->
+    <div class="clients-section">
+      <p class="clients-title">服务于企业核心业务场景</p>
+      <div class="clients-grid">
+        <img src="img/e7825ab5cc9735a14b4c7388643c12ef-removebg-preview.png" alt="A.O.史密斯" class="client-logo">
+        <img src="img/45be8d4887bad4d059939fe17b3bb15a-removebg-preview.png" alt="中冠电器" class="client-logo">
+      </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="导航页.html" class="footer-link">完整导航</a>
+          <a href="https://iiuzjzy3ccx.feishu.cn/wiki/PbWjwvsXmiJK38kcVdFcsnVNndd?fromScene=spaceOverview" class="footer-link" >使用文档</a>
+          <a href="#" class="footer-link" onclick="showSupport(); return false;">技术支持</a>
+        </div>
+        <p class="footer-copyright">© 2025 A.O.史密斯业务工具平台 · 企业级定制解决方案</p>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // 搜索功能
+    const searchInput = document.getElementById('searchInput');
+    const cards = document.querySelectorAll('.solution-card');
+
+    searchInput.addEventListener('input', (e) => {
+      const keyword = e.target.value.toLowerCase().trim();
+      
+      cards.forEach(card => {
+        const name = card.querySelector('.solution-name').textContent.toLowerCase();
+        const desc = card.querySelector('.solution-desc').textContent.toLowerCase();
+        const keywords = card.dataset.keywords || '';
+        const tools = Array.from(card.querySelectorAll('.tool-item-name'))
+          .map(t => t.textContent.toLowerCase())
+          .join(' ');
+        
+        const searchText = `${name} ${desc} ${keywords} ${tools}`;
+        const isMatch = !keyword || searchText.includes(keyword);
+        
+        card.style.display = isMatch ? 'block' : 'none';
+      });
+    });
+
+          // 滚动到解决方案区域
+          function scrollToSolutions() {
+        document.getElementById('solutions').scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+
+      // 显示文档
+      function showDocs() {
+        alert('📖 使用文档\n\n查看详细文档：\n• 02/00-数据准备/使用说明.md\n• 02/00-数据准备/开发文档.md\n• 02/00-数据准备/快速启动.md');
+      }
+
+      // 技术支持
+      function showSupport() {
+        alert('💬 技术支持\n\n如需帮助，请联系：\n• 内部技术支持团队\n• 7×24小时响应\n• 问题快速解决');
+      }
+
+      // 快捷键支持 (Cmd/Ctrl + K 聚焦搜索)
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+        }
+      });
+
+      // 平滑滚动到页面顶部
+      window.addEventListener('scroll', () => {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+          navbar.style.boxShadow = 'var(--shadow-sm)';
+        } else {
+          navbar.style.boxShadow = 'none';
+        }
+      });
+    </script>
+  </body>
+  </html>

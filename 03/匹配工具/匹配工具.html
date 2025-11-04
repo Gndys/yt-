@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel 数据匹配工具 - A.O.史密斯业务工具平台</title>
+    
+    <!-- 统一样式 -->
+    <link rel="stylesheet" href="../../common-styles.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* 工具特定样式保留 */
+
+        .content {
+            padding: 30px;
+        }
+
+        .step {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .file-upload-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .upload-box {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .upload-box:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .upload-box.has-file {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .upload-box.optional {
+            border-style: solid;
+            border-color: #e2e8f0;
+        }
+
+        .upload-box.optional:hover {
+            border-color: #a0aec0;
+        }
+
+        .upload-box.optional.has-file {
+            border-color: #48bb78;
+        }
+
+        .upload-box label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .optional-tag {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 6px;
+            background: #edf2f7;
+            color: #718096;
+            border-radius: 3px;
+            margin-left: 5px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .upload-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .file-info {
+            margin-top: 8px;
+            color: #48bb78;
+            font-size: 12px;
+            display: none;
+        }
+
+        .sheet-selector {
+            margin-top: 8px;
+            display: none;
+        }
+
+        .sheet-selector select {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .mapping-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .mapping-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .mapping-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .mapping-row {
+            display: grid;
+            grid-template-columns: 220px 1fr 100px;
+            gap: 12px;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .mapping-label {
+            font-weight: 500;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .mapping-row select {
+            padding: 6px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .mapping-source {
+            font-size: 11px;
+            color: #718096;
+            padding: 4px 8px;
+            background: #edf2f7;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-area {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 18px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #3182ce;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            color: #7c2d12;
+            border-left: 4px solid #ed8936;
+        }
+
+        .alert-danger {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #f56565;
+        }
+
+        .diagnostics-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .diagnostics-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .diagnostic-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 4px;
+            font-size: 13px;
+            border-left: 3px solid #ed8936;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background: #dd6b20;
+            transform: translateY(-2px);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header" style="position: relative;">
+            <a href="../../index.html" class="back-nav">← 返回首页</a>
+            <h1>📊 Excel 数据匹配工具</h1>
+            <p class="tool-subtitle">智能匹配销售订单、收款、带单费及政策数据</p>
+            <div class="tool-badge">
+                <span class="badge-dot"></span>
+                <span>03-1 政策匹配工具</span>
+            </div>
+        </div>
+
+        <div class="tool-content">
+            <!-- 步骤1: 上传文件 -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    上传Excel文件
+                </div>
+                <div class="alert alert-info">
+                    <strong>必需：</strong>销售订单表（含累计收款金额字段）。<br>
+                    <strong>可选：</strong>收款单（如订单内无收款数据）、带单费、政策表。<br>
+                    <strong>说明：</strong>政策表会自动加载所有子表；工具会自动跳过Excel前面的空白行。
+                </div>
+                <div class="file-upload-area">
+                    <div class="upload-box" id="salesOrderBox">
+                        <label>销售订单表 <span style="color:#e53e3e;">*</span></label>
+                        <input type="file" id="salesOrderFile" class="file-input" accept=".xlsx,.xls" />
+                        <span class="upload-btn" onclick="document.getElementById('salesOrderFile').click()">
+                            选择文件
+                        </span>
+                        <div class="file-info" id="salesOrderInfo"></div>
+                        <div class="sheet-selector" id="salesOrderSheetSelector">
+                            <select id="salesOrderSheet"></select>
+                        </div>
+                    </div>
+
+                    <div class="upload-box optional" id="paymentBox">
+                        <label>收款单表 <span class="optional-tag">可选</span></label>
+                        <input type="file" id="paymentFile" class="file-input" accept=".xlsx,.xls" />
+                        <span class="upload-btn" onclick="document.getElementById('paymentFile').click()">
+                            选择文件
+                        </span>
+                        <div class="file-info" id="paymentInfo"></div>
+                        <div class="sheet-selector" id="paymentSheetSelector">
+                            <select id="paymentSheet"></select>
+                        </div>
+                    </div>
+
+                    <div class="upload-box optional" id="commissionBox">
+                        <label>带单费表 <span class="optional-tag">可选</span></label>
+                        <input type="file" id="commissionFile" class="file-input" accept=".xlsx,.xls" />
+                        <span class="upload-btn" onclick="document.getElementById('commissionFile').click()">
+                            选择文件
+                        </span>
+                        <div class="file-info" id="commissionInfo"></div>
+                        <div class="sheet-selector" id="commissionSheetSelector">
+                            <select id="commissionSheet"></select>
+                        </div>
+                    </div>
+
+                    <div class="upload-box optional" id="policyBox">
+                        <label>政策表 <span class="optional-tag">可选</span></label>
+                        <input type="file" id="policyFile" class="file-input" accept=".xlsx,.xls" />
+                        <span class="upload-btn" onclick="document.getElementById('policyFile').click()">
+                            选择文件
+                        </span>
+                        <div class="file-info" id="policyInfo"></div>
+                        <div style="margin-top: 8px; font-size: 11px; color: #718096;">
+                            将自动加载所有子表
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤2: 配置字段映射 -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    配置字段映射
+                </div>
+                <div class="alert alert-info">
+                    请将Excel表格中的列名映射到对应的字段。系统已智能识别并预选，可手动调整。
+                </div>
+                
+                <div id="mappingContainer"></div>
+            </div>
+
+            <!-- 步骤3: 执行匹配 -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    执行匹配
+                </div>
+                <button class="btn btn-primary" id="matchBtn" onclick="performMatch()" disabled>
+                    开始匹配
+                </button>
+            </div>
+
+            <!-- 结果展示 -->
+            <div class="result-area" id="resultArea">
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">✓</span>
+                        匹配结果
+                    </div>
+                    
+                    <div class="result-stats" id="resultStats"></div>
+
+                    <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+                        <table id="resultTable">
+                            <thead>
+                                <tr id="resultTableHeader"></tr>
+                            </thead>
+                            <tbody id="resultTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-success" onclick="exportResult()">
+                            导出结果
+                        </button>
+                        <button class="btn btn-warning" onclick="exportUnmatchedData()">
+                            导出诊断数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局数据存储
+        const dataStore = {
+            salesOrder: { data: null, headers: [], workbook: null },
+            payment: { data: null, headers: [], workbook: null },
+            commission: { data: null, headers: [], workbook: null },
+            policy: { 
+                workbook: null,
+                sheets: {
+                    specialMachine: { data: null, headers: [] },
+                    chanet: { data: null, headers: [] },
+                    boiler: { data: null, headers: [] },
+                    activity: [], // 改为数组，支持多个时间段的活动子表
+                    priceTable: { data: null, headers: [] }
+                }
+            }
+        };
+
+        let matchResult = [];
+        let matchDiagnostics = {
+            similarOrderNumbers: [],
+            unmatchedOrders: [],
+            unmatchedPayments: [],
+            paymentMatches: []
+        };
+
+        // 门店白名单：只保留这些门店的数据
+        const storeWhitelist = [
+            '（新）滨江第六空间专卖店',
+            '滨江六空8090店',
+            '杭州恒大建材超级旗舰店',
+            '杭州红星美凯龙一号店',
+            '杭州临平江南家居专卖店',
+            '金华龙腾建材市场专卖店',
+            '萧山第六空间专卖店'
+        ];
+
+        // 门店过滤统计
+        let filterStats = {
+            originalCount: 0,
+            filteredCount: 0,
+            removedCount: 0
+        };
+
+        // 订单编号规范化函数：处理空白字符和隐藏字符
+        function normalizeOrderNumber(value) {
+            if (value === null || value === undefined || value === '') {
+                return '';
+            }
+            
+            // 转换为字符串
+            let str = value.toString();
+            
+            // 移除所有类型的空白字符（包括普通空格、制表符、换行符、零宽空格等）
+            str = str.replace(/[\s\u200B-\u200D\uFEFF]/g, '');
+            
+            // 移除其他控制字符
+            str = str.replace(/[\x00-\x1F\x7F]/g, '');
+            
+            return str;
+        }
+
+        // 检测相似订单编号：找出只相差后缀的订单号
+        function detectSimilarOrderNumbers(orderNumbers) {
+            const similar = [];
+            const sortedNumbers = [...orderNumbers].sort();
+            
+            for (let i = 0; i < sortedNumbers.length; i++) {
+                for (let j = i + 1; j < sortedNumbers.length; j++) {
+                    const num1 = sortedNumbers[i];
+                    const num2 = sortedNumbers[j];
+                    
+                    // 检查是否一个是另一个的前缀
+                    if (num2.startsWith(num1) && num2.length > num1.length) {
+                        const suffix = num2.substring(num1.length);
+                        // 如果后缀是 "-数字" 格式，则认为相似
+                        if (/^-\d+$/.test(suffix)) {
+                            similar.push({ base: num1, extended: num2, suffix: suffix });
+                        }
+                    }
+                }
+            }
+            
+            return similar;
+        }
+
+        // 数值规范化函数：处理折扣率等百分比字段的浮点精度问题
+        function normalizePercentage(value) {
+            if (value === null || value === undefined || value === '') {
+                return value;
+            }
+            
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                return value;
+            }
+            
+            // 统一保留两位小数（四舍五入）
+            return parseFloat(num.toFixed(2));
+        }
+
+        // 日期解析函数：支持多种日期格式
+        function parseDate(value) {
+            if (!value) return null;
+            
+            let str = value.toString().trim();
+            
+            // 尝试将 "2025.9.15" 格式转换为标准格式
+            str = str.replace(/\./g, '/');
+            
+            // 尝试解析日期
+            const date = new Date(str);
+            
+            // 检查是否为有效日期
+            if (isNaN(date.getTime())) {
+                return null;
+            }
+            
+            return date;
+        }
+
+        // 根据订单日期查找匹配的销售政策子表
+        function findMatchingActivitySheet(orderDate) {
+            if (!orderDate) return null;
+            
+            const orderTimestamp = parseDate(orderDate);
+            if (!orderTimestamp) return null;
+            
+            const activitySheets = dataStore.policy.sheets.activity;
+            
+            for (let sheet of activitySheets) {
+                const startTimestamp = parseDate(sheet.startDate);
+                const endTimestamp = parseDate(sheet.endDate);
+                
+                if (startTimestamp && endTimestamp) {
+                    if (orderTimestamp >= startTimestamp && orderTimestamp <= endTimestamp) {
+                        return sheet;
+                    }
+                }
+            }
+            
+            return null; // 未找到匹配的政策时间段
+        }
+
+        // 字段配置
+        const fieldConfigs = {
+            salesOrder: {
+                title: '销售订单',
+                fields: [
+                    { key: 'date', label: '日期', matchKey: '日期' },
+                    { key: 'docNumber', label: '单据编号', matchKey: '单据编号' },
+                    { key: 'userName', label: '用户姓名', matchKey: '用户姓名' },
+                    { key: 'model', label: '规格型号', matchKey: '规格型号' },
+                    { key: 'quantity', label: '销售数量', matchKey: '销售数量' },
+                    { key: 'totalAmount', label: '价税合计', matchKey: '价税合计' },
+                    { key: 'systemPrice', label: '系统定价', matchKey: '系统定价' },
+                    { key: 'materialName', label: '物料名称', matchKey: '物料名称' },
+                    { key: 'materialCategory', label: '物料类别', matchKey: '物料类别' },
+                    { key: 'promoter', label: '促销员', matchKey: '促销员' },
+                    { key: 'storeName', label: '客户店名', matchKey: '客户' },
+                    { key: 'docType', label: '单据类型', matchKey: '单据类型' },
+                    { key: 'paymentAmount', label: '回款收款金额', matchKey: '累计收款金额' }
+                ]
+            },
+            payment: {
+                title: '收款单',
+                fields: [
+                    { key: 'docNumber', label: '单据编号', matchKey: '销售订单号' },
+                    { key: 'amount', label: '回款收款金额', matchKey: '收款金额' }
+                ],
+                matchBy: 'docNumber'
+            },
+            commission: {
+                title: '带单费',
+                fields: [
+                    { key: 'docNumber', label: '单号', matchKey: '单号' },
+                    { key: 'commissionRate', label: '支付带单提成点位', matchKey: '支付带单提成点位' },
+                    { key: 'actualDiscount', label: '卖出的实际折扣', matchKey: '折扣' }
+                ],
+                matchBy: 'docNumber'
+            },
+            policySpecialMachine: {
+                title: '政策表 - 特价机整理',
+                sheetName: '特价机整理',
+                fields: [
+                    { key: 'machineModel', label: '机型', matchKey: '机型' },
+                    { key: 'largeType', label: '大类型', matchKey: '大类型' },
+                    { key: 'commissionPlan', label: '特价机提成计算方案', matchKey: '提成计算' },
+                    { key: 'minDiscount', label: '特价机公司最低折扣', matchKey: '公司最低折扣' }
+                ],
+                matchBy: 'model',
+                matchKey: '型号'
+            },
+            policyChanet: {
+                title: '政策表 - 佳尼特',
+                sheetName: '佳尼特',
+                fields: [
+                    { key: 'chanetSpecial', label: '佳尼特特价', matchKey: '特价' }
+                ],
+                matchBy: 'model',
+                matchKey: '型号'
+            },
+            policyBoiler: {
+                title: '政策表 - 壁挂炉',
+                sheetName: '壁挂炉',
+                fields: [
+                    { key: 'boilerDiscount', label: '壁挂炉销售折扣', matchKey: '销售折扣' },
+                    { key: 'boilerCommission', label: '壁挂炉提成原始', matchKey: '提成' }
+                ],
+                matchBy: 'model',
+                matchKey: '型号'
+            },
+            policyActivity: {
+                title: '政策表 - 销售政策',
+                sheetName: '活动',
+                fields: [
+                    { key: 'activityDiscount', label: '销售政策折扣率', matchKey: '折扣率' },
+                    { key: 'activityCommission', label: '销售政策提成原始', matchKey: '提成' },
+                    { key: 'activityExtra', label: '销售政策加提原始', matchKey: '加提' },
+                    { key: 'activityRequire', label: '销售政策要求', matchKey: '加提要求' }
+                ],
+                matchBy: 'model',
+                matchKey: '型号'
+            },
+            policyPriceTable: {
+                title: '政策表 - 标价',
+                sheetName: '标价',
+                fields: [
+                    { key: 'largeType', label: '大类型', matchKey: '大类型' }
+                ],
+                matchBy: 'model',
+                matchKey: '型号'
+            }
+        };
+
+        // 文件上传处理
+        document.getElementById('salesOrderFile').addEventListener('change', function(e) {
+            handleFileUpload(e, 'salesOrder');
+        });
+
+        document.getElementById('paymentFile').addEventListener('change', function(e) {
+            handleFileUpload(e, 'payment');
+        });
+
+        document.getElementById('commissionFile').addEventListener('change', function(e) {
+            handleFileUpload(e, 'commission');
+        });
+
+        document.getElementById('policyFile').addEventListener('change', function(e) {
+            handleFileUpload(e, 'policy');
+        });
+
+        function handleFileUpload(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                const boxId = type + 'Box';
+                const infoId = type + 'Info';
+                
+                document.getElementById(boxId).classList.add('has-file');
+                document.getElementById(infoId).style.display = 'block';
+                document.getElementById(infoId).textContent = `✓ ${file.name}`;
+                
+                if (type === 'policy') {
+                    // 政策表特殊处理：加载所有子表
+                    dataStore.policy.workbook = workbook;
+                    loadPolicySheets(workbook);
+                } else {
+                    // 显示子表选择器
+                    const selectorId = type + 'SheetSelector';
+                    const selectId = type + 'Sheet';
+                    
+                    const sheetSelector = document.getElementById(selectorId);
+                    sheetSelector.style.display = 'block';
+                    
+                    const select = document.getElementById(selectId);
+                    select.innerHTML = '';
+                    workbook.SheetNames.forEach((sheetName, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = sheetName;
+                        select.appendChild(option);
+                    });
+
+                    // 默认加载第一个子表
+                    select.onchange = function() {
+                        loadSheet(workbook, select.value, type);
+                    };
+                    
+                    loadSheet(workbook, 0, type);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function loadSheet(workbook, sheetIndex, type) {
+            const sheetName = workbook.SheetNames[sheetIndex];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            if (jsonData.length === 0) return;
+
+            // 跳过前面的空白行，找到实际表头
+            let headerRowIndex = 0;
+            for (let i = 0; i < Math.min(jsonData.length, 5); i++) {
+                const row = jsonData[i];
+                // 检查这一行是否有有效内容（非空且非全空）
+                const hasContent = row.some(cell => cell !== null && cell !== undefined && cell !== '' && cell !== 0);
+                if (hasContent) {
+                    // 检查是否像表头（字符串内容较多）
+                    const stringCells = row.filter(cell => typeof cell === 'string' && cell.trim() !== '');
+                    if (stringCells.length >= 2) {
+                        headerRowIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            // 第一行作为表头
+            const headers = jsonData[headerRowIndex];
+            const rows = jsonData.slice(headerRowIndex + 1).filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
+
+            dataStore[type].headers = headers;
+            dataStore[type].data = rows;
+            dataStore[type].workbook = workbook;
+
+            console.log(`${type} 读取成功: 表头行=${headerRowIndex}, 数据行数=${rows.length}`);
+            console.log(`${type} 表头:`, headers);
+
+            updateMappingUI();
+            checkReadyToMatch();
+        }
+
+        function loadPolicySheets(workbook) {
+            // 非活动类子表映射（保持原逻辑）
+            const sheetMappings = [
+                { configKey: 'policySpecialMachine', storeKey: 'specialMachine', name: '特价机整理' },
+                { configKey: 'policyChanet', storeKey: 'chanet', name: '佳尼特' },
+                { configKey: 'policyBoiler', storeKey: 'boiler', name: '壁挂炉' },
+                { configKey: 'policyPriceTable', storeKey: 'priceTable', name: '标价' }
+            ];
+
+            // 加载非活动类子表
+            sheetMappings.forEach(mapping => {
+                const sheetIndex = workbook.SheetNames.indexOf(mapping.name);
+                if (sheetIndex !== -1) {
+                    const worksheet = workbook.Sheets[mapping.name];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length > 0) {
+                        // 跳过前面的空白行，找到实际表头
+                        let headerRowIndex = 0;
+                        for (let i = 0; i < Math.min(jsonData.length, 5); i++) {
+                            const row = jsonData[i];
+                            const hasContent = row.some(cell => cell !== null && cell !== undefined && cell !== '' && cell !== 0);
+                            if (hasContent) {
+                                const stringCells = row.filter(cell => typeof cell === 'string' && cell.trim() !== '');
+                                if (stringCells.length >= 2) {
+                                    headerRowIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        const headers = jsonData[headerRowIndex];
+                        const rows = jsonData.slice(headerRowIndex + 1).filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
+                        
+                        dataStore.policy.sheets[mapping.storeKey].headers = headers;
+                        dataStore.policy.sheets[mapping.storeKey].data = rows;
+                        
+                        console.log(`政策表-${mapping.name} 读取成功: 表头行=${headerRowIndex}, 数据行数=${rows.length}`);
+                    }
+                }
+            });
+
+            // 加载所有以"活动"开头的子表（支持多个时间段）
+            dataStore.policy.sheets.activity = []; // 清空活动数组
+            
+            workbook.SheetNames.forEach(sheetName => {
+                // 识别所有以"活动"开头的子表
+                if (sheetName.startsWith('活动')) {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length > 0) {
+                        // 跳过前面的空白行，找到实际表头
+                        let headerRowIndex = 0;
+                        for (let i = 0; i < Math.min(jsonData.length, 5); i++) {
+                            const row = jsonData[i];
+                            const hasContent = row.some(cell => cell !== null && cell !== undefined && cell !== '' && cell !== 0);
+                            if (hasContent) {
+                                const stringCells = row.filter(cell => typeof cell === 'string' && cell.trim() !== '');
+                                if (stringCells.length >= 2) {
+                                    headerRowIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        const headers = jsonData[headerRowIndex];
+                        const rows = jsonData.slice(headerRowIndex + 1).filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
+                        
+                        // 从第一行数据中提取开始和结束时间（M列和N列，索引12和13）
+                        let startDate = null;
+                        let endDate = null;
+                        
+                        if (rows.length > 0) {
+                            const firstRow = rows[0];
+                            // M列：政策开始时间（索引12）
+                            if (firstRow[12]) {
+                                startDate = firstRow[12];
+                            }
+                            // N列：政策结束时间（索引13）
+                            if (firstRow[13]) {
+                                endDate = firstRow[13];
+                            }
+                        }
+                        
+                        // 添加到活动数组
+                        dataStore.policy.sheets.activity.push({
+                            sheetName: sheetName,
+                            startDate: startDate,
+                            endDate: endDate,
+                            headers: headers,
+                            data: rows
+                        });
+                        
+                        console.log(`政策表-${sheetName} 读取成功: 表头行=${headerRowIndex}, 数据行数=${rows.length}, 时间段=${startDate} 至 ${endDate}`);
+                    }
+                }
+            });
+
+            console.log(`共加载 ${dataStore.policy.sheets.activity.length} 个活动子表`);
+
+            // 在界面上显示已加载的活动子表时间段信息
+            displayActivitySheetsInfo();
+
+            updateMappingUI();
+            checkReadyToMatch();
+        }
+
+        // 显示已加载的活动子表时间段信息
+        function displayActivitySheetsInfo() {
+            const infoElement = document.getElementById('policyInfo');
+            if (!infoElement) return;
+            
+            const activitySheets = dataStore.policy.sheets.activity;
+            if (activitySheets.length === 0) {
+                infoElement.innerHTML = '✓ 政策表已加载（未找到活动子表）';
+                return;
+            }
+            
+            let infoHtml = `✓ 政策表已加载<br><small style="color: #4299e1; margin-top: 4px; display: block;">`;
+            infoHtml += `📅 销售政策时间段（${activitySheets.length}个）：<br>`;
+            
+            let hasWarning = false;
+            activitySheets.forEach((sheet, index) => {
+                if (sheet.startDate && sheet.endDate) {
+                    infoHtml += `  ${index + 1}. ${sheet.sheetName}: ${sheet.startDate} ~ ${sheet.endDate}<br>`;
+                } else {
+                    infoHtml += `  ${index + 1}. ${sheet.sheetName}: <span style="color: #ed8936;">未设置时间段（将匹配所有订单）</span><br>`;
+                    hasWarning = true;
+                }
+            });
+            
+            if (hasWarning) {
+                infoHtml += `<br><span style="color: #ed8936;">⚠️ 提示：未设置时间段的子表将对所有订单生效，不会根据日期筛选。</span><br>`;
+                infoHtml += `<span style="color: #718096;">建议在M列和N列设置时间段以启用日期匹配功能。</span>`;
+            }
+            
+            infoHtml += `</small>`;
+            infoElement.innerHTML = infoHtml;
+        }
+
+        function updateMappingUI() {
+            const container = document.getElementById('mappingContainer');
+            container.innerHTML = '';
+
+            // 销售订单映射
+            if (dataStore.salesOrder.data) {
+                createMappingSection('salesOrder', fieldConfigs.salesOrder, dataStore.salesOrder.headers, container);
+            }
+
+            // 收款单映射
+            if (dataStore.payment.data) {
+                createMappingSection('payment', fieldConfigs.payment, dataStore.payment.headers, container);
+            }
+
+            // 带单费映射
+            if (dataStore.commission.data) {
+                createMappingSection('commission', fieldConfigs.commission, dataStore.commission.headers, container);
+            }
+
+            // 政策表各子表映射
+            if (dataStore.policy.workbook) {
+                const policyConfigs = [
+                    { key: 'policySpecialMachine', storeKey: 'specialMachine' },
+                    { key: 'policyChanet', storeKey: 'chanet' },
+                    { key: 'policyBoiler', storeKey: 'boiler' },
+                    { key: 'policyPriceTable', storeKey: 'priceTable' }
+                ];
+
+                policyConfigs.forEach(cfg => {
+                    const sheetData = dataStore.policy.sheets[cfg.storeKey];
+                    if (sheetData.data && sheetData.data.length > 0) {
+                        createMappingSection(cfg.key, fieldConfigs[cfg.key], sheetData.headers, container);
+                    }
+                });
+
+                // 为每个活动子表创建映射区域
+                if (dataStore.policy.sheets.activity.length > 0) {
+                    dataStore.policy.sheets.activity.forEach((activitySheet, index) => {
+                        const config = {
+                            ...fieldConfigs.policyActivity,
+                            title: `政策表 - ${activitySheet.sheetName}${activitySheet.startDate && activitySheet.endDate ? ` (${activitySheet.startDate} ~ ${activitySheet.endDate})` : ''}`
+                        };
+                        createMappingSection(`policyActivity_${index}`, config, activitySheet.headers, container);
+                    });
+                }
+            }
+        }
+
+        function createMappingSection(configKey, config, headers, container) {
+            const section = document.createElement('div');
+            section.className = 'mapping-section';
+
+            const title = document.createElement('div');
+            title.className = 'mapping-section-title';
+            title.textContent = config.title;
+            section.appendChild(title);
+
+            const grid = document.createElement('div');
+            grid.className = 'mapping-grid';
+
+            config.fields.forEach(field => {
+                const row = document.createElement('div');
+                row.className = 'mapping-row';
+
+                const label = document.createElement('div');
+                label.className = 'mapping-label';
+                label.textContent = field.label;
+                row.appendChild(label);
+
+                const select = document.createElement('select');
+                select.id = `${configKey}_${field.key}`;
+                
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '-- 请选择列 --';
+                select.appendChild(defaultOption);
+
+                // 智能匹配
+                let matchedIndex = -1;
+                headers.forEach((header, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = header || `列${index + 1}`;
+                    
+                    // 智能匹配
+                    if (matchedIndex === -1 && header && field.matchKey) {
+                        const headerStr = header.toString().trim();
+                        if (headerStr === field.matchKey || 
+                            headerStr.includes(field.matchKey)) {
+                            matchedIndex = index;
+                            option.selected = true;
+                        }
+                    }
+                    
+                    select.appendChild(option);
+                });
+
+                select.addEventListener('change', checkReadyToMatch);
+                row.appendChild(select);
+
+                const source = document.createElement('div');
+                source.className = 'mapping-source';
+                source.textContent = config.title.split(' - ')[0];
+                row.appendChild(source);
+
+                grid.appendChild(row);
+            });
+
+            section.appendChild(grid);
+            container.appendChild(section);
+        }
+
+        function checkReadyToMatch() {
+            const ready = dataStore.salesOrder.data !== null &&
+                         document.getElementById('salesOrder_docNumber')?.value !== '';
+            
+            document.getElementById('matchBtn').disabled = !ready;
+        }
+
+        function performMatch() {
+            const btn = document.getElementById('matchBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>匹配中...';
+
+            setTimeout(() => {
+                try {
+                    // 获取所有字段映射
+                    const mappings = extractMappings();
+                    
+                    // 构建索引
+                    const indexes = buildIndexes(mappings);
+                    
+                    // 执行匹配
+                    matchResult = [];
+                    const stats = { 
+                        payment: 0, 
+                        commission: 0, 
+                        specialMachine: 0,
+                        chanet: 0,
+                        boiler: 0,
+                        activity: 0,
+                        priceTable: 0
+                    };
+
+                    // 检测销售订单中的相似订单号
+                    const allSalesOrderNumbers = dataStore.salesOrder.data
+                        .map(row => {
+                            const colIndex = mappings.salesOrder.docNumber;
+                            if (colIndex !== undefined && row[colIndex]) {
+                                return normalizeOrderNumber(row[colIndex]);
+                            }
+                            return '';
+                        })
+                        .filter(num => num !== '');
+                    
+                    const similarSales = detectSimilarOrderNumbers([...new Set(allSalesOrderNumbers)]);
+                    if (similarSales.length > 0) {
+                        console.warn('销售订单中发现相似订单号:', similarSales);
+                        matchDiagnostics.similarOrderNumbers.push(...similarSales.map(s => ({
+                            source: '销售订单',
+                            ...s
+                        })));
+                    }
+                    
+                    // 门店过滤：只保留白名单中的门店数据
+                    filterStats.originalCount = dataStore.salesOrder.data.length;
+                    const storeNameColIndex = mappings.salesOrder.storeName;
+                    const filteredSalesData = dataStore.salesOrder.data.filter(row => {
+                        if (storeNameColIndex === undefined) {
+                            return true; // 如果没有映射客户店名字段，保留所有数据
+                        }
+                        const storeName = row[storeNameColIndex];
+                        if (!storeName) {
+                            return false; // 空店名不保留
+                        }
+                        const storeNameStr = storeName.toString().trim();
+                        // 检查是否在白名单中
+                        return storeWhitelist.some(whiteStore => {
+                            // 精确匹配或包含匹配
+                            return storeNameStr === whiteStore || 
+                                   storeNameStr.includes(whiteStore) || 
+                                   whiteStore.includes(storeNameStr);
+                        });
+                    });
+                    filterStats.filteredCount = filteredSalesData.length;
+                    filterStats.removedCount = filterStats.originalCount - filterStats.filteredCount;
+                    
+                    console.log(`门店过滤：原始 ${filterStats.originalCount} 条，保留 ${filterStats.filteredCount} 条，过滤 ${filterStats.removedCount} 条`);
+                    
+                    filteredSalesData.forEach(row => {
+                        const record = {};
+                        
+                        // 提取销售订单字段
+                        fieldConfigs.salesOrder.fields.forEach(field => {
+                            const colIndex = mappings.salesOrder[field.key];
+                            record[field.label] = colIndex !== undefined ? (row[colIndex] || '') : '';
+                        });
+
+                        // 获取匹配键（使用规范化）
+                        const docNumberRaw = record['单据编号'];
+                        const docNumber = normalizeOrderNumber(docNumberRaw);
+                        const model = record['规格型号'] ? record['规格型号'].toString().trim() : '';
+
+                        // 匹配收款金额 - 新逻辑：
+                        // 1. 先根据收款单匹配"表头-实收金额"
+                        // 2. 如果销售数量<0（退款订单），回款收款金额=价税合计
+                        // 3. 剩余没有匹配到的，回款收款金额填0
+                        const quantity = parseFloat(record['销售数量']) || 0;
+                        let finalPayment = '';
+                        let matchedFromPayment = false;
+                        
+                        // 规则1: 先尝试匹配收款单（使用规范化后的订单号进行精确匹配）
+                        if (indexes.payment && docNumber && indexes.payment[docNumber] !== undefined) {
+                            finalPayment = indexes.payment[docNumber];
+                            matchedFromPayment = true;
+                            stats.payment++;
+                            
+                            // 记录匹配信息
+                            matchDiagnostics.paymentMatches.push({
+                                orderNumber: docNumber,
+                                orderNumberRaw: docNumberRaw,
+                                paymentAmount: finalPayment,
+                                matchType: '收款单匹配'
+                            });
+                        }
+                        
+                        // 规则2: 退款订单（销售数量<0）使用价税合计
+                        if (quantity < 0) {
+                            finalPayment = record['价税合计'] || 0;
+                            if (!matchedFromPayment) {
+                                matchDiagnostics.paymentMatches.push({
+                                    orderNumber: docNumber,
+                                    orderNumberRaw: docNumberRaw,
+                                    paymentAmount: finalPayment,
+                                    matchType: '退款订单（使用价税合计）'
+                                });
+                            }
+                        }
+                        
+                        // 规则3: 剩余未匹配的填0
+                        if (!finalPayment && finalPayment !== 0) {
+                            finalPayment = 0;
+                            if (!matchedFromPayment && quantity >= 0 && docNumber) {
+                                // 记录未匹配的订单
+                                matchDiagnostics.unmatchedOrders.push({
+                                    orderNumber: docNumber,
+                                    orderNumberRaw: docNumberRaw,
+                                    userName: record['用户姓名'],
+                                    model: model,
+                                    totalAmount: record['价税合计']
+                                });
+                            }
+                        }
+                        
+                        record['回款收款金额'] = finalPayment;
+
+                        // 匹配带单费（按单据编号）
+                        if (mappings.commission && indexes.commission && indexes.commission[docNumber]) {
+                            const commData = indexes.commission[docNumber];
+                            fieldConfigs.commission.fields.forEach(field => {
+                                // 跳过单号字段，因为已经有单据编号了
+                                if (field.key !== 'docNumber') {
+                                    record[field.label] = commData[field.key] || '';
+                                }
+                            });
+                            stats.commission++;
+                        } else if (mappings.commission) {
+                            fieldConfigs.commission.fields.forEach(field => {
+                                if (field.key !== 'docNumber') {
+                                    record[field.label] = '';
+                                }
+                            });
+                        }
+
+                        // 匹配政策表 - 特价机整理（按规格型号）
+                        if (mappings.policySpecialMachine && indexes.policySpecialMachine[model]) {
+                            const policyData = indexes.policySpecialMachine[model];
+                            fieldConfigs.policySpecialMachine.fields.forEach(field => {
+                                record[field.label] = policyData[field.key] || '';
+                            });
+                            stats.specialMachine++;
+                        } else if (mappings.policySpecialMachine) {
+                            fieldConfigs.policySpecialMachine.fields.forEach(field => {
+                                record[field.label] = '';
+                            });
+                        }
+
+                        // 匹配政策表 - 佳尼特（按规格型号）
+                        if (mappings.policyChanet && indexes.policyChanet[model]) {
+                            const policyData = indexes.policyChanet[model];
+                            fieldConfigs.policyChanet.fields.forEach(field => {
+                                record[field.label] = policyData[field.key] || '';
+                            });
+                            stats.chanet++;
+                        } else if (mappings.policyChanet) {
+                            fieldConfigs.policyChanet.fields.forEach(field => {
+                                record[field.label] = '';
+                            });
+                        }
+
+                        // 匹配政策表 - 壁挂炉（按规格型号）
+                        if (mappings.policyBoiler && indexes.policyBoiler[model]) {
+                            const policyData = indexes.policyBoiler[model];
+                            fieldConfigs.policyBoiler.fields.forEach(field => {
+                                record[field.label] = policyData[field.key] || '';
+                            });
+                            stats.boiler++;
+                        } else if (mappings.policyBoiler) {
+                            fieldConfigs.policyBoiler.fields.forEach(field => {
+                                record[field.label] = '';
+                            });
+                        }
+
+                        // 匹配政策表 - 销售政策（根据订单日期匹配对应时间段的政策）
+                        if (mappings.policyActivity && Array.isArray(indexes.policyActivity)) {
+                            const orderDate = record['日期'];
+                            let policyData = null;
+                            let matchedSheet = null;
+                            let matchType = '';
+                            let dateMatchedSheet = null; // 记录日期匹配到的子表（即使型号不存在）
+                            
+                            // 遍历所有活动子表，找到日期匹配的那个
+                            for (let activitySheet of indexes.policyActivity) {
+                                if (!activitySheet) continue;
+                                
+                                const orderTimestamp = parseDate(orderDate);
+                                const startTimestamp = parseDate(activitySheet.startDate);
+                                const endTimestamp = parseDate(activitySheet.endDate);
+                                
+                                // 如果有时间段，则进行日期匹配
+                                if (orderTimestamp && startTimestamp && endTimestamp) {
+                                    if (orderTimestamp >= startTimestamp && orderTimestamp <= endTimestamp) {
+                                        // 找到日期匹配的子表
+                                        dateMatchedSheet = activitySheet;
+                                        
+                                        // 从该子表的索引中查找型号
+                                        if (activitySheet.index[model]) {
+                                            policyData = activitySheet.index[model];
+                                            matchedSheet = activitySheet;
+                                            matchType = 'date';
+                                            break;
+                                        }
+                                        // 找到了日期匹配的表，但没有这个型号，继续看是否有其他时间段
+                                    }
+                                } 
+                                // 如果没有时间段设置，直接匹配型号（向后兼容）
+                                else if (!startTimestamp || !endTimestamp) {
+                                    if (activitySheet.index[model]) {
+                                        policyData = activitySheet.index[model];
+                                        matchedSheet = activitySheet;
+                                        matchType = 'direct';
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (policyData) {
+                                fieldConfigs.policyActivity.fields.forEach(field => {
+                                    record[field.label] = policyData[field.key] || '';
+                                });
+                                
+                                // 添加匹配说明
+                                if (matchType === 'date') {
+                                    record['销售政策匹配说明'] = `匹配成功：${matchedSheet.sheetName}（${matchedSheet.startDate} ~ ${matchedSheet.endDate}）`;
+                                } else if (matchType === 'direct') {
+                                    record['销售政策匹配说明'] = `匹配成功：${matchedSheet.sheetName}（未设置时间段）`;
+                                }
+                                
+                                stats.activity++;
+                            } else {
+                                fieldConfigs.policyActivity.fields.forEach(field => {
+                                    record[field.label] = '';
+                                });
+                                
+                                // 未匹配时的精确说明
+                                if (dateMatchedSheet) {
+                                    // 情况1：找到了日期匹配的政策表，但型号不在表中
+                                    record['销售政策匹配说明'] = `未匹配：型号"${model}"不在政策表"${dateMatchedSheet.sheetName}"（${dateMatchedSheet.startDate} ~ ${dateMatchedSheet.endDate}）中`;
+                                } else if (indexes.policyActivity.length > 0) {
+                                    // 情况2：有政策表，但订单日期不在任何时间段内
+                                    const hasTimeRange = indexes.policyActivity.some(s => s && s.startDate && s.endDate);
+                                    if (hasTimeRange) {
+                                        // 列出所有可用的时间段
+                                        const periods = indexes.policyActivity
+                                            .filter(s => s && s.startDate && s.endDate)
+                                            .map(s => `${s.startDate}~${s.endDate}`)
+                                            .join('、');
+                                        record['销售政策匹配说明'] = `未匹配：订单日期"${orderDate || '缺失'}"不在任何政策时间段内（可用时间段：${periods}）`;
+                                    } else {
+                                        // 没有设置时间段，型号也不在表中
+                                        record['销售政策匹配说明'] = `未匹配：型号"${model}"不在政策表中`;
+                                    }
+                                } else {
+                                    record['销售政策匹配说明'] = '未匹配：未上传销售政策表';
+                                }
+                            }
+                        } else if (mappings.policyActivity) {
+                            fieldConfigs.policyActivity.fields.forEach(field => {
+                                record[field.label] = '';
+                            });
+                            record['销售政策匹配说明'] = '未匹配：销售政策字段映射未配置';
+                        } else {
+                            record['销售政策匹配说明'] = '未匹配：未上传销售政策表';
+                        }
+
+                        // 匹配政策表 - 标价（按规格型号）
+                        if (mappings.policyPriceTable && indexes.policyPriceTable[model]) {
+                            const policyData = indexes.policyPriceTable[model];
+                            fieldConfigs.policyPriceTable.fields.forEach(field => {
+                                record[field.label] = policyData[field.key] || '';
+                            });
+                            stats.priceTable++;
+                        } else if (mappings.policyPriceTable) {
+                            fieldConfigs.policyPriceTable.fields.forEach(field => {
+                                record[field.label] = '';
+                            });
+                        }
+
+                        matchResult.push(record);
+                    });
+
+                    // 查找收款单中未匹配的记录
+                    if (indexes.payment) {
+                        const matchedPaymentOrderNumbers = new Set(
+                            matchDiagnostics.paymentMatches
+                                .filter(m => m.matchType === '收款单匹配')
+                                .map(m => m.orderNumber)
+                        );
+                        
+                        Object.keys(indexes.payment).forEach(paymentOrderNumber => {
+                            if (!matchedPaymentOrderNumbers.has(paymentOrderNumber)) {
+                                matchDiagnostics.unmatchedPayments.push({
+                                    orderNumber: paymentOrderNumber,
+                                    paymentAmount: indexes.payment[paymentOrderNumber]
+                                });
+                            }
+                        });
+                    }
+
+                    // 识别退货和国补订单
+                    const guobuStats = identifyGuoBu(matchResult);
+                    stats.return = guobuStats.returnCount;
+                    stats.guobu = guobuStats.guobuCount;
+                    stats.nonGuobu = guobuStats.nonGuobuCount;
+
+                    // 显示结果
+                    displayResult(stats);
+                    
+                    btn.innerHTML = '重新匹配';
+                    btn.disabled = false;
+                } catch (error) {
+                    alert('匹配过程中出现错误: ' + error.message);
+                    console.error(error);
+                    btn.innerHTML = '开始匹配';
+                    btn.disabled = false;
+                }
+            }, 500);
+        }
+
+        function extractMappings() {
+            const mappings = {};
+            
+            // 提取所有配置的字段映射（除了活动）
+            Object.keys(fieldConfigs).forEach(configKey => {
+                if (configKey === 'policyActivity') return; // 活动单独处理
+                
+                const config = fieldConfigs[configKey];
+                const mapping = {};
+                let hasMapping = false;
+                
+                config.fields.forEach(field => {
+                    const select = document.getElementById(`${configKey}_${field.key}`);
+                    if (select && select.value !== '') {
+                        mapping[field.key] = parseInt(select.value);
+                        hasMapping = true;
+                    }
+                });
+                
+                if (hasMapping) {
+                    mappings[configKey] = mapping;
+                }
+            });
+            
+            // 提取所有活动子表的映射
+            if (dataStore.policy.sheets.activity.length > 0) {
+                mappings.policyActivity = []; // 改为数组
+                dataStore.policy.sheets.activity.forEach((activitySheet, index) => {
+                    const mapping = {};
+                    let hasMapping = false;
+                    
+                    fieldConfigs.policyActivity.fields.forEach(field => {
+                        const select = document.getElementById(`policyActivity_${index}_${field.key}`);
+                        if (select && select.value !== '') {
+                            mapping[field.key] = parseInt(select.value);
+                            hasMapping = true;
+                        }
+                    });
+                    
+                    if (hasMapping) {
+                        mappings.policyActivity.push(mapping);
+                    } else {
+                        mappings.policyActivity.push(null);
+                    }
+                });
+            }
+            
+            return mappings;
+        }
+
+        function buildIndexes(mappings) {
+            const indexes = {};
+            
+            // 重置诊断信息
+            matchDiagnostics = {
+                similarOrderNumbers: [],
+                unmatchedOrders: [],
+                unmatchedPayments: [],
+                paymentMatches: []
+            };
+            
+            // 收款单索引（按单据编号求和）
+            if (mappings.payment && dataStore.payment.data) {
+                indexes.payment = {};
+                const paymentOrderNumbers = [];
+                
+                dataStore.payment.data.forEach(row => {
+                    const docNumber = row[mappings.payment.docNumber];
+                    const amount = parseFloat(row[mappings.payment.amount]) || 0;
+                    
+                    if (docNumber) {
+                        const key = normalizeOrderNumber(docNumber);
+                        if (key) {
+                            paymentOrderNumbers.push(key);
+                            if (!indexes.payment[key]) {
+                                indexes.payment[key] = 0;
+                            }
+                            indexes.payment[key] += amount;
+                        }
+                    }
+                });
+                
+                // 检测收款单中的相似订单号
+                const similarPayments = detectSimilarOrderNumbers([...new Set(paymentOrderNumbers)]);
+                if (similarPayments.length > 0) {
+                    console.warn('收款单中发现相似订单号:', similarPayments);
+                    matchDiagnostics.similarOrderNumbers.push(...similarPayments.map(s => ({
+                        source: '收款单',
+                        ...s
+                    })));
+                }
+            }
+            
+            // 带单费索引（按单据编号）
+            if (mappings.commission && dataStore.commission.data) {
+                indexes.commission = {};
+                const docNumberColIndex = mappings.commission.docNumber;
+                if (docNumberColIndex !== undefined) {
+                    dataStore.commission.data.forEach(row => {
+                        const docNumber = row[docNumberColIndex];
+                        if (docNumber) {
+                            const key = normalizeOrderNumber(docNumber);
+                            if (key) {
+                                indexes.commission[key] = {};
+                                fieldConfigs.commission.fields.forEach(field => {
+                                    const colIndex = mappings.commission[field.key];
+                                    if (colIndex !== undefined) {
+                                        let value = row[colIndex];
+                                        // 对折扣字段进行规范化处理
+                                        if (field.key === 'actualDiscount') {
+                                            value = normalizePercentage(value);
+                                        }
+                                        indexes.commission[key][field.key] = value;
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // 政策表索引（活动除外，活动需要根据日期动态匹配）
+            buildPolicyIndex('policySpecialMachine', 'specialMachine', mappings, indexes);
+            buildPolicyIndex('policyChanet', 'chanet', mappings, indexes);
+            buildPolicyIndex('policyBoiler', 'boiler', mappings, indexes);
+            buildPolicyIndex('policyPriceTable', 'priceTable', mappings, indexes);
+            
+            // 活动子表的索引构建（支持多个时间段）
+            if (mappings.policyActivity && Array.isArray(mappings.policyActivity)) {
+                indexes.policyActivity = [];
+                
+                dataStore.policy.sheets.activity.forEach((activitySheet, index) => {
+                    const mapping = mappings.policyActivity[index];
+                    if (mapping) {
+                        const activityIndex = {};
+                        const config = fieldConfigs.policyActivity;
+                        const data = activitySheet.data;
+                        const headers = activitySheet.headers;
+                        
+                        // 需要规范化的折扣率字段
+                        const percentageFields = ['activityDiscount', 'boilerDiscount', 'minDiscount'];
+                        
+                        // 找到匹配键列（机型列）
+                        const matchColIndex = headers.indexOf(config.matchKey);
+                        
+                        if (matchColIndex !== -1) {
+                            data.forEach(row => {
+                                const matchValue = row[matchColIndex];
+                                if (matchValue) {
+                                    const key = matchValue.toString().trim();
+                                    activityIndex[key] = {};
+                                    config.fields.forEach(field => {
+                                        const colIndex = mapping[field.key];
+                                        if (colIndex !== undefined) {
+                                            let value = row[colIndex];
+                                            // 对折扣率字段进行规范化处理
+                                            if (percentageFields.includes(field.key)) {
+                                                value = normalizePercentage(value);
+                                            }
+                                            activityIndex[key][field.key] = value;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        
+                        indexes.policyActivity.push({
+                            index: activityIndex,
+                            startDate: activitySheet.startDate,
+                            endDate: activitySheet.endDate,
+                            sheetName: activitySheet.sheetName
+                        });
+                    } else {
+                        indexes.policyActivity.push(null);
+                    }
+                });
+            }
+            
+            return indexes;
+        }
+
+        function buildPolicyIndex(configKey, storeKey, mappings, indexes) {
+            if (mappings[configKey] && dataStore.policy.sheets[storeKey].data) {
+                indexes[configKey] = {};
+                const config = fieldConfigs[configKey];
+                const data = dataStore.policy.sheets[storeKey].data;
+                const headers = dataStore.policy.sheets[storeKey].headers;
+                
+                // 需要规范化的折扣率字段
+                const percentageFields = ['activityDiscount', 'boilerDiscount', 'minDiscount'];
+                
+                // 找到匹配键列（机型列）
+                const matchColIndex = headers.indexOf(config.matchKey);
+                
+                if (matchColIndex !== -1) {
+                    data.forEach(row => {
+                        const matchValue = row[matchColIndex];
+                        if (matchValue) {
+                            const key = matchValue.toString().trim();
+                            indexes[configKey][key] = {};
+                            config.fields.forEach(field => {
+                                const colIndex = mappings[configKey][field.key];
+                                if (colIndex !== undefined) {
+                                    let value = row[colIndex];
+                                    // 对折扣率字段进行规范化处理
+                                    if (percentageFields.includes(field.key)) {
+                                        value = normalizePercentage(value);
+                                    }
+                                    indexes[configKey][key][field.key] = value;
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        }
+
+        function findModelColumn(headers) {
+            const modelKeywords = ['规格型号', '机型', '型号', '规格'];
+            for (let i = 0; i < headers.length; i++) {
+                const header = headers[i] ? headers[i].toString().trim() : '';
+                if (modelKeywords.some(keyword => header.includes(keyword))) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function identifyGuoBu(matchResult) {
+            // 第一步：识别退货订单（优先级高）
+            // 按 (用户姓名 + 规格型号) 分组
+            const returnGroupMap = {};
+            
+            matchResult.forEach((record, index) => {
+                const userName = record['用户姓名'] || '';
+                const model = record['规格型号'] || '';
+                const key = `${userName}|${model}`;
+                
+                if (!returnGroupMap[key]) {
+                    returnGroupMap[key] = [];
+                }
+                returnGroupMap[key].push(index);
+            });
+            
+            // 标记退货：一正一负配对标记为退货
+            const returnIndexes = new Set();
+            Object.values(returnGroupMap).forEach(indexes => {
+                // 分离正数和负数订单
+                const positiveIndexes = [];
+                const negativeIndexes = [];
+                
+                indexes.forEach(idx => {
+                    const quantity = parseFloat(matchResult[idx]['销售数量']) || 0;
+                    if (quantity > 0) {
+                        positiveIndexes.push(idx);
+                    } else if (quantity < 0) {
+                        negativeIndexes.push(idx);
+                    }
+                });
+                
+                // 一正一负配对标记为退货
+                const pairCount = Math.min(positiveIndexes.length, negativeIndexes.length);
+                for (let i = 0; i < pairCount; i++) {
+                    matchResult[positiveIndexes[i]]['订单类型'] = '退货';
+                    matchResult[negativeIndexes[i]]['订单类型'] = '退货';
+                    returnIndexes.add(positiveIndexes[i]);
+                    returnIndexes.add(negativeIndexes[i]);
+                }
+            });
+            
+            // 第二步：在非退货订单中识别国补
+            // 按 (日期 + 用户姓名) 分组统计
+            const groupMap = {};
+            
+            matchResult.forEach((record, index) => {
+                // 跳过已标记为退货的订单
+                if (returnIndexes.has(index)) return;
+                
+                const date = record['日期'] || '';
+                const userName = record['用户姓名'] || '';
+                const key = `${date}|${userName}`;
+                
+                if (!groupMap[key]) {
+                    groupMap[key] = [];
+                }
+                groupMap[key].push(index);
+            });
+            
+            // 标记国补：同一天内同一个人恰好有2笔订单则标记为国补
+            Object.values(groupMap).forEach(indexes => {
+                if (indexes.length === 2) {
+                    indexes.forEach(idx => {
+                        matchResult[idx]['订单类型'] = '国补';
+                    });
+                } else {
+                    indexes.forEach(idx => {
+                        matchResult[idx]['订单类型'] = '非国补';
+                    });
+                }
+            });
+            
+            // 统计
+            const returnCount = matchResult.filter(r => r['订单类型'] === '退货').length;
+            const guobuCount = matchResult.filter(r => r['订单类型'] === '国补').length;
+            const nonGuobuCount = matchResult.filter(r => r['订单类型'] === '非国补').length;
+            
+            return { returnCount, guobuCount, nonGuobuCount };
+        }
+
+        function displayResult(stats) {
+            const total = matchResult.length;
+            
+            // 构建统计信息
+            const statsContainer = document.getElementById('resultStats');
+            statsContainer.innerHTML = '';
+            
+            // 添加门店过滤提示
+            if (filterStats.originalCount > 0) {
+                const filterInfo = document.createElement('div');
+                filterInfo.style.cssText = `
+                    grid-column: 1 / -1;
+                    background: #eef2ff;
+                    border: 2px solid #c7d2fe;
+                    border-radius: 8px;
+                    padding: 12px 16px;
+                    margin-bottom: 12px;
+                    font-size: 13px;
+                    color: #4338ca;
+                `;
+                filterInfo.innerHTML = `
+                    <strong>🏪 门店筛选：</strong>
+                    原始数据 <strong>${filterStats.originalCount}</strong> 条，
+                    已过滤保留 <strong>${filterStats.filteredCount}</strong> 条
+                    ${filterStats.removedCount > 0 ? `（过滤掉 <strong>${filterStats.removedCount}</strong> 条非指定门店数据）` : ''}
+                    <br>
+                    <small style="color: #6366f1;">仅保留以下门店：${storeWhitelist.join('、')}</small>
+                `;
+                statsContainer.appendChild(filterInfo);
+            }
+            
+            const statItems = [
+                { label: '总记录数', value: total, color: '#667eea' },
+                { label: '退货订单', value: stats.return || 0, color: '#e53e3e' },
+                { label: '国补订单', value: stats.guobu || 0, color: '#f6ad55' },
+                { label: '非国补订单', value: stats.nonGuobu || 0, color: '#a0aec0' },
+                { label: '收款匹配', value: stats.payment, color: '#48bb78' },
+                { label: '带单费匹配', value: stats.commission, color: '#4299e1' },
+                { label: '特价机匹配', value: stats.specialMachine, color: '#ed8936' },
+                { label: '佳尼特匹配', value: stats.chanet, color: '#9f7aea' },
+                { label: '壁挂炉匹配', value: stats.boiler, color: '#f56565' },
+                { label: '销售政策匹配', value: stats.activity, color: '#38b2ac' },
+                { label: '标价表匹配', value: stats.priceTable, color: '#ed64a6' }
+            ];
+
+            statItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.style.borderLeftColor = item.color;
+                card.innerHTML = `
+                    <div class="stat-label">${item.label}</div>
+                    <div class="stat-value" style="color: ${item.color}">${item.value}</div>
+                `;
+                statsContainer.appendChild(card);
+            });
+
+            // 显示诊断信息
+            displayDiagnostics();
+
+            // 构建表格
+            const thead = document.getElementById('resultTableHeader');
+            const tbody = document.getElementById('resultTableBody');
+            
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if (matchResult.length > 0) {
+                // 表头
+                const headerRow = document.createElement('tr');
+                Object.keys(matchResult[0]).forEach(key => {
+                    const th = document.createElement('th');
+                    th.textContent = key;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+
+                // 数据行（限制显示前1000行以提高性能）
+                const displayLimit = Math.min(matchResult.length, 1000);
+                for (let i = 0; i < displayLimit; i++) {
+                    const record = matchResult[i];
+                    const tr = document.createElement('tr');
+                    Object.values(record).forEach(value => {
+                        const td = document.createElement('td');
+                        td.textContent = value !== undefined && value !== null ? value : '';
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                }
+
+                if (matchResult.length > displayLimit) {
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.colSpan = Object.keys(matchResult[0]).length;
+                    td.style.textAlign = 'center';
+                    td.style.color = '#718096';
+                    td.style.fontStyle = 'italic';
+                    td.textContent = `... 还有 ${matchResult.length - displayLimit} 条记录未显示，请导出查看完整数据`;
+                    tr.appendChild(td);
+                    tbody.appendChild(tr);
+                }
+            }
+
+            document.getElementById('resultArea').style.display = 'block';
+            document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function displayDiagnostics() {
+            let diagnosticsHtml = '';
+            
+            // 显示相似订单号警告
+            if (matchDiagnostics.similarOrderNumbers.length > 0) {
+                diagnosticsHtml += '<div class="alert alert-warning">';
+                diagnosticsHtml += '<strong>⚠️ 警告：发现相似订单号</strong><br>';
+                diagnosticsHtml += '以下订单号非常相似，可能导致匹配混淆。请确认数据是否正确：<br><br>';
+                
+                const groupedBySimilarity = {};
+                matchDiagnostics.similarOrderNumbers.forEach(item => {
+                    const key = `${item.base}-${item.extended}`;
+                    if (!groupedBySimilarity[key]) {
+                        groupedBySimilarity[key] = [];
+                    }
+                    groupedBySimilarity[key].push(item.source);
+                });
+                
+                Object.keys(groupedBySimilarity).forEach(key => {
+                    const [base, extended] = key.split('-').slice(0, 2);
+                    const sources = [...new Set(groupedBySimilarity[key])];
+                    diagnosticsHtml += `📋 <code>${base}</code> 和 <code>${extended}</code> （来源：${sources.join('、')}）<br>`;
+                });
+                
+                diagnosticsHtml += '</div>';
+            }
+            
+            // 显示未匹配订单
+            if (matchDiagnostics.unmatchedOrders.length > 0) {
+                diagnosticsHtml += '<div class="alert alert-danger">';
+                diagnosticsHtml += `<strong>❌ 未找到回款的订单：${matchDiagnostics.unmatchedOrders.length} 条</strong><br>`;
+                diagnosticsHtml += '以下订单在收款单中未找到匹配（回款金额已设为0）：<br><br>';
+                
+                const displayLimit = Math.min(matchDiagnostics.unmatchedOrders.length, 10);
+                for (let i = 0; i < displayLimit; i++) {
+                    const order = matchDiagnostics.unmatchedOrders[i];
+                    diagnosticsHtml += `📄 订单号：<code>${order.orderNumberRaw || order.orderNumber}</code>`;
+                    if (order.userName) diagnosticsHtml += ` | 客户：${order.userName}`;
+                    if (order.model) diagnosticsHtml += ` | 型号：${order.model}`;
+                    if (order.totalAmount) diagnosticsHtml += ` | 金额：¥${order.totalAmount}`;
+                    diagnosticsHtml += '<br>';
+                }
+                
+                if (matchDiagnostics.unmatchedOrders.length > displayLimit) {
+                    diagnosticsHtml += `<i>... 还有 ${matchDiagnostics.unmatchedOrders.length - displayLimit} 条未显示</i><br>`;
+                }
+                
+                diagnosticsHtml += '</div>';
+            }
+            
+            // 显示未匹配收款
+            if (matchDiagnostics.unmatchedPayments.length > 0) {
+                diagnosticsHtml += '<div class="alert alert-danger">';
+                diagnosticsHtml += `<strong>❌ 未找到订单的收款：${matchDiagnostics.unmatchedPayments.length} 条</strong><br>`;
+                diagnosticsHtml += '以下收款记录在销售订单中未找到匹配：<br><br>';
+                
+                const displayLimit = Math.min(matchDiagnostics.unmatchedPayments.length, 10);
+                for (let i = 0; i < displayLimit; i++) {
+                    const payment = matchDiagnostics.unmatchedPayments[i];
+                    diagnosticsHtml += `💰 订单号：<code>${payment.orderNumber}</code> | 金额：¥${payment.paymentAmount}<br>`;
+                }
+                
+                if (matchDiagnostics.unmatchedPayments.length > displayLimit) {
+                    diagnosticsHtml += `<i>... 还有 ${matchDiagnostics.unmatchedPayments.length - displayLimit} 条未显示</i><br>`;
+                }
+                
+                diagnosticsHtml += '</div>';
+            }
+            
+            // 成功匹配提示
+            if (matchDiagnostics.similarOrderNumbers.length === 0 && 
+                matchDiagnostics.unmatchedOrders.length === 0 && 
+                matchDiagnostics.unmatchedPayments.length === 0) {
+                diagnosticsHtml += '<div class="alert alert-info">';
+                diagnosticsHtml += '<strong>✅ 数据质量良好</strong><br>';
+                diagnosticsHtml += '未发现订单号冲突或未匹配的记录。';
+                diagnosticsHtml += '</div>';
+            }
+            
+            // 插入诊断信息到结果区域
+            const resultStats = document.getElementById('resultStats');
+            const existingDiagnostics = document.getElementById('diagnosticsContainer');
+            if (existingDiagnostics) {
+                existingDiagnostics.remove();
+            }
+            
+            if (diagnosticsHtml) {
+                const diagnosticsContainer = document.createElement('div');
+                diagnosticsContainer.id = 'diagnosticsContainer';
+                diagnosticsContainer.innerHTML = diagnosticsHtml;
+                resultStats.parentNode.insertBefore(diagnosticsContainer, resultStats.nextSibling);
+            }
+        }
+
+        function exportUnmatchedData() {
+            if (matchDiagnostics.unmatchedOrders.length === 0 && 
+                matchDiagnostics.unmatchedPayments.length === 0) {
+                alert('没有未匹配的数据需要导出！');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            // 导出未匹配订单
+            if (matchDiagnostics.unmatchedOrders.length > 0) {
+                const ws1 = XLSX.utils.json_to_sheet(matchDiagnostics.unmatchedOrders.map(order => ({
+                    '订单号（原始）': order.orderNumberRaw,
+                    '订单号（规范化）': order.orderNumber,
+                    '用户姓名': order.userName,
+                    '规格型号': order.model,
+                    '价税合计': order.totalAmount
+                })));
+                XLSX.utils.book_append_sheet(wb, ws1, '未匹配订单');
+            }
+
+            // 导出未匹配收款
+            if (matchDiagnostics.unmatchedPayments.length > 0) {
+                const ws2 = XLSX.utils.json_to_sheet(matchDiagnostics.unmatchedPayments.map(payment => ({
+                    '订单号': payment.orderNumber,
+                    '收款金额': payment.paymentAmount
+                })));
+                XLSX.utils.book_append_sheet(wb, ws2, '未匹配收款');
+            }
+
+            // 导出相似订单号
+            if (matchDiagnostics.similarOrderNumbers.length > 0) {
+                const ws3 = XLSX.utils.json_to_sheet(matchDiagnostics.similarOrderNumbers.map(item => ({
+                    '来源': item.source,
+                    '基础订单号': item.base,
+                    '扩展订单号': item.extended,
+                    '后缀': item.suffix
+                })));
+                XLSX.utils.book_append_sheet(wb, ws3, '相似订单号');
+            }
+
+            // 生成文件名
+            const date = new Date();
+            const filename = `未匹配数据诊断_${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}_${date.getHours().toString().padStart(2,'0')}${date.getMinutes().toString().padStart(2,'0')}.xlsx`;
+
+            // 下载
+            XLSX.writeFile(wb, filename);
+        }
+
+        function exportResult() {
+            if (matchResult.length === 0) {
+                alert('没有可导出的数据！');
+                return;
+            }
+
+            // 导出前对所有折扣率字段进行二次规范化
+            const discountFields = ['销售政策折扣率', '壁挂炉销售折扣', '特价机公司最低折扣', '卖出的实际折扣'];
+            const normalizedResult = matchResult.map(record => {
+                const newRecord = { ...record };
+                discountFields.forEach(field => {
+                    if (field in newRecord) {
+                        newRecord[field] = normalizePercentage(newRecord[field]);
+                    }
+                });
+                return newRecord;
+            });
+
+            // 转换为工作表
+            const ws = XLSX.utils.json_to_sheet(normalizedResult);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '匹配结果');
+
+            // 生成文件名
+            const date = new Date();
+            const filename = `匹配结果_${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}_${date.getHours().toString().padStart(2,'0')}${date.getMinutes().toString().padStart(2,'0')}.xlsx`;
+
+            // 下载
+            XLSX.writeFile(wb, filename);
+        }
+    </script>
+</body>
+</html>
+
