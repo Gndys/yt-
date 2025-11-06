@@ -13,161 +13,196 @@
   
   <!-- 页面特定样式 -->
   <style>
-    /* 优先级提示框 - 统一为半透明卡片 */
+    /* 布局优化 - 减少间距提升紧凑度 */
+    .tool-content{padding:20px 28px;}
+    .section{padding:16px 20px;margin-bottom:16px;background:#fff;}
+    .section:hover{box-shadow:none;}
+    h2{font-size:1.15rem;margin-bottom:12px;color:#1e293b;}
+    
+    /* 统计卡片紧凑化 */
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:12px 0;}
+    .stat-card{
+      background:#f8fafc;
+      border:1px solid #cbd5e1;
+      border-radius:6px;
+      padding:12px 14px;
+      text-align:center;
+    }
+    .stat-card:hover{transform:none;box-shadow:none;}
+    .stat-number{
+      font-size:1.4rem;
+      font-weight:600;
+      color:#3b82f6;
+      margin-bottom:4px;
+    }
+    .stat-label{
+      font-size:.8em;
+      color:#64748b;
+    }
+    
+    /* 加载动画优化 */
+    .loading{
+      display:none;
+      text-align:center;
+      padding:20px;
+    }
+    .loading-spinner{
+      border:3px solid #e2e8f0;
+      border-top-color:#3b82f6;
+      width:32px;
+      height:32px;
+      margin:0 auto;
+      animation:spin 0.8s linear infinite;
+    }
+    @keyframes spin{
+      to{transform:rotate(360deg);}
+    }
+    /* 优先级提示框 - 扁平化设计 */
     .priority-notice{
-      background:rgba(255,255,255,.95);
-      border:2px solid var(--accent-gold);
-      border-radius:16px;
-      padding:20px 24px;
-      margin:24px 0;
-      box-shadow:var(--shadow-md);
+      background:#fffbeb;
+      border:1px solid #fbbf24;
+      border-radius:6px;
+      padding:12px 16px;
+      margin:16px 0;
       font-size:.9em;
-      line-height:1.7;
+      line-height:1.6;
     }
     .priority-notice h3{
-      margin:0 0 12px;
-      font-size:1.1em;
-      color:var(--accent-gold);
+      margin:0 0 8px;
+      font-size:1em;
+      color:#d97706;
       display:flex;
       align-items:center;
       gap:8px;
     }
-    .priority-notice div{margin:6px 0;color:var(--text-secondary);}
+    .priority-notice div{margin:4px 0;color:#78716c;}
     
     /* 字段映射 */
-    .field-mapping{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:16px;}
+    .field-mapping{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px;}
     .field-group{display:flex;flex-direction:column;}
     .field-group label{
       font-size:.85em;
       font-weight:600;
-      color:var(--text-secondary);
-      margin-bottom:8px;
+      color:#64748b;
+      margin-bottom:6px;
     }
     .field-group select{
-      padding:11px 14px;
-      border:2px solid var(--border-light);
-      background:var(--bg-card);
-      border-radius:10px;
+      padding:8px 12px;
+      border:1px solid #cbd5e1;
+      background:#fff;
+      border-radius:4px;
       font-size:.875em;
-      transition:all .25s ease;
       cursor:pointer;
     }
     .field-group select:focus{
       outline:none;
-      border-color:var(--accent-blue);
-      box-shadow:0 0 0 4px var(--accent-blue-light);
+      border-color:#3b82f6;
     }
     
-    /* 按钮组 - 统一样式 */
-    .calc-buttons{margin-top:24px;display:flex;flex-wrap:wrap;gap:12px;}
-    .btn-green{background:var(--color-success);color:var(--text-white);}
-    .btn-green:hover{background:#059669;transform:translateY(-2px);}
-    .btn-blue{background:var(--accent-blue);color:var(--text-white);}
-    .btn-blue:hover{background:var(--accent-blue-hover);transform:translateY(-2px);}
-    .btn-orange{background:var(--color-warning);color:var(--text-white);}
-    .btn-orange:hover{background:#ea580c;transform:translateY(-2px);}
-    .btn-gray{background:#64748b;color:var(--text-white);}
-    .btn-gray:hover{background:#475569;transform:translateY(-2px);}
-    .btn-export{background:var(--accent-gold);color:var(--text-white);}
-    .btn-export:hover{background:#d97706;transform:translateY(-2px);}
-    .btn-purple{background:#8b5cf6;color:var(--text-white);}
-    .btn-purple:hover{background:#7c3aed;transform:translateY(-2px);}
+    /* 按钮组 - 扁平样式 */
+    .calc-buttons{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;}
+    .btn-green{background:#10b981;color:#fff;}
+    .btn-green:hover{background:#059669;}
+    .btn-blue{background:#3b82f6;color:#fff;}
+    .btn-blue:hover{background:#2563eb;}
+    .btn-orange{background:#f97316;color:#fff;}
+    .btn-orange:hover{background:#ea580c;}
+    .btn-gray{background:#64748b;color:#fff;}
+    .btn-gray:hover{background:#475569;}
+    .btn-export{background:#f59e0b;color:#fff;}
+    .btn-export:hover{background:#d97706;}
+    .btn-purple{background:#8b5cf6;color:#fff;}
+    .btn-purple:hover{background:#7c3aed;}
     
-    /* 消息框 - 优化视觉效果 */
-    .error,.success{
+    /* 消息框 - 扁平设计 */
+    .error,.success,#policySuccessMsg{
       display:none;
-      margin:16px 0;
-      padding:16px 20px;
-      border-radius:12px;
+      margin:12px 0;
+      padding:10px 14px;
+      border-radius:4px;
       font-size:.875em;
-      font-weight:600;
-      border-left:4px solid;
+      border-left:3px solid;
     }
     .error{
-      background:var(--color-danger-light);
-      border-color:var(--color-danger);
-      color:#991B1B;
+      background:#fee;
+      border-color:#dc2626;
+      color:#991b1b;
     }
-    .success{
-      background:var(--color-success-light);
-      border-color:var(--color-success);
-      color:#065F46;
+    .success,#policySuccessMsg{
+      background:#d1fae5;
+      border-color:#10b981;
+      color:#065f46;
     }
     
-    /* 结果区块 */
+    /* 结果区块 - 扁平设计 */
     .results-block{
-      margin-top:24px;
-      background:var(--bg-card);
-      border:2px solid var(--border-light);
-      border-radius:16px;
-      padding:24px;
-      box-shadow:var(--shadow-lg);
+      margin-top:16px;
+      background:#fff;
+      border:1px solid #e2e8f0;
+      border-radius:6px;
+      padding:16px;
     }
     .results-header{
       display:flex;
       flex-wrap:wrap;
-      gap:16px;
+      gap:12px;
       align-items:center;
       justify-content:space-between;
-      margin-bottom:20px;
-      padding-bottom:16px;
-      border-bottom:2px solid var(--border-light);
+      margin-bottom:14px;
+      padding-bottom:12px;
+      border-bottom:1px solid #e2e8f0;
     }
     .results-header h3{
       margin:0;
-      font-size:1.25rem;
-      color:var(--text-primary);
+      font-size:1.1rem;
+      color:#1e293b;
       display:flex;
       align-items:center;
-      gap:10px;
+      gap:8px;
     }
     .results-header h3 span{
-      background:var(--accent-blue);
-      padding:4px 12px;
-      font-size:.7em;
-      color:var(--text-white);
-      font-weight:700;
-      border-radius:20px;
+      background:#3b82f6;
+      padding:2px 10px;
+      font-size:.75em;
+      color:#fff;
+      font-weight:600;
+      border-radius:12px;
     }
-    .export-buttons{display:flex;flex-wrap:wrap;gap:10px;}
+    .export-buttons{display:flex;flex-wrap:wrap;gap:8px;}
     
-    /* 表格 - 现代化设计 */
+    /* 表格 - 扁平设计 */
     table{width:100%;border-collapse:separate;border-spacing:0;font-size:.875rem;}
-    th,td{border:1px solid var(--border-light);padding:12px 14px;vertical-align:top;}
+    th,td{border:1px solid #e2e8f0;padding:8px 10px;vertical-align:top;}
     th{
-      background:linear-gradient(180deg,var(--accent-blue),var(--accent-blue-hover));
-      color:var(--text-white);
+      background:#3b82f6;
+      color:#fff;
       position:sticky;
       top:0;
       z-index:3;
       text-align:center;
       font-weight:600;
-      font-size:.85em;
-      text-transform:uppercase;
-      letter-spacing:.5px;
+      font-size:.8em;
     }
-    th:first-child{border-top-left-radius:10px;}
-    th:last-child{border-top-right-radius:10px;}
-    tbody tr{transition:all .2s ease;}
-    tbody tr:nth-child(even){background:rgba(0,0,0,.02);}
-    tbody tr:hover{background:var(--accent-blue-light);transform:scale(1.01);box-shadow:var(--shadow-sm);}
+    th:first-child{border-top-left-radius:4px;}
+    th:last-child{border-top-right-radius:4px;}
+    tbody tr:nth-child(even){background:#f8fafc;}
+    tbody tr:hover{background:#e0f2fe;}
     
-    /* 套餐组 - 精致卡片设计 */
+    /* 套餐组 - 扁平设计 */
     .package-group{
-      border:2px solid var(--border-light);
-      border-radius:12px;
-      background:var(--bg-card);
-      margin-bottom:10px;
+      border:1px solid #cbd5e1;
+      border-radius:4px;
+      background:#fff;
+      margin-bottom:8px;
       overflow:hidden;
-      transition:all .3s ease;
     }
-    .package-group:hover{border-color:var(--accent-blue);box-shadow:var(--shadow-md);}
+    .package-group:hover{border-color:#3b82f6;}
     .package-header{
-      background:linear-gradient(135deg,var(--accent-blue-light),#e0f2fe);
-      padding:10px 16px;
+      background:#dbeafe;
+      padding:8px 12px;
       font-size:.875em;
-      color:var(--accent-blue);
-      font-weight:700;
+      color:#1e40af;
+      font-weight:600;
       display:flex;
       justify-content:space-between;
       align-items:center;
@@ -175,237 +210,229 @@
     .product-row{
       display:flex;
       justify-content:space-between;
-      gap:16px;
-      padding:10px 16px;
-      border-top:1px solid var(--border-light);
+      gap:12px;
+      padding:8px 12px;
+      border-top:1px solid #e2e8f0;
       font-size:.875em;
     }
-    .product-row:nth-child(even){background:rgba(0,0,0,.02);}
+    .product-row:nth-child(even){background:#f8fafc;}
     .commission-highlight{
-      background:var(--color-success);
-      color:var(--text-white);
-      padding:4px 12px;
-      border-radius:20px;
-      font-weight:700;
+      background:#10b981;
+      color:#fff;
+      padding:3px 10px;
+      border-radius:12px;
+      font-weight:600;
       font-size:.75em;
     }
     
-    /* 提示框 - 统一设计语言 */
+    /* 提示框 - 扁平设计 */
     .warn-box{
-      background:rgba(251,191,36,.1);
-      border-left:4px solid var(--color-warning);
-      border-radius:12px;
-      padding:16px 20px;
+      background:#fef3c7;
+      border-left:3px solid #f59e0b;
+      border-radius:4px;
+      padding:10px 14px;
       font-size:.875em;
-      line-height:1.7;
+      line-height:1.6;
       color:#78350f;
-      margin-top:16px;
+      margin-top:12px;
     }
     .notice-box{
-      background:rgba(59,130,246,.1);
-      border-left:4px solid var(--accent-blue);
-      border-radius:12px;
-      padding:16px 20px;
+      background:#dbeafe;
+      border-left:3px solid #3b82f6;
+      border-radius:4px;
+      padding:10px 14px;
       font-size:.875em;
-      line-height:1.7;
+      line-height:1.6;
       color:#1e3a8a;
-      margin-top:16px;
+      margin-top:12px;
     }
     .step-notice{
-      background:rgba(251,191,36,.1);
-      border-left:4px solid var(--color-warning);
-      border-radius:12px;
-      padding:16px 20px;
-      margin-top:16px;
+      background:#fef3c7;
+      border-left:3px solid #f59e0b;
+      border-radius:4px;
+      padding:10px 14px;
+      margin-top:12px;
       font-size:.875em;
-      line-height:1.7;
+      line-height:1.6;
       color:#78350f;
     }
-    .step-notice h4{margin:0 0 10px;color:var(--color-warning);font-size:1em;font-weight:700;}
+    .step-notice h4{margin:0 0 8px;color:#f59e0b;font-size:.95em;font-weight:600;}
     
-    /* 全局导出 - 统一主题色 */
+    /* 全局导出 - 扁平设计 */
     .global-export{
-      background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,191,36,.05));
-      border:2px solid var(--accent-gold);
-      border-radius:16px;
-      padding:28px 32px;
-      margin-top:32px;
+      background:#fef3c7;
+      border:1px solid #f59e0b;
+      border-radius:6px;
+      padding:20px 24px;
+      margin-top:20px;
       text-align:center;
     }
-    .global-export h3{margin:0 0 12px;color:var(--accent-gold);font-size:1.4em;font-weight:700;}
-    .global-export p{margin:0 0 20px;color:var(--text-secondary);font-size:.9em;}
+    .global-export h3{margin:0 0 10px;color:#d97706;font-size:1.2em;font-weight:600;}
+    .global-export p{margin:0 0 14px;color:#64748b;font-size:.9em;}
     
     /* 修复标记 */
     .fix-badge{
       display:inline-block;
-      background:var(--color-warning);
-      color:var(--text-white);
-      padding:4px 12px;
-      border-radius:20px;
+      background:#f59e0b;
+      color:#fff;
+      padding:3px 10px;
+      border-radius:12px;
       font-size:.7em;
-      font-weight:700;
-      margin-left:10px;
+      font-weight:600;
+      margin-left:8px;
     }
     
-    /* 政策说明 - 统一卡片设计 */
+    /* 政策说明 - 扁平设计 */
     .policy-explain{
-      background:var(--bg-card);
-      border:2px solid var(--border-light);
-      border-radius:16px;
-      padding:24px 28px;
-      margin-top:24px;
-      box-shadow:var(--shadow-md);
+      background:#fff;
+      border:1px solid #cbd5e1;
+      border-radius:6px;
+      padding:16px 20px;
+      margin-top:16px;
+      display:none;
     }
+    .policy-explain.expanded{display:block;}
     .policy-explain h3{
-      margin:0 0 20px;
-      color:var(--accent-blue);
-      font-size:1.2em;
+      margin:0 0 14px;
+      color:#3b82f6;
+      font-size:1.1em;
       display:flex;
       align-items:center;
-      gap:10px;
-      padding-bottom:12px;
-      border-bottom:2px solid var(--border-light);
+      gap:8px;
+      padding-bottom:10px;
+      border-bottom:1px solid #e2e8f0;
     }
-    .policy-section{margin-bottom:28px;}
+    .policy-section{margin-bottom:20px;}
     .policy-section:last-child{margin-bottom:0;}
     .policy-section h4{
-      margin:0 0 16px;
-      color:var(--text-primary);
-      font-size:1em;
-      padding-bottom:8px;
-      border-bottom:2px solid var(--accent-blue-light);
-      font-weight:700;
+      margin:0 0 12px;
+      color:#1e293b;
+      font-size:.95em;
+      padding-bottom:6px;
+      border-bottom:1px solid #cbd5e1;
+      font-weight:600;
     }
     .policy-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-      gap:14px;
-      margin-top:14px;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:10px;
+      margin-top:10px;
     }
     .policy-card{
-      background:var(--bg-card);
-      border:2px solid var(--border-light);
-      border-radius:12px;
-      padding:16px 18px;
-      transition:all .3s ease;
+      background:#f8fafc;
+      border:1px solid #cbd5e1;
+      border-radius:4px;
+      padding:12px 14px;
     }
     .policy-card:hover{
-      border-color:var(--accent-blue);
-      box-shadow:var(--shadow-md);
-      transform:translateY(-2px);
+      border-color:#3b82f6;
     }
     .policy-card .title{
-      font-weight:700;
-      color:var(--accent-blue);
+      font-weight:600;
+      color:#3b82f6;
       font-size:.9em;
-      margin-bottom:8px;
+      margin-bottom:6px;
       display:flex;
       align-items:center;
     }
     .policy-card .priority{
-      background:var(--accent-blue);
-      color:var(--text-white);
-      padding:3px 10px;
-      border-radius:12px;
-      font-size:.75em;
+      background:#3b82f6;
+      color:#fff;
+      padding:2px 8px;
+      border-radius:10px;
+      font-size:.7em;
       margin-left:auto;
     }
     .policy-card .condition{
-      color:var(--text-secondary);
+      color:#64748b;
       font-size:.85em;
-      line-height:1.6;
-      margin:8px 0;
+      line-height:1.5;
+      margin:6px 0;
     }
     .policy-card .reward{
-      background:var(--color-success);
-      color:var(--text-white);
-      padding:6px 12px;
-      border-radius:8px;
+      background:#10b981;
+      color:#fff;
+      padding:4px 10px;
+      border-radius:4px;
       font-size:.85em;
-      font-weight:700;
+      font-weight:600;
       display:inline-block;
-      margin-top:6px;
+      margin-top:4px;
     }
     .policy-card .note{
-      color:var(--color-warning);
+      color:#f59e0b;
       font-size:.75em;
-      margin-top:6px;
+      margin-top:4px;
       font-style:italic;
     }
     
     /* 套餐列表 */
     .old-package-list,.activity-model-list{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
-      gap:12px;
-      margin-top:14px;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:10px;
+      margin-top:10px;
     }
     .old-package-item,.activity-model-item{
-      background:var(--bg-card);
-      border-left:4px solid var(--accent-blue);
-      border-radius:8px;
-      padding:14px 16px;
+      background:#f8fafc;
+      border-left:3px solid #3b82f6;
+      border-radius:4px;
+      padding:10px 12px;
       font-size:.875em;
-      line-height:1.7;
-      transition:all .3s ease;
-      border:2px solid var(--border-light);
+      line-height:1.6;
+      border:1px solid #cbd5e1;
     }
     .old-package-item:hover,.activity-model-item:hover{
-      border-left-color:var(--accent-gold);
-      box-shadow:var(--shadow-sm);
-      transform:translateX(4px);
+      border-left-color:#f59e0b;
     }
     .old-package-item strong,.activity-model-item strong{
-      color:var(--accent-blue);
+      color:#3b82f6;
       display:block;
-      margin-bottom:6px;
-      font-size:1.05em;
+      margin-bottom:4px;
+      font-size:1em;
     }
     .activity-model-item.threshold-model{
-      border-left-color:var(--color-success);
+      border-left-color:#10b981;
     }
     .activity-model-item.threshold-model:hover{
-      border-left-color:var(--accent-gold);
+      border-left-color:#f59e0b;
     }
     .activity-model-item small{
-      color:var(--text-tertiary);
+      color:#94a3b8;
       font-size:.85em;
     }
     .activity-model-item .threshold-note{
-      color:var(--color-success);
+      color:#10b981;
       font-weight:600;
     }
     .activity-model-explain{
-      background:rgba(251,191,36,.1);
-      border-left:4px solid var(--color-warning);
-      border-radius:8px;
-      padding:12px 16px;
+      background:#fef3c7;
+      border-left:3px solid #f59e0b;
+      border-radius:4px;
+      padding:10px 12px;
       font-size:.85em;
-      margin:12px 0;
+      margin:10px 0;
     }
     .activity-model-explain strong{
-      color:var(--color-warning);
+      color:#f59e0b;
       display:block;
-      margin-bottom:6px;
+      margin-bottom:4px;
     }
     
     /* 折叠按钮 */
     .toggle-btn{
-      background:var(--accent-blue);
-      color:var(--text-white);
+      background:#3b82f6;
+      color:#fff;
       border:none;
-      padding:10px 20px;
-      border-radius:10px;
+      padding:8px 16px;
+      border-radius:4px;
       font-size:.875em;
       cursor:pointer;
-      margin-top:12px;
-      transition:all .3s ease;
-      font-weight:600;
+      margin-top:10px;
+      font-weight:500;
     }
     .toggle-btn:hover{
-      background:var(--accent-blue-hover);
-      transform:translateY(-2px);
-      box-shadow:var(--shadow-md);
+      background:#2563eb;
     }
     .collapsible-content{
       max-height:0;
@@ -413,24 +440,64 @@
       transition:max-height .4s ease;
     }
     .collapsible-content.expanded{max-height:3000px;}
+    .toggle-policy-btn{
+      background:#f59e0b;
+      color:#fff;
+      border:none;
+      padding:8px 16px;
+      border-radius:4px;
+      font-size:.875em;
+      cursor:pointer;
+      margin-top:8px;
+      font-weight:500;
+    }
+    .toggle-policy-btn:hover{
+      background:#d97706;
+    }
     
-    .inline-note{font-size:.8em;color:var(--text-tertiary);margin-left:8px;font-style:italic;}
-    .mini-desc{font-size:.9em;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;}
+    .inline-note{font-size:.8em;color:#94a3b8;margin-left:6px;font-style:italic;}
+    .mini-desc{font-size:.9em;color:#64748b;margin-bottom:10px;line-height:1.5;}
     .file-input{display:none;}
     
-    /* 上传区域美化 */
-    .upload-icon{font-size:3.2em;margin-bottom:8px;}
-    .upload-text{font-weight:600;letter-spacing:1px;margin:8px 0;color:var(--text-primary);}
-    .upload-hint{color:var(--text-tertiary);font-size:.75em;margin-top:12px;}
-    .loading-text{font-size:.75em;color:var(--text-tertiary);margin-top:8px;}
+    /* 上传区域扁平化 */
+    .upload-icon{font-size:2.8em;margin-bottom:6px;}
+    .upload-text{font-weight:500;margin:6px 0;color:#1e293b;}
+    .upload-hint{color:#94a3b8;font-size:.75em;margin-top:8px;}
+    .loading-text{font-size:.75em;color:#94a3b8;margin-top:6px;}
     
     /* 表格容器 */
     .table-container{
-      max-height:520px;
+      max-height:480px;
       overflow:auto;
-      border:2px solid var(--border-light);
-      border-radius:14px;
-      box-shadow:var(--shadow-sm);
+      border:1px solid #cbd5e1;
+      border-radius:4px;
+    }
+    
+    /* 可折叠区域容器 */
+    .collapsible-section{
+      margin-top:12px;
+    }
+    .section-toggle-header{
+      cursor:pointer;
+      padding:10px 14px;
+      background:#f1f5f9;
+      border:1px solid #cbd5e1;
+      border-radius:4px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-weight:500;
+      color:#1e293b;
+    }
+    .section-toggle-header:hover{
+      background:#e2e8f0;
+    }
+    .section-toggle-content{
+      display:none;
+      margin-top:8px;
+    }
+    .section-toggle-content.expanded{
+      display:block;
     }
     
     @media (max-width:880px){
@@ -457,12 +524,11 @@
     </div>
     <div class="priority-notice">
       <h3>⚠️ 重要说明</h3>
-      <div>• 这是第一步活动套餐计算，结果需导入主工具继续处理</div>
-      <div>• 已对【旧套餐匹配】算法进行"按客户+套餐整体占用"修复，避免同一产品被拆到不同套餐</div>
-      <div>• 同一条明细（行）只会被一个旧套餐占用</div>
+      <div>• 活动套餐前置计算，结果需导入主工具继续处理 • 旧套餐算法已修复，确保同一明细只进一个套餐</div>
     </div>
     <div class="nav-tabs">
-      <button class="active" onclick="scrollToAnchor('uploadSection', this)">数据上传</button>
+      <button class="active" onclick="scrollToAnchor('policyConfigSection', this)">政策配置</button>
+      <button onclick="scrollToAnchor('uploadSection', this)">数据上传</button>
       <button onclick="scrollToAnchor('mappingSection', this)">字段映射</button>
       <button onclick="scrollToAnchor('oldResultsSection', this)">旧套餐</button>
       <button onclick="scrollToAnchor('comboResultsSection', this)">套餐政策</button>
@@ -471,6 +537,32 @@
     </div>
   </div>
   <div class="tool-content">
+    <!-- 政策配置上传 -->
+    <div class="section">
+      <div class="collapsible-section">
+        <div class="section-toggle-header" onclick="togglePolicyConfig()">
+          <span>⚙️ 政策配置文件 <span class="inline-note">可选</span></span>
+          <span id="policyConfigToggleIcon">▼</span>
+        </div>
+        <div class="section-toggle-content" id="policyConfigSection">
+      <div class="upload-area" onclick="document.getElementById('policyFileInput').click()" id="policyUploadArea" style="border-color:#10b981;">
+        <div class="upload-icon">⚙️</div>
+        <p class="upload-text">上传政策配置文件（可选）</p>
+        <p class="upload-hint">下载模板 → <a href="#" onclick="downloadPolicyTemplate();return false;" style="color:#10b981;font-weight:600;">点击下载Excel模板</a></p>
+      </div>
+      <input type="file" id="policyFileInput" class="file-input" accept=".xlsx,.xls">
+      <div class="success" id="policySuccessMsg"></div>
+      <div id="policyStatusBox" style="display:none;background:#e0f2fe;border-left:4px solid #0ea5e9;border-radius:8px;padding:12px 16px;margin-top:12px;font-size:.85em;">
+        <strong style="color:#0369a1;">📊 当前配置状态：</strong>
+        <span id="policyStatusText" style="color:#0c4a6e;"></span>
+      </div>
+      <div class="notice-box" style="margin-top:12px;">
+        <strong>说明：</strong>不上传则使用默认配置 • 上传后替换所有规则 • 配置自动保存到浏览器
+      </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 上传 -->
     <div class="section" id="uploadSection">
       <h2>📁 上传数据文件 <span class="inline-note">支持 .xlsx / .xls</span></h2>
@@ -526,17 +618,13 @@
         <button class="btn btn-gray" onclick="rebuildBaseData()">♻️ 重新解析数据</button>
       </div>
       <div class="warn-box">
-        说明：<br>
-        1）三个按钮互不影响，可分别多次计算与导出。<br>
-        2）套餐政策 & 活动机型政策依赖"大类型"字段。<br>
-        3）组合套餐优先级：九件套 > 五件套 > 组合套餐1（防止重复计套）。<br>
-        4）活动机型阶梯：达阈值后全量计提（非增量）。<br>
-        5）旧套餐修复：同一套餐内所有产品统一标记，不再出现"一半属于套餐1 一半属于套餐2"的错配。<br>
+        <strong>快速说明：</strong>三种计算可独立进行 • 套餐/活动政策需要"大类型"字段 • 组合套餐按优先级匹配（九件套>五件套>组合1）
       </div>
+      <button class="toggle-policy-btn" onclick="togglePolicyExplain()">📋 查看详细政策说明</button>
 
       <!-- 政策详细说明 -->
-      <div class="policy-explain">
-        <h3>📋 套餐政策详细说明 <span class="inline-note">（点击按钮展开查看详情）</span></h3>
+      <div class="policy-explain" id="policyExplainSection">
+        <h3>📋 套餐政策详细说明</h3>
         
         <!-- 组合套餐政策 -->
         <div class="policy-section">
@@ -791,14 +879,7 @@
           </table>
         </div>
         <div class="notice-box">
-          修复要点：<br>
-          • 采用"资源占用"方式，同一个明细行只会进入一个旧套餐。<br>
-          • 套餐判断按"客户+所需 SKU 全部存在"一次性确立，避免拆散。<br>
-          • 若同一个组合能匹配多种旧套餐规则，按规则列表顺序优先匹配第一个并占用。<br>
-        </div>
-        <div class="step-notice">
-          <h4>📋 下一步操作</h4>
-          导出后导入主提成计算工具继续后续计算，文件已包含占用标记，避免重复计算。
+          <strong>修复要点：</strong>同一明细只进一个旧套餐 • 按客户+SKU整体匹配 • 避免拆散和重复
         </div>
       </div>
     </div>
@@ -830,11 +911,7 @@
           </table>
         </div>
         <div class="notice-box">
-          优先级：九件套 > 五件套 > 组合套餐1 > 嵌蒸套装；资源按优先级逐层消耗。
-        </div>
-        <div class="step-notice">
-          <h4>📋 下一步操作</h4>
-          导出文件后导入主工具继续处理。
+          <strong>优先级：</strong>九件套 > 五件套 > 组合1 > 嵌蒸套装，资源逐层消耗
         </div>
       </div>
     </div>
@@ -866,11 +943,7 @@
           </table>
         </div>
         <div class="notice-box">
-          阶梯：达阈值全量计；未达=0。仅统计现金类激励。
-        </div>
-        <div class="step-notice">
-          <h4>📋 下一步操作</h4>
-          导出结果导入主工具。
+          <strong>阶梯规则：</strong>达阈值全量计提，未达=0
         </div>
       </div>
     </div>
@@ -884,10 +957,7 @@
           📋 导出全部数据
         </button>
         <div class="notice-box">
-          <strong>说明：</strong><br>
-          • 同一行数据如被多种规则匹配，会在不同列中显示对应的提成信息<br>
-          • 未被任何规则匹配的原始数据也会包含在内<br>
-          • 只有当至少有一种计算结果存在时，该按钮才可点击
+          <strong>说明：</strong>合并所有计算结果到一个文件 • 包含原始数据 • 至少有一种结果才可导出
         </div>
       </div>
     </div>
@@ -959,7 +1029,25 @@
     /***************** 初始化 *****************/
     document.addEventListener('DOMContentLoaded', () => {
       setupFileUpload();
+      setupPolicyFileUpload();
       updateExportAllButton();
+      
+      // 尝试从本地存储加载配置
+      const hasCustomConfig = loadPolicyFromLocalStorage();
+      
+      // 应用保存的折叠状态
+      applySavedCollapseState();
+      
+      // 初始化时显示配置
+      setTimeout(()=>{
+        refreshPolicyDisplay();
+        updatePolicyStatus(hasCustomConfig);
+        
+        // 如果加载了自定义配置，显示提示
+        if(hasCustomConfig){
+          showPolicySuccess('已自动加载上次保存的自定义配置');
+        }
+      }, 100);
     });
 
     function setupFileUpload(){
@@ -982,6 +1070,353 @@
           uploadArea.classList.remove('dragover');
         });
       });
+    }
+
+    function setupPolicyFileUpload(){
+      const policyInput = document.getElementById('policyFileInput');
+      policyInput.addEventListener('change', handlePolicyFileSelect);
+    }
+
+    function handlePolicyFileSelect(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        try{
+          const data = new Uint8Array(ev.target.result);
+          const wb = XLSX.read(data,{type:'array'});
+          
+          // 解析旧套餐规则 Sheet
+          if(wb.SheetNames.includes('旧套餐规则')){
+            const ws1 = wb.Sheets['旧套餐规则'];
+            const jsonData = XLSX.utils.sheet_to_json(ws1);
+            oldPackageRules.length = 0;
+            jsonData.forEach(row=>{
+              const products = [];
+              const prices = {};
+              for(let i=1;i<=4;i++){
+                const prod = row['产品'+i];
+                const price = row['价格'+i];
+                if(prod && prod.toString().trim()){
+                  products.push(prod.toString().trim());
+                  if(price) prices[prod.toString().trim()] = parseFloat(price)||0;
+                }
+              }
+              if(products.length>0){
+                oldPackageRules.push({
+                  id: parseInt(row['套餐编号'])||oldPackageRules.length+1,
+                  products,
+                  prices,
+                  packagePrice: parseFloat(row['套餐价'])||0,
+                  commission: parseFloat(row['提成金额'])||0
+                });
+              }
+            });
+          }
+
+          // 解析组合套餐政策 Sheet
+          if(wb.SheetNames.includes('组合套餐政策')){
+            const ws2 = wb.Sheets['组合套餐政策'];
+            const jsonData = XLSX.utils.sheet_to_json(ws2);
+            comboPolicyDefs.length = 0;
+            jsonData.forEach(row=>{
+              const categoriesRequired = [];
+              let groupA = [];
+              let groupB = [];
+              
+              for(let i=1;i<=7;i++){
+                const cat = row['必需品类'+i];
+                if(cat && cat.toString().trim()){
+                  categoriesRequired.push(cat.toString().trim());
+                }
+              }
+              
+              // 处理特殊说明
+              const special = row['特殊说明']?row['特殊说明'].toString():'';
+              if(special.includes('groupA:')){
+                const match = special.match(/groupA:\s*\[(.*?)\]/);
+                if(match) groupA = match[1].split(',').map(s=>s.trim());
+              }
+              if(special.includes('groupB:')){
+                const match = special.match(/groupB:\s*\[(.*?)\]/);
+                if(match) groupB = match[1].split(',').map(s=>s.trim());
+              }
+              
+              const def = {
+                id: row['套餐名称'],
+                priority: parseInt(row['优先级'])||99,
+                commissionPerSet: parseFloat(row['单套激励'])||0,
+                categoriesRequired
+              };
+              
+              if(groupA.length>0) def.groupA = groupA;
+              if(groupB.length>0) def.groupB = groupB;
+              
+              // 处理特定型号套装
+              if(special.includes('specificModels:')){
+                const match = special.match(/specificModels:\s*\[(.*?)\]/);
+                if(match) def.specificModels = match[1].split(',').map(s=>s.trim());
+              }
+              
+              comboPolicyDefs.push(def);
+            });
+          }
+
+          // 解析活动机型政策 Sheet
+          if(wb.SheetNames.includes('活动机型政策')){
+            const ws3 = wb.Sheets['活动机型政策'];
+            const jsonData = XLSX.utils.sheet_to_json(ws3);
+            Object.keys(activityModels).forEach(k=>delete activityModels[k]);
+            jsonData.forEach(row=>{
+              const model = row['机型型号'];
+              if(model && model.toString().trim()){
+                activityModels[model.toString().trim()] = {
+                  type: row['类型']||'其他',
+                  mode: row['激励模式']||'flat',
+                  perUnit: parseFloat(row['单台激励'])||0,
+                  threshold: row['阈值']?parseInt(row['阈值']):undefined,
+                  note: row['说明备注']||''
+                };
+              }
+            });
+          }
+
+          // 保存配置到本地存储
+          savePolicyToLocalStorage();
+          
+          // 更新页面显示
+          refreshPolicyDisplay();
+          
+          // 更新配置状态
+          updatePolicyStatus(true);
+          
+          // 显示详细的更新信息
+          const msg = `政策配置加载成功并已保存！\n已更新：旧套餐${oldPackageRules.length}个，组合政策${comboPolicyDefs.length}个，活动机型${Object.keys(activityModels).length}个`;
+          showPolicySuccess(msg);
+        }catch(err){
+          showError('政策文件解析失败：'+err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // 动态刷新页面上的政策说明显示
+    function refreshPolicyDisplay(){
+      // 更新旧套餐列表
+      const oldPackageList = document.querySelector('#oldPackageDetail .old-package-list');
+      if(oldPackageList){
+        oldPackageList.innerHTML = '';
+        oldPackageRules.forEach(rule=>{
+          const div = document.createElement('div');
+          div.className = 'old-package-item';
+          div.innerHTML = `
+            <strong>套餐${rule.id}：${rule.commission}元</strong>
+            ${rule.products.join(' + ')}<br>
+            套餐价：${rule.packagePrice}元
+          `;
+          oldPackageList.appendChild(div);
+        });
+      }
+      
+      // 更新组合套餐政策卡片
+      const policyGrid = document.querySelector('.policy-explain .policy-grid');
+      if(policyGrid){
+        policyGrid.innerHTML = '';
+        comboPolicyDefs.slice().sort((a,b)=>a.priority-b.priority).forEach(def=>{
+          const card = document.createElement('div');
+          card.className = 'policy-card';
+          
+          let conditionHtml = '';
+          if(def.specificModels){
+            conditionHtml = `<strong>匹配条件：</strong>特定型号组合<br><small>${def.specificModels.join(' + ')}</small>`;
+          } else {
+            const cats = def.categoriesRequired.map(c=>{
+              if(c==='GROUP_A') return 'A组('+(def.groupA||[]).join('/')+')';
+              if(c==='GROUP_B') return 'B组('+(def.groupB||[]).join('/')+')';
+              return c;
+            }).join(' + ');
+            conditionHtml = `<strong>匹配条件：</strong>${cats}`;
+          }
+          
+          card.innerHTML = `
+            <div class="title">
+              <span>${def.id}</span>
+              <span class="priority">优先级 ${def.priority}</span>
+            </div>
+            <div class="condition">${conditionHtml}</div>
+            <div class="reward">💰 激励：${def.commissionPerSet}元/套</div>
+          `;
+          policyGrid.appendChild(card);
+        });
+      }
+      
+      // 更新活动机型列表
+      const activityList = document.querySelector('#activityModelDetail .activity-model-list');
+      if(activityList){
+        activityList.innerHTML = '';
+        Object.entries(activityModels).forEach(([model, config])=>{
+          const div = document.createElement('div');
+          div.className = config.mode==='threshold'?'activity-model-item threshold-model':'activity-model-item';
+          
+          let rewardText = '';
+          if(config.mode==='flat'){
+            rewardText = `加提${config.perUnit}元/台`;
+          } else {
+            rewardText = `≥${config.threshold}台时，全量${config.perUnit}元/台`;
+          }
+          
+          div.innerHTML = `
+            <strong>${model}（${config.type}）</strong>
+            ${rewardText}<br>
+            <small>${config.note}</small>
+          `;
+          activityList.appendChild(div);
+        });
+      }
+    }
+
+    function showPolicySuccess(msg){
+      const el = document.getElementById('policySuccessMsg');
+      el.innerHTML = msg.replace(/\n/g, '<br>');
+      el.style.display='block';
+      setTimeout(()=>{ el.style.display='none'; },8000);
+    }
+
+    function updatePolicyStatus(isCustom){
+      const statusBox = document.getElementById('policyStatusBox');
+      const statusText = document.getElementById('policyStatusText');
+      
+      if(isCustom){
+        statusText.innerHTML = `使用自定义配置（旧套餐${oldPackageRules.length}个 / 组合政策${comboPolicyDefs.length}个 / 活动机型${Object.keys(activityModels).length}个） <a href="#" onclick="resetToDefaultPolicy();return false;" style="color:#dc2626;margin-left:12px;text-decoration:underline;">恢复默认</a>`;
+        statusBox.style.display = 'block';
+      } else {
+        statusText.innerHTML = `使用默认配置（旧套餐${oldPackageRules.length}个 / 组合政策${comboPolicyDefs.length}个 / 活动机型${Object.keys(activityModels).length}个）`;
+        statusBox.style.display = 'block';
+      }
+    }
+
+    // 保存配置到本地存储
+    function savePolicyToLocalStorage(){
+      try{
+        const policyData = {
+          oldPackageRules: oldPackageRules,
+          comboPolicyDefs: comboPolicyDefs,
+          activityModels: activityModels,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('activityPackagePolicy', JSON.stringify(policyData));
+        console.log('政策配置已保存到本地存储');
+      }catch(err){
+        console.error('保存配置失败:', err);
+      }
+    }
+
+    // 从本地存储加载配置
+    function loadPolicyFromLocalStorage(){
+      try{
+        const saved = localStorage.getItem('activityPackagePolicy');
+        if(!saved) return false;
+        
+        const policyData = JSON.parse(saved);
+        
+        // 恢复旧套餐规则
+        if(policyData.oldPackageRules){
+          oldPackageRules.length = 0;
+          policyData.oldPackageRules.forEach(rule=> oldPackageRules.push(rule));
+        }
+        
+        // 恢复组合套餐政策
+        if(policyData.comboPolicyDefs){
+          comboPolicyDefs.length = 0;
+          policyData.comboPolicyDefs.forEach(def=> comboPolicyDefs.push(def));
+        }
+        
+        // 恢复活动机型政策
+        if(policyData.activityModels){
+          Object.keys(activityModels).forEach(k=>delete activityModels[k]);
+          Object.assign(activityModels, policyData.activityModels);
+        }
+        
+        console.log('已从本地存储加载配置，保存时间:', policyData.timestamp);
+        return true;
+      }catch(err){
+        console.error('加载配置失败:', err);
+        return false;
+      }
+    }
+
+    // 恢复默认配置
+    function resetToDefaultPolicy(){
+      if(!confirm('确定要恢复默认配置吗？这将清除您上传的自定义配置。')){
+        return;
+      }
+      
+      // 清除本地存储
+      localStorage.removeItem('activityPackagePolicy');
+      
+      // 重新加载页面以恢复默认配置
+      location.reload();
+    }
+
+    function downloadPolicyTemplate(){
+      const wb = XLSX.utils.book_new();
+      
+      // Sheet 1: 旧套餐规则
+      const oldPackageData = [
+        ['套餐编号','产品1','价格1','产品2','价格2','产品3','价格3','产品4','价格4','套餐价','提成金额'],
+        [1,'CXW-350-Q2CWI',5678,'JZT-V2B2S',3098,'','','','',5098,300],
+        [2,'CXW-400-Z3AWi',8288,'JZT-V2B2S',3098,'','','','',6788,400],
+        [3,'CXW-350-Q2CWI',5678,'JZT-V2B2S',3098,'DWQ10-SR3HWI',6698,'','',8598,500],
+        [4,'CXW-350-Q2CWi',5678,'JZT-V2B2S',3098,'KZQ45-M1wi',7308,'','',8798,500],
+        [5,'CXW-350-Q2CWI',5398,'JZT-V2B2S',3098,'KZQ45-M1Wi',7308,'DWQ10-SR3HWI',6698,12898,800],
+        [6,'KZQ45-M5wi',9098,'R1600DWWi',5988,'','','','',8299,500],
+        [7,'DWQ15-R3wi',9388,'DR1600HF2',7988,'','','','',10598,600]
+      ];
+      const ws1 = XLSX.utils.aoa_to_sheet(oldPackageData);
+      XLSX.utils.book_append_sheet(wb, ws1, '旧套餐规则');
+      
+      // Sheet 2: 组合套餐政策
+      const comboPolicyData = [
+        ['套餐名称','优先级','单套激励','必需品类1','必需品类2','必需品类3','必需品类4','必需品类5','必需品类6','必需品类7','特殊说明'],
+        ['九件套',1,1000,'烟机','蒸烤','洗碗机','热水器','净水','冰箱','洗护',''],
+        ['五件套',2,500,'热水器','净水','冰箱','洗护','','','',''],
+        ['组合套餐1',3,300,'GROUP_A','净水','热水器','','','','','groupA:[烟机,蒸烤,洗碗机]'],
+        ['嵌蒸套装',4,500,'','','','','','','','specificModels:[ER1600BWi,KZQ45-M1Wi]'],
+        ['A+净热组合',5,200,'GROUP_A','GROUP_B','','','','','','groupA:[烟机,蒸烤,洗碗机] groupB:[净水,热水器]']
+      ];
+      const ws2 = XLSX.utils.aoa_to_sheet(comboPolicyData);
+      XLSX.utils.book_append_sheet(wb, ws2, '组合套餐政策');
+      
+      // Sheet 3: 活动机型政策
+      const activityData = [
+        ['机型型号','类型','激励模式','单台激励','阈值','说明备注'],
+        ['JSQ31-VJSAI','燃热','flat',100,'','活动期加提100元/台'],
+        ['JSQ31-QJS','燃热','flat',100,'','加提100元/台+赠品'],
+        ['JSQ31-QJSAI','燃热','flat',100,'','加提100元/台+赠品'],
+        ['JSQ33-MJSX','燃热','flat',100,'','加提100元/台+赠品'],
+        ['JSQ40-SJSX','燃热','flat',300,'','加提300元/台+赠品'],
+        ['R1700FWI','净水','threshold',50,5,'≥5台 全量50元/台'],
+        ['DR1600HF2','净水','threshold',100,3,'≥3台 全量100元/台'],
+        ['DR1800HF1','净水','threshold',100,3,'≥3台 全量100元/台'],
+        ['DR1800HF2','净水','threshold',100,3,'≥3台 全量100元/台'],
+        ['DR2000HF1','净水','threshold',100,3,'≥3台 全量100元/台'],
+        ['DR2000HF2','净水','threshold',100,3,'≥3台 全量100元/台'],
+        ['R1800RC9','净水','flat',100,'','加提100元/台'],
+        ['R2300RC9','净水','flat',100,'','加提100元/台'],
+        ['R2500AB1AI','净水','flat',100,'','加提100元/台'],
+        ['R2500RC3','净水','flat',100,'','加提100元/台'],
+        ['CEWH-60GA','其他','flat',100,'','加提100元/台（包销）']
+      ];
+      const ws3 = XLSX.utils.aoa_to_sheet(activityData);
+      XLSX.utils.book_append_sheet(wb, ws3, '活动机型政策');
+      
+      // 设置列宽
+      ws1['!cols'] = [{wch:10},{wch:18},{wch:8},{wch:18},{wch:8},{wch:18},{wch:8},{wch:18},{wch:8},{wch:10},{wch:10}];
+      ws2['!cols'] = [{wch:14},{wch:8},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:40}];
+      ws3['!cols'] = [{wch:16},{wch:8},{wch:10},{wch:10},{wch:8},{wch:30}];
+      
+      XLSX.writeFile(wb, '活动套餐政策配置模板.xlsx');
+      showPolicySuccess('模板下载成功！请在模板基础上修改后上传。\n上传后配置会自动保存，下次打开自动加载。');
     }
 
     function handleFileSelect(e){
@@ -1949,6 +2384,52 @@
         section.classList.remove('expanded');
       } else {
         section.classList.add('expanded');
+      }
+    }
+
+    // 政策配置区域折叠
+    function togglePolicyConfig(){
+      const section = document.getElementById('policyConfigSection');
+      const icon = document.getElementById('policyConfigToggleIcon');
+      const isExpanded = section.classList.contains('expanded');
+      
+      if(isExpanded){
+        section.classList.remove('expanded');
+        icon.textContent = '▼';
+        localStorage.setItem('policyConfigExpanded', 'false');
+      } else {
+        section.classList.add('expanded');
+        icon.textContent = '▲';
+        localStorage.setItem('policyConfigExpanded', 'true');
+      }
+    }
+
+    // 政策详细说明折叠
+    function togglePolicyExplain(){
+      const section = document.getElementById('policyExplainSection');
+      const isExpanded = section.classList.contains('expanded');
+      
+      if(isExpanded){
+        section.classList.remove('expanded');
+      } else {
+        section.classList.add('expanded');
+      }
+      localStorage.setItem('policyExplainExpanded', section.classList.contains('expanded'));
+    }
+
+    // 应用保存的折叠状态
+    function applySavedCollapseState(){
+      // 政策配置区域
+      const policyConfigExpanded = localStorage.getItem('policyConfigExpanded');
+      if(policyConfigExpanded === 'true'){
+        document.getElementById('policyConfigSection').classList.add('expanded');
+        document.getElementById('policyConfigToggleIcon').textContent = '▲';
+      }
+      
+      // 政策详细说明
+      const policyExplainExpanded = localStorage.getItem('policyExplainExpanded');
+      if(policyExplainExpanded === 'true'){
+        document.getElementById('policyExplainSection').classList.add('expanded');
       }
     }
   </script>

@@ -10,268 +10,664 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* 工具特定样式保留 */
-
-        .content {
-            padding: 30px;
+        /* ==================== 布局结构 ==================== */
+        .main-layout {
+            display: flex;
+            gap: 0;
+            min-height: calc(100vh - 48px);
         }
 
-        .step {
-            margin-bottom: 30px;
-            padding: 25px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
+        /* 侧边步骤导航 */
+        .step-navigator {
+            width: 200px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: var(--space-lg);
+            flex-shrink: 0;
+        }
+        
+        /* 可隐藏导航 */
+        @media (max-width: 1200px) {
+            .step-navigator {
+                width: 60px;
+            }
+            .nav-title,
+            .nav-step-content {
+                display: none;
+            }
+            .nav-step {
+                padding: var(--space-sm);
+                justify-content: center;
+            }
         }
 
-        .step-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
+        .nav-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--space-lg);
+        }
+
+        .nav-steps {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .nav-step {
             display: flex;
             align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--transition);
+            text-decoration: none;
+            color: var(--text-primary);
         }
 
-        .step-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+        .nav-step:hover {
+            background: var(--bg-hover);
+        }
+
+        .nav-step.active {
+            background: var(--accent-gold-light);
+            color: var(--accent-blue);
+        }
+
+        .nav-step.completed .nav-step-icon {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .nav-step-icon {
             width: 32px;
             height: 32px;
-            background: #667eea;
-            color: white;
             border-radius: 50%;
-            margin-right: 12px;
-            font-size: 16px;
+            background: var(--bg-secondary);
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+            transition: all var(--transition-normal) var(--transition);
         }
 
-        .file-upload-area {
+        .nav-step.active .nav-step-icon {
+            background: var(--accent-gold);
+            color: var(--accent-blue);
+        }
+
+        .nav-step-content {
+            flex: 1;
+        }
+
+        .nav-step-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .nav-step-subtitle {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            padding: var(--space-lg) var(--space-xl);
+            overflow-x: hidden;
+        }
+
+        /* 步骤区块 */
+        .step-section {
+            margin-bottom: var(--space-xl);
+            scroll-margin-top: var(--space-lg);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .step-header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .step-icon-large {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            background: var(--accent-gold);
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .step-title-group h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .step-subtitle {
+            font-size: 14px;
+            color: var(--text-tertiary);
+        }
+
+        /* 文件上传区域 */
+        .upload-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
+            gap: var(--space-lg);
+            margin-top: var(--space-lg);
         }
 
-        .upload-box {
-            border: 2px dashed #cbd5e0;
-            border-radius: 8px;
-            padding: 15px;
+        .upload-card {
+            border: 2px dashed var(--border-medium);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
             text-align: center;
-            transition: all 0.3s;
-            background: white;
+            background: var(--bg-card);
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--transition);
+            position: relative;
         }
 
-        .upload-box:hover {
-            border-color: #667eea;
-            background: #f7fafc;
+        .upload-card:hover {
+            border-color: var(--accent-gold);
+            background: var(--accent-gold-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        .upload-box.has-file {
-            border-color: #48bb78;
-            background: #f0fff4;
-        }
-
-        .upload-box.optional {
+        .upload-card.dragover {
+            border-color: var(--color-success);
+            background: var(--color-success-light);
             border-style: solid;
-            border-color: #e2e8f0;
         }
 
-        .upload-box.optional:hover {
-            border-color: #a0aec0;
+        .upload-card.has-file {
+            border-color: var(--color-success);
+            background: var(--color-success-light);
+            border-style: solid;
         }
 
-        .upload-box.optional.has-file {
-            border-color: #48bb78;
+        .upload-card.has-file::after {
+            content: '✓';
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            width: 24px;
+            height: 24px;
+            background: var(--color-success);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            animation: checkmark 0.5s ease-out;
         }
 
-        .upload-box label {
-            display: block;
+        @keyframes checkmark {
+            0% { transform: scale(0) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        .upload-card.optional {
+            border-style: solid;
+            border-color: var(--border-light);
+        }
+
+        .upload-card-header {
             font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 8px;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
             font-size: 14px;
         }
 
-        .optional-tag {
+        .upload-tag {
             display: inline-block;
             font-size: 11px;
-            padding: 2px 6px;
-            background: #edf2f7;
-            color: #718096;
-            border-radius: 3px;
-            margin-left: 5px;
+            padding: 2px 8px;
+            background: var(--bg-secondary);
+            color: var(--text-tertiary);
+            border-radius: var(--radius-full);
+            margin-left: var(--space-sm);
+            font-weight: 500;
+        }
+
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: var(--space-sm);
+            opacity: 0.7;
+        }
+
+        .upload-button {
+            margin-top: var(--space-sm);
+        }
+
+        .file-info-display {
+            margin-top: var(--space-sm);
+            color: var(--color-success);
+            font-size: 12px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .sheet-selector-wrapper {
+            margin-top: var(--space-sm);
+            display: none;
+        }
+
+        .sheet-selector-wrapper select {
+            width: 100%;
+            padding: 8px var(--space-md);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            background: var(--bg-card);
         }
 
         .file-input {
             display: none;
         }
 
-        .upload-btn {
-            display: inline-block;
-            padding: 8px 16px;
-            background: #667eea;
-            color: white;
-            border-radius: 6px;
+        /* 折叠面板 */
+        .accordion {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .accordion-item {
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+            overflow: hidden;
+            margin-bottom: var(--space-sm);
+        }
+
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-md) var(--space-lg);
             cursor: pointer;
-            transition: all 0.3s;
-            font-size: 13px;
+            background: var(--bg-card);
+            user-select: none;
         }
 
-        .upload-btn:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
+        .accordion-header:hover {
+            background: var(--bg-hover);
         }
 
-        .file-info {
-            margin-top: 8px;
-            color: #48bb78;
-            font-size: 12px;
-            display: none;
+        .accordion-header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            flex: 1;
         }
 
-        .sheet-selector {
-            margin-top: 8px;
-            display: none;
-        }
-
-        .sheet-selector select {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            font-size: 13px;
-            background: white;
-        }
-
-        .mapping-section {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .mapping-section-title {
+        .accordion-title {
             font-size: 16px;
             font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e2e8f0;
+            color: var(--text-primary);
         }
 
+        .accordion-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .mapping-progress {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            background: var(--bg-secondary);
+            padding: 4px var(--space-md);
+            border-radius: var(--radius-full);
+        }
+
+        .mapping-progress.complete {
+            background: var(--color-success-light);
+            color: var(--color-success);
+        }
+
+        .accordion-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .accordion-content {
+            display: none;
+        }
+
+        .accordion-item.expanded .accordion-content {
+            display: block;
+        }
+
+        .accordion-body {
+            padding: 0 var(--space-lg) var(--space-lg) var(--space-lg);
+        }
+
+        /* 字段映射行 */
         .mapping-grid {
             display: grid;
-            gap: 10px;
+            gap: var(--space-sm);
         }
 
         .mapping-row {
             display: grid;
-            grid-template-columns: 220px 1fr 100px;
-            gap: 12px;
+            grid-template-columns: 200px 1fr auto;
+            gap: var(--space-md);
             align-items: center;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
+            padding: var(--space-md);
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast) var(--transition);
+        }
+
+        .mapping-row:hover {
+            background: var(--bg-hover);
+        }
+
+        .mapping-row.matched {
+            border: 1px solid var(--color-success);
+            background: var(--color-success-light);
         }
 
         .mapping-label {
             font-weight: 500;
-            color: #2d3748;
+            color: var(--text-primary);
             font-size: 14px;
         }
 
         .mapping-row select {
-            padding: 6px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
+            padding: 8px var(--space-md);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
             font-size: 13px;
-            background: white;
+            background: var(--bg-card);
+            transition: all var(--transition-fast) var(--transition);
         }
 
-        .mapping-source {
+        .mapping-row select:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px var(--accent-gold-light);
+        }
+
+        .mapping-source-tag {
             font-size: 11px;
-            color: #718096;
-            padding: 4px 8px;
-            background: #edf2f7;
-            border-radius: 4px;
-            text-align: center;
+            color: var(--text-tertiary);
+            padding: 4px var(--space-sm);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
         }
 
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
+        /* 智能映射按钮 */
+        .smart-mapping-section {
+            margin-top: var(--space-lg);
+            padding: var(--space-lg);
+            background: var(--accent-blue-light);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--accent-blue);
+            border-style: dashed;
+        }
+
+        .smart-mapping-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-lg);
+        }
+
+        .smart-mapping-info {
+            flex: 1;
+        }
+
+        .smart-mapping-title {
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-right: 10px;
+            color: var(--accent-blue);
+            margin-bottom: 4px;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .smart-mapping-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
         }
 
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        /* 结果筛选器 */
+        .result-filters {
+            display: flex;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+            padding: var(--space-lg);
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+            flex-wrap: wrap;
         }
 
-        .btn-success {
-            background: #48bb78;
-            color: white;
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
         }
 
-        .btn-success:hover:not(:disabled) {
-            background: #38a169;
-            transform: translateY(-2px);
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
+            display: block;
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 8px var(--space-md);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            font-size: 14px;
         }
 
-        .result-area {
-            margin-top: 20px;
-            display: none;
+        /* 统计卡片分组 */
+        .stats-section {
+            margin-bottom: var(--space-xl);
         }
 
-        .result-stats {
+        .stats-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--space-md);
+        }
+
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
         }
 
         .stat-card {
-            padding: 18px;
-            background: white;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+            padding: var(--space-md);
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-sm);
+        }
+
+        .stat-icon {
+            font-size: 20px;
         }
 
         .stat-label {
             font-size: 13px;
-            color: #718096;
-            margin-bottom: 5px;
+            color: var(--text-tertiary);
         }
 
         .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2d3748;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
         }
 
+        .stat-percentage {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        /* 表格分页 */
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: var(--space-lg) 0;
+            padding: var(--space-md);
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: var(--text-tertiary);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .page-size-selector select {
+            padding: 6px var(--space-md);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+        }
+
+        /* 诊断信息折叠 */
+        .diagnostics-summary {
+            padding: var(--space-lg);
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+            margin-bottom: var(--space-lg);
+            cursor: pointer;
+            transition: all var(--transition-normal) var(--transition);
+        }
+
+        .diagnostics-summary:hover {
+            box-shadow: var(--shadow-sm);
+        }
+
+        .diagnostics-summary-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .diagnostics-summary-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .diagnostics-badges {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .diagnostics-badge {
+            padding: 4px var(--space-md);
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .diagnostics-badge.error {
+            background: var(--color-danger-light);
+            color: var(--color-danger);
+        }
+
+        .diagnostics-badge.warning {
+            background: var(--color-warning-light);
+            color: var(--color-warning);
+        }
+
+        .diagnostics-badge.success {
+            background: var(--color-success-light);
+            color: var(--color-success);
+        }
+
+        .diagnostics-details {
+            margin-top: var(--space-lg);
+            padding-top: var(--space-lg);
+            border-top: 1px solid var(--border-light);
+            display: none;
+        }
+
+        .diagnostics-summary.expanded .diagnostics-details {
+            display: block;
+        }
+
+        /* 表格优化 */
         .table-container {
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: var(--bg-card);
+        }
+
+        .table-wrapper {
             overflow-x: auto;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            max-height: 70vh;
+            overflow-y: auto;
         }
 
         table {
@@ -280,103 +676,85 @@
         }
 
         th, td {
-            padding: 10px;
+            padding: 10px 12px;
             text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-light);
             font-size: 13px;
-            white-space: nowrap;
         }
 
         th {
-            background: #f7fafc;
+            background: var(--accent-blue);
+            color: white;
             font-weight: 600;
-            color: #2d3748;
             position: sticky;
             top: 0;
+            z-index: 5;
         }
 
-        tr:hover {
-            background: #f7fafc;
+        tbody tr {
+            transition: background-color var(--transition-fast);
         }
 
-        .alert {
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 14px;
+        tbody tr:nth-child(even) {
+            background: var(--bg-primary);
         }
 
-        .alert-info {
-            background: #bee3f8;
-            color: #2c5282;
-            border-left: 4px solid #3182ce;
+        tbody tr:hover {
+            background: var(--bg-hover);
         }
 
-        .alert-warning {
-            background: #feebc8;
-            color: #7c2d12;
-            border-left: 4px solid #ed8936;
-        }
-
-        .alert-danger {
-            background: #fed7d7;
-            color: #742a2a;
-            border-left: 4px solid #f56565;
-        }
-
-        .diagnostics-section {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .diagnostics-title {
-            font-size: 16px;
+        /* 高亮重要列 */
+        td.highlight {
+            background: var(--accent-gold-light);
             font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 10px;
         }
 
-        .diagnostic-item {
-            padding: 8px;
-            margin-bottom: 5px;
-            background: white;
-            border-radius: 4px;
-            font-size: 13px;
-            border-left: 3px solid #ed8936;
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .main-layout {
+                flex-direction: column;
+            }
+
+            .step-navigator {
+                width: 100%;
+                height: auto;
+                position: static;
+                border-right: none;
+                border-bottom: 1px solid var(--border-light);
+            }
+
+            .nav-steps {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .nav-step {
+                flex-shrink: 0;
+            }
         }
 
-        .btn-warning {
-            background: #ed8936;
-            color: white;
-        }
+        @media (max-width: 768px) {
+            .main-content {
+                padding: var(--space-lg);
+            }
 
-        .btn-warning:hover:not(:disabled) {
-            background: #dd6b20;
-            transform: translateY(-2px);
-        }
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+            .result-filters {
+                flex-direction: column;
+            }
 
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #fff;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            margin-right: 8px;
+            .filter-group {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="tool-container">
-        <div class="tool-header" style="position: relative;">
+        <div class="tool-header">
             <a href="../../index.html" class="back-nav">← 返回首页</a>
             <h1>📊 Excel 数据匹配工具</h1>
             <p class="tool-subtitle">智能匹配销售订单、收款、带单费及政策数据</p>
@@ -386,121 +764,243 @@
             </div>
         </div>
 
-        <div class="tool-content">
-            <!-- 步骤1: 上传文件 -->
-            <div class="step">
-                <div class="step-title">
-                    <span class="step-number">1</span>
-                    上传Excel文件
-                </div>
-                <div class="alert alert-info">
-                    <strong>必需：</strong>销售订单表（含累计收款金额字段）。<br>
-                    <strong>可选：</strong>收款单（如订单内无收款数据）、带单费、政策表。<br>
-                    <strong>说明：</strong>政策表会自动加载所有子表；工具会自动跳过Excel前面的空白行。
-                </div>
-                <div class="file-upload-area">
-                    <div class="upload-box" id="salesOrderBox">
-                        <label>销售订单表 <span style="color:#e53e3e;">*</span></label>
-                        <input type="file" id="salesOrderFile" class="file-input" accept=".xlsx,.xls" />
-                        <span class="upload-btn" onclick="document.getElementById('salesOrderFile').click()">
-                            选择文件
-                        </span>
-                        <div class="file-info" id="salesOrderInfo"></div>
-                        <div class="sheet-selector" id="salesOrderSheetSelector">
-                            <select id="salesOrderSheet"></select>
+        <div class="main-layout">
+            <!-- 侧边步骤导航 -->
+            <div class="step-navigator">
+                <div class="nav-title">操作流程</div>
+                <div class="nav-steps">
+                    <a href="#step-upload" class="nav-step active" data-step="1">
+                        <div class="nav-step-icon">1</div>
+                        <div class="nav-step-content">
+                            <div class="nav-step-title">上传文件</div>
+                            <div class="nav-step-subtitle">Excel数据文件</div>
                         </div>
-                    </div>
-
-                    <div class="upload-box optional" id="paymentBox">
-                        <label>收款单表 <span class="optional-tag">可选</span></label>
-                        <input type="file" id="paymentFile" class="file-input" accept=".xlsx,.xls" />
-                        <span class="upload-btn" onclick="document.getElementById('paymentFile').click()">
-                            选择文件
-                        </span>
-                        <div class="file-info" id="paymentInfo"></div>
-                        <div class="sheet-selector" id="paymentSheetSelector">
-                            <select id="paymentSheet"></select>
+                    </a>
+                    <a href="#step-mapping" class="nav-step" data-step="2">
+                        <div class="nav-step-icon">2</div>
+                        <div class="nav-step-content">
+                            <div class="nav-step-title">配置映射</div>
+                            <div class="nav-step-subtitle">字段对应关系</div>
                         </div>
-                    </div>
-
-                    <div class="upload-box optional" id="commissionBox">
-                        <label>带单费表 <span class="optional-tag">可选</span></label>
-                        <input type="file" id="commissionFile" class="file-input" accept=".xlsx,.xls" />
-                        <span class="upload-btn" onclick="document.getElementById('commissionFile').click()">
-                            选择文件
-                        </span>
-                        <div class="file-info" id="commissionInfo"></div>
-                        <div class="sheet-selector" id="commissionSheetSelector">
-                            <select id="commissionSheet"></select>
+                    </a>
+                    <a href="#step-match" class="nav-step" data-step="3">
+                        <div class="nav-step-icon">3</div>
+                        <div class="nav-step-content">
+                            <div class="nav-step-title">执行匹配</div>
+                            <div class="nav-step-subtitle">开始处理数据</div>
                         </div>
-                    </div>
-
-                    <div class="upload-box optional" id="policyBox">
-                        <label>政策表 <span class="optional-tag">可选</span></label>
-                        <input type="file" id="policyFile" class="file-input" accept=".xlsx,.xls" />
-                        <span class="upload-btn" onclick="document.getElementById('policyFile').click()">
-                            选择文件
-                        </span>
-                        <div class="file-info" id="policyInfo"></div>
-                        <div style="margin-top: 8px; font-size: 11px; color: #718096;">
-                            将自动加载所有子表
+                    </a>
+                    <a href="#step-result" class="nav-step" data-step="4">
+                        <div class="nav-step-icon">4</div>
+                        <div class="nav-step-content">
+                            <div class="nav-step-title">查看结果</div>
+                            <div class="nav-step-subtitle">导出处理结果</div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
 
-            <!-- 步骤2: 配置字段映射 -->
-            <div class="step">
-                <div class="step-title">
-                    <span class="step-number">2</span>
-                    配置字段映射
-                </div>
-                <div class="alert alert-info">
-                    请将Excel表格中的列名映射到对应的字段。系统已智能识别并预选，可手动调整。
-                </div>
-                
-                <div id="mappingContainer"></div>
-            </div>
-
-            <!-- 步骤3: 执行匹配 -->
-            <div class="step">
-                <div class="step-title">
-                    <span class="step-number">3</span>
-                    执行匹配
-                </div>
-                <button class="btn btn-primary" id="matchBtn" onclick="performMatch()" disabled>
-                    开始匹配
-                </button>
-            </div>
-
-            <!-- 结果展示 -->
-            <div class="result-area" id="resultArea">
-                <div class="step">
-                    <div class="step-title">
-                        <span class="step-number">✓</span>
-                        匹配结果
-                    </div>
-                    
-                    <div class="result-stats" id="resultStats"></div>
-
-                    <div class="table-container" style="max-height: 600px; overflow-y: auto;">
-                        <table id="resultTable">
-                            <thead>
-                                <tr id="resultTableHeader"></tr>
-                            </thead>
-                            <tbody id="resultTableBody"></tbody>
-                        </table>
+            <!-- 主内容区域 -->
+            <div class="main-content">
+                <!-- 步骤1: 上传文件 -->
+                <section class="step-section" id="step-upload">
+                    <div class="step-header">
+                        <div class="step-header-left">
+                            <div class="step-icon-large">1</div>
+                            <div class="step-title-group">
+                                <h2>上传Excel文件</h2>
+                                <div class="step-subtitle">支持 .xlsx 和 .xls 格式</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div style="margin-top: 20px;">
-                        <button class="btn btn-success" onclick="exportResult()">
-                            导出结果
+                    <div class="alert alert-info">
+                        <strong>📌 必需：</strong>销售订单表（含累计收款金额字段）<br>
+                        <strong>📎 可选：</strong>收款单、带单费、政策表（会自动加载所有子表）
+                    </div>
+
+                    <div class="upload-grid">
+                        <div class="upload-card" id="salesOrderBox" data-type="salesOrder">
+                            <div class="upload-card-header">
+                                销售订单表 <span style="color:var(--color-danger);">*</span>
+                            </div>
+                            <div class="upload-icon">📄</div>
+                            <input type="file" id="salesOrderFile" class="file-input" accept=".xlsx,.xls" />
+                            <button class="btn btn-secondary btn-sm upload-button" onclick="document.getElementById('salesOrderFile').click()">
+                                选择文件
+                            </button>
+                            <div class="file-info-display" id="salesOrderInfo"></div>
+                            <div class="sheet-selector-wrapper" id="salesOrderSheetSelector">
+                                <select id="salesOrderSheet"></select>
+                            </div>
+                        </div>
+
+                        <div class="upload-card optional" id="paymentBox" data-type="payment">
+                            <div class="upload-card-header">
+                                收款单表 <span class="upload-tag">可选</span>
+                            </div>
+                            <div class="upload-icon">💰</div>
+                            <input type="file" id="paymentFile" class="file-input" accept=".xlsx,.xls" />
+                            <button class="btn btn-secondary btn-sm upload-button" onclick="document.getElementById('paymentFile').click()">
+                                选择文件
+                            </button>
+                            <div class="file-info-display" id="paymentInfo"></div>
+                            <div class="sheet-selector-wrapper" id="paymentSheetSelector">
+                                <select id="paymentSheet"></select>
+                            </div>
+                        </div>
+
+                        <div class="upload-card optional" id="commissionBox" data-type="commission">
+                            <div class="upload-card-header">
+                                带单费表 <span class="upload-tag">可选</span>
+                            </div>
+                            <div class="upload-icon">💵</div>
+                            <input type="file" id="commissionFile" class="file-input" accept=".xlsx,.xls" />
+                            <button class="btn btn-secondary btn-sm upload-button" onclick="document.getElementById('commissionFile').click()">
+                                选择文件
+                            </button>
+                            <div class="file-info-display" id="commissionInfo"></div>
+                            <div class="sheet-selector-wrapper" id="commissionSheetSelector">
+                                <select id="commissionSheet"></select>
+                            </div>
+                        </div>
+
+                        <div class="upload-card optional" id="policyBox" data-type="policy">
+                            <div class="upload-card-header">
+                                政策表 <span class="upload-tag">可选</span>
+                            </div>
+                            <div class="upload-icon">📋</div>
+                            <input type="file" id="policyFile" class="file-input" accept=".xlsx,.xls" />
+                            <button class="btn btn-secondary btn-sm upload-button" onclick="document.getElementById('policyFile').click()">
+                                选择文件
+                            </button>
+                            <div class="file-info-display" id="policyInfo"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 步骤2: 配置字段映射 -->
+                <section class="step-section" id="step-mapping">
+                    <div class="step-header">
+                        <div class="step-header-left">
+                            <div class="step-icon-large">2</div>
+                            <div class="step-title-group">
+                                <h2>配置字段映射</h2>
+                                <div class="step-subtitle">将Excel列名映射到对应字段</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="smartMappingBtn" onclick="quickSmartMapping()" style="display: none;">
+                            ✨ 一键智能映射
                         </button>
-                        <button class="btn btn-warning" onclick="exportUnmatchedData()">
-                            导出诊断数据
-                        </button>
                     </div>
-                </div>
+
+                    <div class="alert alert-info">
+                        💡 系统已智能识别并预选字段，您可以手动调整。使用"一键智能映射"可自动完成所有配置。
+                    </div>
+
+                    <div id="mappingContainer" class="accordion"></div>
+                </section>
+
+                <!-- 步骤3: 执行匹配 -->
+                <section class="step-section" id="step-match">
+                    <div class="step-header">
+                        <div class="step-header-left">
+                            <div class="step-icon-large">3</div>
+                            <div class="step-title-group">
+                                <h2>执行匹配</h2>
+                                <div class="step-subtitle">开始处理和匹配数据</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg" id="matchBtn" onclick="performMatch()" disabled>
+                        🚀 开始匹配
+                    </button>
+                </section>
+
+                <!-- 步骤4: 结果展示 -->
+                <section class="step-section hidden" id="step-result">
+                    <div class="step-header">
+                        <div class="step-header-left">
+                            <div class="step-icon-large">✓</div>
+                            <div class="step-title-group">
+                                <h2>匹配结果</h2>
+                                <div class="step-subtitle">数据处理完成</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: var(--space-sm);">
+                            <button class="btn btn-success" onclick="exportResult()">
+                                📥 导出结果
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="exportUnmatchedData()">
+                                🔍 导出诊断数据
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 诊断信息摘要 -->
+                    <div id="diagnosticsSummary"></div>
+
+                    <!-- 统计数据 -->
+                    <div id="statsContainer"></div>
+
+                    <!-- 筛选器 -->
+                    <div class="result-filters">
+                        <div class="filter-group">
+                            <label class="filter-label">订单类型</label>
+                            <select id="filterOrderType" onchange="applyFilters()">
+                                <option value="">全部</option>
+                                <option value="退货">退货</option>
+                                <option value="国补">国补</option>
+                                <option value="非国补">非国补</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">门店筛选</label>
+                            <select id="filterStore" onchange="applyFilters()">
+                                <option value="">全部门店</option>
+                            </select>
+                        </div>
+                        <div class="filter-group" style="flex: 2;">
+                            <label class="filter-label">搜索</label>
+                            <input type="text" id="filterSearch" placeholder="订单号、用户姓名、型号..." onkeyup="applyFilters()">
+                        </div>
+                    </div>
+
+                    <!-- 分页控制 -->
+                    <div class="pagination-controls">
+                        <div class="page-size-selector">
+                            <span style="font-size: 13px; color: var(--text-tertiary);">每页显示</span>
+                            <select id="pageSize" onchange="changePageSize()">
+                                <option value="50">50</option>
+                                <option value="100" selected>100</option>
+                                <option value="200">200</option>
+                                <option value="500">500</option>
+                            </select>
+                        </div>
+                        <div class="pagination-info" id="paginationInfo"></div>
+                        <div class="pagination-buttons">
+                            <button class="btn btn-sm btn-outline" id="prevPageBtn" onclick="prevPage()">
+                                ← 上一页
+                            </button>
+                            <button class="btn btn-sm btn-outline" id="nextPageBtn" onclick="nextPage()">
+                                下一页 →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 结果表格 -->
+                    <div class="table-container">
+                        <div class="table-wrapper">
+                            <table id="resultTable">
+                                <thead>
+                                    <tr id="resultTableHeader"></tr>
+                                </thead>
+                                <tbody id="resultTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -524,6 +1024,10 @@
         };
 
         let matchResult = [];
+        let filteredMatchResult = []; // 筛选后的结果
+        let currentPage = 1;
+        let pageSize = 100;
+        
         let matchDiagnostics = {
             similarOrderNumbers: [],
             unmatchedOrders: [],
@@ -548,6 +1052,113 @@
             filteredCount: 0,
             removedCount: 0
         };
+
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            initNavigation();
+            initDragAndDrop();
+        });
+
+        // ==================== 侧边导航 ====================
+        function initNavigation() {
+            const navSteps = document.querySelectorAll('.nav-step');
+            navSteps.forEach(step => {
+                step.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = this.getAttribute('href');
+                    const targetElement = document.querySelector(target);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        updateActiveNav(this.dataset.step);
+                    }
+                });
+            });
+
+            // 监听滚动更新激活状态（优化性能）
+            let scrollTimeout;
+            window.addEventListener('scroll', function() {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    const sections = document.querySelectorAll('.step-section');
+                    const stepMap = {
+                        'step-upload': '1',
+                        'step-mapping': '2',
+                        'step-match': '3',
+                        'step-result': '4'
+                    };
+                    
+                    for (let section of sections) {
+                        const rect = section.getBoundingClientRect();
+                        if (rect.top <= 100 && rect.bottom >= 100) {
+                            const stepNum = stepMap[section.id];
+                            if (stepNum) {
+                                updateActiveNav(stepNum);
+                                break;
+                            }
+                        }
+                    }
+                }, 100);
+            }, { passive: true });
+        }
+
+        function updateActiveNav(stepNumber) {
+            const navSteps = document.querySelectorAll('.nav-step');
+            navSteps.forEach(step => {
+                if (step.dataset.step === stepNumber) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+        }
+
+        function markStepCompleted(stepNumber) {
+            const navStep = document.querySelector(`.nav-step[data-step="${stepNumber}"]`);
+            if (navStep) {
+                navStep.classList.add('completed');
+            }
+        }
+
+        // ==================== 拖拽上传 ====================
+        function initDragAndDrop() {
+            const uploadCards = document.querySelectorAll('.upload-card');
+            uploadCards.forEach(card => {
+                const fileType = card.dataset.type;
+                const fileInput = document.getElementById(fileType + 'File');
+
+                card.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.classList.add('dragover');
+                });
+
+                card.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.classList.remove('dragover');
+                });
+
+                card.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                            // 创建一个新的 FileList 对象并触发 change 事件
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(file);
+                            fileInput.files = dataTransfer.files;
+                            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        } else {
+                            alert('请上传 Excel 文件（.xlsx 或 .xls）');
+                        }
+                    }
+                });
+            });
+        }
 
         // 订单编号规范化函数：处理空白字符和隐藏字符
         function normalizeOrderNumber(value) {
@@ -773,6 +1384,9 @@
                 document.getElementById(infoId).style.display = 'block';
                 document.getElementById(infoId).textContent = `✓ ${file.name}`;
                 
+                // 标记步骤1完成
+                markStepCompleted('1');
+                
                 if (type === 'policy') {
                     // 政策表特殊处理：加载所有子表
                     dataStore.policy.workbook = workbook;
@@ -988,58 +1602,101 @@
             const container = document.getElementById('mappingContainer');
             container.innerHTML = '';
 
-            // 销售订单映射
+            // 显示智能映射按钮
+            document.getElementById('smartMappingBtn').style.display = 'inline-flex';
+
+            // 销售订单映射（默认折叠，必需）
             if (dataStore.salesOrder.data) {
-                createMappingSection('salesOrder', fieldConfigs.salesOrder, dataStore.salesOrder.headers, container);
+                createMappingAccordion('salesOrder', fieldConfigs.salesOrder, dataStore.salesOrder.headers, container, true, false);
             }
 
-            // 收款单映射
+            // 收款单映射（可选，默认折叠）
             if (dataStore.payment.data) {
-                createMappingSection('payment', fieldConfigs.payment, dataStore.payment.headers, container);
+                createMappingAccordion('payment', fieldConfigs.payment, dataStore.payment.headers, container, false, false);
             }
 
-            // 带单费映射
+            // 带单费映射（可选，默认折叠）
             if (dataStore.commission.data) {
-                createMappingSection('commission', fieldConfigs.commission, dataStore.commission.headers, container);
+                createMappingAccordion('commission', fieldConfigs.commission, dataStore.commission.headers, container, false, false);
             }
 
             // 政策表各子表映射
             if (dataStore.policy.workbook) {
                 const policyConfigs = [
-                    { key: 'policySpecialMachine', storeKey: 'specialMachine' },
-                    { key: 'policyChanet', storeKey: 'chanet' },
-                    { key: 'policyBoiler', storeKey: 'boiler' },
-                    { key: 'policyPriceTable', storeKey: 'priceTable' }
+                    { key: 'policySpecialMachine', storeKey: 'specialMachine', title: '特价机整理' },
+                    { key: 'policyChanet', storeKey: 'chanet', title: '佳尼特' },
+                    { key: 'policyBoiler', storeKey: 'boiler', title: '壁挂炉' },
+                    { key: 'policyPriceTable', storeKey: 'priceTable', title: '标价' }
                 ];
 
                 policyConfigs.forEach(cfg => {
                     const sheetData = dataStore.policy.sheets[cfg.storeKey];
                     if (sheetData.data && sheetData.data.length > 0) {
-                        createMappingSection(cfg.key, fieldConfigs[cfg.key], sheetData.headers, container);
+                        createMappingAccordion(cfg.key, fieldConfigs[cfg.key], sheetData.headers, container, false, false);
                     }
                 });
 
-                // 为每个活动子表创建映射区域
+                // 合并所有活动子表映射（统一配置）
                 if (dataStore.policy.sheets.activity.length > 0) {
-                    dataStore.policy.sheets.activity.forEach((activitySheet, index) => {
-                        const config = {
-                            ...fieldConfigs.policyActivity,
-                            title: `政策表 - ${activitySheet.sheetName}${activitySheet.startDate && activitySheet.endDate ? ` (${activitySheet.startDate} ~ ${activitySheet.endDate})` : ''}`
-                        };
-                        createMappingSection(`policyActivity_${index}`, config, activitySheet.headers, container);
-                    });
+                    const firstActivitySheet = dataStore.policy.sheets.activity[0];
+                    const mergedConfig = {
+                        ...fieldConfigs.policyActivity,
+                        title: `政策表 - 销售政策 (${dataStore.policy.sheets.activity.length}个时间段)`
+                    };
+                    createMappingAccordion('policyActivity_0', mergedConfig, firstActivitySheet.headers, container, false, false, true);
                 }
             }
+
+            // 标记步骤2完成
+            markStepCompleted('2');
         }
 
-        function createMappingSection(configKey, config, headers, container) {
-            const section = document.createElement('div');
-            section.className = 'mapping-section';
+        function createMappingAccordion(configKey, config, headers, container, isRequired = false, defaultExpanded = false, isMerged = false) {
+            const item = document.createElement('div');
+            item.className = 'accordion-item';
+            if (defaultExpanded) item.classList.add('expanded');
+
+            // 头部
+            const header = document.createElement('div');
+            header.className = 'accordion-header';
+            header.onclick = function() {
+                item.classList.toggle('expanded');
+                icon.textContent = item.classList.contains('expanded') ? '▲' : '▼';
+            };
+
+            const headerLeft = document.createElement('div');
+            headerLeft.className = 'accordion-header-left';
 
             const title = document.createElement('div');
-            title.className = 'mapping-section-title';
-            title.textContent = config.title;
-            section.appendChild(title);
+            title.className = 'accordion-title';
+            title.textContent = config.title + (isRequired ? ' *' : '');
+            if (isMerged) {
+                title.innerHTML += ' <small style="color: var(--text-tertiary);">(统一配置所有时间段)</small>';
+            }
+            headerLeft.appendChild(title);
+
+            const status = document.createElement('div');
+            status.className = 'accordion-status';
+            
+            const progress = document.createElement('span');
+            progress.className = 'mapping-progress';
+            progress.id = `${configKey}_progress`;
+            status.appendChild(progress);
+
+            const icon = document.createElement('div');
+            icon.className = 'accordion-icon';
+            icon.textContent = '▼';
+            
+            header.appendChild(headerLeft);
+            header.appendChild(status);
+            header.appendChild(icon);
+
+            // 内容区
+            const content = document.createElement('div');
+            content.className = 'accordion-content';
+
+            const body = document.createElement('div');
+            body.className = 'accordion-body';
 
             const grid = document.createElement('div');
             grid.className = 'mapping-grid';
@@ -1075,25 +1732,103 @@
                             headerStr.includes(field.matchKey)) {
                             matchedIndex = index;
                             option.selected = true;
+                            row.classList.add('matched');
                         }
                     }
                     
                     select.appendChild(option);
                 });
 
-                select.addEventListener('change', checkReadyToMatch);
+                select.addEventListener('change', function() {
+                    if (this.value) {
+                        row.classList.add('matched');
+                    } else {
+                        row.classList.remove('matched');
+                    }
+                    updateMappingProgress(configKey, config.fields.length);
+                    checkReadyToMatch();
+                });
                 row.appendChild(select);
 
                 const source = document.createElement('div');
-                source.className = 'mapping-source';
+                source.className = 'mapping-source-tag';
                 source.textContent = config.title.split(' - ')[0];
                 row.appendChild(source);
 
                 grid.appendChild(row);
             });
 
-            section.appendChild(grid);
-            container.appendChild(section);
+            body.appendChild(grid);
+            content.appendChild(body);
+
+            item.appendChild(header);
+            item.appendChild(content);
+            container.appendChild(item);
+
+            // 初始化进度
+            updateMappingProgress(configKey, config.fields.length);
+        }
+
+        function updateMappingProgress(configKey, totalFields) {
+            const progressEl = document.getElementById(`${configKey}_progress`);
+            if (!progressEl) return;
+
+            let mappedCount = 0;
+            for (let i = 0; i < totalFields; i++) {
+                const select = document.querySelector(`select[id^="${configKey}_"]`);
+                if (select && select.value !== '') {
+                    mappedCount++;
+                }
+            }
+
+            // 重新计算
+            const selects = document.querySelectorAll(`select[id^="${configKey}_"]`);
+            mappedCount = Array.from(selects).filter(s => s.value !== '').length;
+
+            progressEl.textContent = `${mappedCount}/${totalFields} 已映射`;
+            if (mappedCount === totalFields) {
+                progressEl.classList.add('complete');
+            } else {
+                progressEl.classList.remove('complete');
+            }
+        }
+
+        // 一键智能映射
+        function quickSmartMapping() {
+            const accordions = document.querySelectorAll('.accordion-item');
+            accordions.forEach(accordion => {
+                const selects = accordion.querySelectorAll('select');
+                selects.forEach(select => {
+                    // 触发每个已经自动匹配的选择框
+                    if (select.value !== '') {
+                        const row = select.closest('.mapping-row');
+                        if (row) row.classList.add('matched');
+                    }
+                });
+                
+                // 展开所有面板
+                accordion.classList.add('expanded');
+            });
+
+            // 更新所有进度
+            Object.keys(fieldConfigs).forEach(configKey => {
+                if (configKey === 'policyActivity') {
+                    // 处理活动配置
+                    if (dataStore.policy.sheets.activity.length > 0) {
+                        updateMappingProgress('policyActivity_0', fieldConfigs.policyActivity.fields.length);
+                    }
+                } else {
+                    const config = fieldConfigs[configKey];
+                    if (config && config.fields) {
+                        updateMappingProgress(configKey, config.fields.length);
+                    }
+                }
+            });
+
+            checkReadyToMatch();
+            
+            // 显示提示
+            alert('✨ 智能映射完成！已自动匹配所有可识别的字段。');
         }
 
         function checkReadyToMatch() {
@@ -1432,7 +2167,19 @@
                     // 显示结果
                     displayResult(stats);
                     
-                    btn.innerHTML = '重新匹配';
+                    // 显示结果区域
+                    document.getElementById('step-result').classList.remove('hidden');
+                    
+                    // 滚动到结果区域
+                    setTimeout(() => {
+                        document.querySelector('#step-result').scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                    
+                    // 标记步骤3完成
+                    markStepCompleted('3');
+                    markStepCompleted('4');
+                    
+                    btn.innerHTML = '🚀 开始匹配';
                     btn.disabled = false;
                 } catch (error) {
                     alert('匹配过程中出现错误: ' + error.message);
@@ -1755,201 +2502,380 @@
         function displayResult(stats) {
             const total = matchResult.length;
             
-            // 构建统计信息
-            const statsContainer = document.getElementById('resultStats');
-            statsContainer.innerHTML = '';
+            // 初始化筛选结果
+            filteredMatchResult = [...matchResult];
             
-            // 添加门店过滤提示
-            if (filterStats.originalCount > 0) {
-                const filterInfo = document.createElement('div');
-                filterInfo.style.cssText = `
-                    grid-column: 1 / -1;
-                    background: #eef2ff;
-                    border: 2px solid #c7d2fe;
-                    border-radius: 8px;
-                    padding: 12px 16px;
-                    margin-bottom: 12px;
-                    font-size: 13px;
-                    color: #4338ca;
-                `;
-                filterInfo.innerHTML = `
-                    <strong>🏪 门店筛选：</strong>
-                    原始数据 <strong>${filterStats.originalCount}</strong> 条，
-                    已过滤保留 <strong>${filterStats.filteredCount}</strong> 条
-                    ${filterStats.removedCount > 0 ? `（过滤掉 <strong>${filterStats.removedCount}</strong> 条非指定门店数据）` : ''}
-                    <br>
-                    <small style="color: #6366f1;">仅保留以下门店：${storeWhitelist.join('、')}</small>
-                `;
-                statsContainer.appendChild(filterInfo);
-            }
+            // 显示诊断信息摘要
+            displayDiagnosticsSummary();
             
-            const statItems = [
-                { label: '总记录数', value: total, color: '#667eea' },
-                { label: '退货订单', value: stats.return || 0, color: '#e53e3e' },
-                { label: '国补订单', value: stats.guobu || 0, color: '#f6ad55' },
-                { label: '非国补订单', value: stats.nonGuobu || 0, color: '#a0aec0' },
-                { label: '收款匹配', value: stats.payment, color: '#48bb78' },
-                { label: '带单费匹配', value: stats.commission, color: '#4299e1' },
-                { label: '特价机匹配', value: stats.specialMachine, color: '#ed8936' },
-                { label: '佳尼特匹配', value: stats.chanet, color: '#9f7aea' },
-                { label: '壁挂炉匹配', value: stats.boiler, color: '#f56565' },
-                { label: '销售政策匹配', value: stats.activity, color: '#38b2ac' },
-                { label: '标价表匹配', value: stats.priceTable, color: '#ed64a6' }
+            // 构建统计卡片
+            buildStatsCards(stats, total);
+            
+            // 填充门店筛选下拉框
+            populateStoreFilter();
+            
+            // 初始化分页并显示结果
+            currentPage = 1;
+            displayPaginatedResults();
+        }
+
+        function buildStatsCards(stats, total) {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = '';
+
+            // 基础统计
+            const basicSection = document.createElement('div');
+            basicSection.className = 'stats-section';
+            basicSection.innerHTML = `
+                <div class="stats-section-title">📊 基础统计</div>
+                <div class="stats-grid"></div>
+            `;
+            
+            const basicGrid = basicSection.querySelector('.stats-grid');
+            const basicStats = [
+                { icon: '📦', label: '总记录数', value: total, percentage: '' },
+                { icon: '↩️', label: '退货订单', value: stats.return || 0, percentage: total > 0 ? `${((stats.return || 0) / total * 100).toFixed(1)}%` : '' },
+                { icon: '🏷️', label: '国补订单', value: stats.guobu || 0, percentage: total > 0 ? `${((stats.guobu || 0) / total * 100).toFixed(1)}%` : '' },
+                { icon: '📝', label: '非国补订单', value: stats.nonGuobu || 0, percentage: total > 0 ? `${((stats.nonGuobu || 0) / total * 100).toFixed(1)}%` : '' }
             ];
 
-            statItems.forEach(item => {
+            if (filterStats.originalCount > 0 && filterStats.removedCount > 0) {
+                basicSection.insertAdjacentHTML('afterbegin', `
+                    <div class="alert alert-info" style="margin-bottom: var(--space-md);">
+                        <strong>🏪 门店筛选：</strong>
+                        原始 ${filterStats.originalCount} 条 → 保留 ${filterStats.filteredCount} 条
+                        （过滤掉 ${filterStats.removedCount} 条）
+                    </div>
+                `);
+            }
+
+            basicStats.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'stat-card';
-                card.style.borderLeftColor = item.color;
                 card.innerHTML = `
-                    <div class="stat-label">${item.label}</div>
-                    <div class="stat-value" style="color: ${item.color}">${item.value}</div>
+                    <div class="stat-header">
+                        <span class="stat-icon">${item.icon}</span>
+                        <span class="stat-label">${item.label}</span>
+                    </div>
+                    <div class="stat-value">${item.value}</div>
+                    ${item.percentage ? `<div class="stat-percentage">${item.percentage}</div>` : ''}
                 `;
-                statsContainer.appendChild(card);
+                basicGrid.appendChild(card);
             });
 
-            // 显示诊断信息
-            displayDiagnostics();
+            container.appendChild(basicSection);
 
-            // 构建表格
+            // 匹配统计
+            const matchSection = document.createElement('div');
+            matchSection.className = 'stats-section';
+            matchSection.innerHTML = `
+                <div class="stats-section-title">🔗 匹配统计</div>
+                <div class="stats-grid"></div>
+            `;
+            
+            const matchGrid = matchSection.querySelector('.stats-grid');
+            const matchStats = [
+                { icon: '💰', label: '收款匹配', value: stats.payment, total: total, color: 'var(--color-success)' },
+                { icon: '💵', label: '带单费匹配', value: stats.commission, total: total, color: 'var(--color-info)' },
+                { icon: '🏷️', label: '特价机匹配', value: stats.specialMachine, total: total, color: 'var(--color-warning)' },
+                { icon: '💧', label: '佳尼特匹配', value: stats.chanet, total: total, color: 'var(--accent-blue)' },
+                { icon: '🔥', label: '壁挂炉匹配', value: stats.boiler, total: total, color: 'var(--color-danger)' },
+                { icon: '📋', label: '销售政策匹配', value: stats.activity, total: total, color: 'var(--color-success)' }
+            ];
+
+            matchStats.forEach(item => {
+                const percentage = item.total > 0 ? ((item.value / item.total) * 100).toFixed(1) : '0.0';
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-header">
+                        <span class="stat-icon">${item.icon}</span>
+                        <span class="stat-label">${item.label}</span>
+                    </div>
+                    <div class="stat-value" style="color: ${item.color}">${item.value}</div>
+                    <div class="stat-percentage">匹配率 ${percentage}%</div>
+                `;
+                matchGrid.appendChild(card);
+            });
+
+            container.appendChild(matchSection);
+        }
+
+        function populateStoreFilter() {
+            const filterStore = document.getElementById('filterStore');
+            const stores = new Set();
+            matchResult.forEach(record => {
+                const storeName = record['客户店名'];
+                if (storeName) stores.add(storeName);
+            });
+
+            filterStore.innerHTML = '<option value="">全部门店</option>';
+            Array.from(stores).sort().forEach(store => {
+                const option = document.createElement('option');
+                option.value = store;
+                option.textContent = store;
+                filterStore.appendChild(option);
+            });
+        }
+
+        // 防抖函数
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        const applyFilters = debounce(function() {
+            const orderType = document.getElementById('filterOrderType').value;
+            const store = document.getElementById('filterStore').value;
+            const search = document.getElementById('filterSearch').value.toLowerCase();
+
+            filteredMatchResult = matchResult.filter(record => {
+                // 订单类型筛选
+                if (orderType && record['订单类型'] !== orderType) return false;
+
+                // 门店筛选
+                if (store && record['客户店名'] !== store) return false;
+
+                // 搜索
+                if (search) {
+                    const searchableFields = [
+                        record['单据编号'],
+                        record['用户姓名'],
+                        record['规格型号']
+                    ];
+                    const matchesSearch = searchableFields.some(field => 
+                        field && field.toString().toLowerCase().includes(search)
+                    );
+                    if (!matchesSearch) return false;
+                }
+
+                return true;
+            });
+
+            currentPage = 1;
+            displayPaginatedResults();
+        }, 300);
+
+        function displayPaginatedResults() {
+            const totalRecords = filteredMatchResult.length;
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, totalRecords);
+            const pageData = filteredMatchResult.slice(startIndex, endIndex);
+
+            // 更新分页信息
+            document.getElementById('paginationInfo').textContent = 
+                `显示 ${startIndex + 1}-${endIndex} 条，共 ${totalRecords} 条`;
+
+            // 更新分页按钮状态
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+
+            // 构建表格 - 使用 DocumentFragment 提升性能
             const thead = document.getElementById('resultTableHeader');
             const tbody = document.getElementById('resultTableBody');
             
             thead.innerHTML = '';
             tbody.innerHTML = '';
 
-            if (matchResult.length > 0) {
-                // 表头
+            if (pageData.length > 0) {
+                const headers = Object.keys(pageData[0]);
+                
+                // 表头 - 使用 DocumentFragment
+                const headerFragment = document.createDocumentFragment();
                 const headerRow = document.createElement('tr');
-                Object.keys(matchResult[0]).forEach(key => {
+                headers.forEach(key => {
                     const th = document.createElement('th');
                     th.textContent = key;
                     headerRow.appendChild(th);
                 });
-                thead.appendChild(headerRow);
+                headerFragment.appendChild(headerRow);
+                thead.appendChild(headerFragment);
 
-                // 数据行（限制显示前1000行以提高性能）
-                const displayLimit = Math.min(matchResult.length, 1000);
-                for (let i = 0; i < displayLimit; i++) {
-                    const record = matchResult[i];
+                // 数据行 - 批量插入
+                const bodyFragment = document.createDocumentFragment();
+                pageData.forEach(record => {
                     const tr = document.createElement('tr');
-                    Object.values(record).forEach(value => {
+                    headers.forEach(key => {
                         const td = document.createElement('td');
+                        const value = record[key];
                         td.textContent = value !== undefined && value !== null ? value : '';
+                        
+                        // 高亮重要列
+                        if (key === '回款收款金额' || key === '订单类型') {
+                            td.classList.add('highlight');
+                        }
+                        
                         tr.appendChild(td);
                     });
-                    tbody.appendChild(tr);
-                }
-
-                if (matchResult.length > displayLimit) {
-                    const tr = document.createElement('tr');
-                    const td = document.createElement('td');
-                    td.colSpan = Object.keys(matchResult[0]).length;
-                    td.style.textAlign = 'center';
-                    td.style.color = '#718096';
-                    td.style.fontStyle = 'italic';
-                    td.textContent = `... 还有 ${matchResult.length - displayLimit} 条记录未显示，请导出查看完整数据`;
-                    tr.appendChild(td);
-                    tbody.appendChild(tr);
-                }
+                    bodyFragment.appendChild(tr);
+                });
+                tbody.appendChild(bodyFragment);
+            } else {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 100;
+                td.style.textAlign = 'center';
+                td.style.padding = 'var(--space-xl)';
+                td.style.color = 'var(--text-tertiary)';
+                td.textContent = '没有符合条件的数据';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
             }
-
-            document.getElementById('resultArea').style.display = 'block';
-            document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function displayDiagnostics() {
-            let diagnosticsHtml = '';
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayPaginatedResults();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredMatchResult.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayPaginatedResults();
+            }
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSize').value);
+            currentPage = 1;
+            displayPaginatedResults();
+        }
+
+        function displayDiagnosticsSummary() {
+            const container = document.getElementById('diagnosticsSummary');
+            container.innerHTML = '';
+
+            const hasIssues = matchDiagnostics.similarOrderNumbers.length > 0 ||
+                             matchDiagnostics.unmatchedOrders.length > 0 ||
+                             matchDiagnostics.unmatchedPayments.length > 0;
+
+            if (!hasIssues) {
+                container.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>✅ 数据质量良好</strong><br>
+                        未发现订单号冲突或未匹配的记录。
+                    </div>
+                `;
+                return;
+            }
+
+            // 创建折叠式诊断摘要
+            const summary = document.createElement('div');
+            summary.className = 'diagnostics-summary';
             
-            // 显示相似订单号警告
+            const header = document.createElement('div');
+            header.className = 'diagnostics-summary-header';
+            
+            const title = document.createElement('div');
+            title.className = 'diagnostics-summary-title';
+            title.innerHTML = '⚠️ 数据质量诊断';
+            
+            const badges = document.createElement('div');
+            badges.className = 'diagnostics-badges';
+            
             if (matchDiagnostics.similarOrderNumbers.length > 0) {
-                diagnosticsHtml += '<div class="alert alert-warning">';
-                diagnosticsHtml += '<strong>⚠️ 警告：发现相似订单号</strong><br>';
-                diagnosticsHtml += '以下订单号非常相似，可能导致匹配混淆。请确认数据是否正确：<br><br>';
+                badges.innerHTML += `<span class="diagnostics-badge warning">${matchDiagnostics.similarOrderNumbers.length} 个相似订单号</span>`;
+            }
+            if (matchDiagnostics.unmatchedOrders.length > 0) {
+                badges.innerHTML += `<span class="diagnostics-badge error">${matchDiagnostics.unmatchedOrders.length} 个未匹配订单</span>`;
+            }
+            if (matchDiagnostics.unmatchedPayments.length > 0) {
+                badges.innerHTML += `<span class="diagnostics-badge error">${matchDiagnostics.unmatchedPayments.length} 个未匹配收款</span>`;
+            }
+            
+            const expandIcon = document.createElement('span');
+            expandIcon.textContent = '▼';
+            expandIcon.style.fontSize = '14px';
+            expandIcon.style.color = 'var(--text-tertiary)';
+            
+            header.appendChild(title);
+            header.appendChild(badges);
+            header.appendChild(expandIcon);
+            
+            // 详细内容
+            const details = document.createElement('div');
+            details.className = 'diagnostics-details';
+            
+            // 相似订单号
+            if (matchDiagnostics.similarOrderNumbers.length > 0) {
+                let html = '<div class="alert alert-warning"><strong>⚠️ 警告：发现相似订单号</strong><br>';
+                html += '以下订单号非常相似，可能导致匹配混淆：<br><br>';
                 
                 const groupedBySimilarity = {};
                 matchDiagnostics.similarOrderNumbers.forEach(item => {
                     const key = `${item.base}-${item.extended}`;
-                    if (!groupedBySimilarity[key]) {
-                        groupedBySimilarity[key] = [];
-                    }
+                    if (!groupedBySimilarity[key]) groupedBySimilarity[key] = [];
                     groupedBySimilarity[key].push(item.source);
                 });
                 
                 Object.keys(groupedBySimilarity).forEach(key => {
                     const [base, extended] = key.split('-').slice(0, 2);
                     const sources = [...new Set(groupedBySimilarity[key])];
-                    diagnosticsHtml += `📋 <code>${base}</code> 和 <code>${extended}</code> （来源：${sources.join('、')}）<br>`;
+                    html += `📋 <code>${base}</code> 和 <code>${extended}</code> （来源：${sources.join('、')}）<br>`;
                 });
-                
-                diagnosticsHtml += '</div>';
+                html += '</div>';
+                details.innerHTML += html;
             }
             
-            // 显示未匹配订单
+            // 未匹配订单
             if (matchDiagnostics.unmatchedOrders.length > 0) {
-                diagnosticsHtml += '<div class="alert alert-danger">';
-                diagnosticsHtml += `<strong>❌ 未找到回款的订单：${matchDiagnostics.unmatchedOrders.length} 条</strong><br>`;
-                diagnosticsHtml += '以下订单在收款单中未找到匹配（回款金额已设为0）：<br><br>';
+                let html = '<div class="alert alert-danger">';
+                html += `<strong>❌ 未找到回款的订单：${matchDiagnostics.unmatchedOrders.length} 条</strong><br>`;
+                html += '以下订单在收款单中未找到匹配（回款金额已设为0）：<br><br>';
                 
                 const displayLimit = Math.min(matchDiagnostics.unmatchedOrders.length, 10);
                 for (let i = 0; i < displayLimit; i++) {
                     const order = matchDiagnostics.unmatchedOrders[i];
-                    diagnosticsHtml += `📄 订单号：<code>${order.orderNumberRaw || order.orderNumber}</code>`;
-                    if (order.userName) diagnosticsHtml += ` | 客户：${order.userName}`;
-                    if (order.model) diagnosticsHtml += ` | 型号：${order.model}`;
-                    if (order.totalAmount) diagnosticsHtml += ` | 金额：¥${order.totalAmount}`;
-                    diagnosticsHtml += '<br>';
+                    html += `📄 订单号：<code>${order.orderNumberRaw || order.orderNumber}</code>`;
+                    if (order.userName) html += ` | 客户：${order.userName}`;
+                    if (order.model) html += ` | 型号：${order.model}`;
+                    if (order.totalAmount) html += ` | 金额：¥${order.totalAmount}`;
+                    html += '<br>';
                 }
                 
                 if (matchDiagnostics.unmatchedOrders.length > displayLimit) {
-                    diagnosticsHtml += `<i>... 还有 ${matchDiagnostics.unmatchedOrders.length - displayLimit} 条未显示</i><br>`;
+                    html += `<i>... 还有 ${matchDiagnostics.unmatchedOrders.length - displayLimit} 条未显示</i><br>`;
                 }
-                
-                diagnosticsHtml += '</div>';
+                html += '</div>';
+                details.innerHTML += html;
             }
             
-            // 显示未匹配收款
+            // 未匹配收款
             if (matchDiagnostics.unmatchedPayments.length > 0) {
-                diagnosticsHtml += '<div class="alert alert-danger">';
-                diagnosticsHtml += `<strong>❌ 未找到订单的收款：${matchDiagnostics.unmatchedPayments.length} 条</strong><br>`;
-                diagnosticsHtml += '以下收款记录在销售订单中未找到匹配：<br><br>';
+                let html = '<div class="alert alert-danger">';
+                html += `<strong>❌ 未找到订单的收款：${matchDiagnostics.unmatchedPayments.length} 条</strong><br>`;
+                html += '以下收款记录在销售订单中未找到匹配：<br><br>';
                 
                 const displayLimit = Math.min(matchDiagnostics.unmatchedPayments.length, 10);
                 for (let i = 0; i < displayLimit; i++) {
                     const payment = matchDiagnostics.unmatchedPayments[i];
-                    diagnosticsHtml += `💰 订单号：<code>${payment.orderNumber}</code> | 金额：¥${payment.paymentAmount}<br>`;
+                    html += `💰 订单号：<code>${payment.orderNumber}</code> | 金额：¥${payment.paymentAmount}<br>`;
                 }
                 
                 if (matchDiagnostics.unmatchedPayments.length > displayLimit) {
-                    diagnosticsHtml += `<i>... 还有 ${matchDiagnostics.unmatchedPayments.length - displayLimit} 条未显示</i><br>`;
+                    html += `<i>... 还有 ${matchDiagnostics.unmatchedPayments.length - displayLimit} 条未显示</i><br>`;
                 }
-                
-                diagnosticsHtml += '</div>';
+                html += '</div>';
+                details.innerHTML += html;
             }
             
-            // 成功匹配提示
-            if (matchDiagnostics.similarOrderNumbers.length === 0 && 
-                matchDiagnostics.unmatchedOrders.length === 0 && 
-                matchDiagnostics.unmatchedPayments.length === 0) {
-                diagnosticsHtml += '<div class="alert alert-info">';
-                diagnosticsHtml += '<strong>✅ 数据质量良好</strong><br>';
-                diagnosticsHtml += '未发现订单号冲突或未匹配的记录。';
-                diagnosticsHtml += '</div>';
-            }
+            summary.appendChild(header);
+            summary.appendChild(details);
             
-            // 插入诊断信息到结果区域
-            const resultStats = document.getElementById('resultStats');
-            const existingDiagnostics = document.getElementById('diagnosticsContainer');
-            if (existingDiagnostics) {
-                existingDiagnostics.remove();
-            }
+            // 点击切换展开/折叠
+            header.addEventListener('click', function() {
+                summary.classList.toggle('expanded');
+                expandIcon.textContent = summary.classList.contains('expanded') ? '▲' : '▼';
+            });
             
-            if (diagnosticsHtml) {
-                const diagnosticsContainer = document.createElement('div');
-                diagnosticsContainer.id = 'diagnosticsContainer';
-                diagnosticsContainer.innerHTML = diagnosticsHtml;
-                resultStats.parentNode.insertBefore(diagnosticsContainer, resultStats.nextSibling);
-            }
+            container.appendChild(summary);
         }
 
         function exportUnmatchedData() {

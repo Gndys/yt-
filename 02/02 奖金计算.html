@@ -1103,7 +1103,13 @@
   <!-- 页面头部 -->
   <header class="header">
     <div class="header-content">
-      <h1>💰 业务员奖金计算系统 <span style="font-size: 14px; color: #667eea;">✨ AI增强版</span></h1>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; text-decoration: none; color: var(--text-primary); transition: all 0.3s; font-size: 14px;" onmouseover="this.style.borderColor='var(--primary-color)'; this.style.color='var(--primary-color)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-primary)';">
+          <span>←</span>
+          <span>返回首页</span>
+        </a>
+        <h1>💰 业务员奖金计算系统 <span style="font-size: 14px; color: #667eea;">✨ AI增强版</span></h1>
+      </div>
       <nav class="tabs">
         <button class="tab active" onclick="switchPage('monthly')">月度计算</button>
         <button class="tab" onclick="switchPage('quarterly')">季度计算</button>
