@@ -1046,6 +1046,17 @@
             '萧山第六空间专卖店'
         ];
 
+        // 门店地区映射
+        const storeRegionMap = {
+            '杭州红星美凯龙一号店': '杭州',
+            '萧山第六空间专卖店': '杭州',
+            '（新）滨江第六空间专卖店': '杭州',
+            '滨江六空8090店': '杭州',
+            '杭州恒大建材超级旗舰店': '杭州',
+            '杭州临平江南家居专卖店': '杭州',
+            '金华龙腾建材市场专卖店': '金华'
+        };
+
         // 门店过滤统计
         let filterStats = {
             originalCount: 0,
@@ -1217,28 +1228,65 @@
             return parseFloat(num.toFixed(2));
         }
 
-        // 日期解析函数：支持多种日期格式
+        // Excel日期序列号转换为JavaScript Date对象
+        // Excel日期序列号：从1900-01-01开始的天数（序列号1=1900-01-01）
+        function excelSerialToDate(serial) {
+            // Excel错误地认为1900是闰年，所以需要调整
+            // 序列号60是1900-02-29（不存在的日期），之后的日期需要减1
+            const utc_days = Math.floor(serial - 25569);
+            const utc_value = utc_days * 86400;
+            const date_info = new Date(utc_value * 1000);
+            
+            return new Date(date_info.getFullYear(), date_info.getMonth(), date_info.getDate());
+        }
+        
+        // 将日期转换为格式化字符串 YYYY-MM-DD
+        function formatDate(date) {
+            if (!date || isNaN(date.getTime())) return null;
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 日期解析函数：支持多种日期格式和Excel序列号
         function parseDate(value) {
             if (!value) return null;
             
+            // 如果是数字，判断是否为Excel日期序列号（范围：1到65536+，合理的日期范围）
+            if (typeof value === 'number') {
+                // Excel日期序列号通常在1到100000之间（1900-01-01到2173-10-14）
+                if (value > 1 && value < 100000) {
+                    return excelSerialToDate(value);
+                }
+                return null;
+            }
+            
             let str = value.toString().trim();
+            
+            // 检查是否是纯数字字符串（Excel序列号）
+            const numValue = parseFloat(str);
+            if (!isNaN(numValue) && numValue > 1 && numValue < 100000 && str === numValue.toString()) {
+                return excelSerialToDate(numValue);
+            }
             
             // 尝试将 "2025.9.15" 格式转换为标准格式
             str = str.replace(/\./g, '/');
             
             // 尝试解析日期
-            const date = new Date(str);
+            let date = new Date(str);
             
             // 检查是否为有效日期
             if (isNaN(date.getTime())) {
                 return null;
             }
             
-            return date;
+            // 统一转换为本地时间的午夜（去除时间部分，避免时区问题）
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate());
         }
 
-        // 根据订单日期查找匹配的销售政策子表
-        function findMatchingActivitySheet(orderDate) {
+        // 根据订单日期和地区查找匹配的销售政策子表（双维度匹配）
+        function findMatchingActivitySheet(orderDate, orderRegion) {
             if (!orderDate) return null;
             
             const orderTimestamp = parseDate(orderDate);
@@ -1250,14 +1298,53 @@
                 const startTimestamp = parseDate(sheet.startDate);
                 const endTimestamp = parseDate(sheet.endDate);
                 
+                // 先匹配时间
                 if (startTimestamp && endTimestamp) {
                     if (orderTimestamp >= startTimestamp && orderTimestamp <= endTimestamp) {
-                        return sheet;
+                        // 时间匹配后，再匹配地区
+                        const policyRegion = sheet.region;
+                        
+                        // 如果政策未指定地区（为空或null），则适用所有地区
+                        if (!policyRegion || policyRegion === '') {
+                            return sheet;
+                        }
+                        
+                        // 如果政策指定了地区，必须订单地区与之匹配
+                        if (orderRegion && orderRegion.trim() !== '') {
+                            // 精确匹配或包含匹配
+                            if (policyRegion === orderRegion || 
+                                policyRegion.includes(orderRegion) || 
+                                orderRegion.includes(policyRegion)) {
+                                return sheet;
+                            }
+                        }
+                        // 订单地区为空，不匹配指定地区的政策，继续查找
                     }
                 }
             }
             
-            return null; // 未找到匹配的政策时间段
+            return null; // 未找到匹配的政策时间段和地区
+        }
+
+        // 根据门店名称获取地区
+        function getStoreRegion(storeName) {
+            if (!storeName) return '';
+            
+            const storeNameStr = storeName.toString().trim();
+            
+            // 精确匹配
+            if (storeRegionMap[storeNameStr]) {
+                return storeRegionMap[storeNameStr];
+            }
+            
+            // 模糊匹配
+            for (const [store, region] of Object.entries(storeRegionMap)) {
+                if (storeNameStr.includes(store) || store.includes(storeNameStr)) {
+                    return region;
+                }
+            }
+            
+            return ''; // 未匹配到地区
         }
 
         // 字段配置
@@ -1526,19 +1613,26 @@
                         const headers = jsonData[headerRowIndex];
                         const rows = jsonData.slice(headerRowIndex + 1).filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
                         
-                        // 从第一行数据中提取开始和结束时间（M列和N列，索引12和13）
+                        // 从第一行数据中提取开始和结束时间（M列和N列，索引12和13）以及地区（O列，索引14）
                         let startDate = null;
                         let endDate = null;
+                        let region = null;
                         
                         if (rows.length > 0) {
                             const firstRow = rows[0];
                             // M列：政策开始时间（索引12）
                             if (firstRow[12]) {
-                                startDate = firstRow[12];
+                                const parsedStartDate = parseDate(firstRow[12]);
+                                startDate = parsedStartDate ? formatDate(parsedStartDate) : firstRow[12];
                             }
                             // N列：政策结束时间（索引13）
                             if (firstRow[13]) {
-                                endDate = firstRow[13];
+                                const parsedEndDate = parseDate(firstRow[13]);
+                                endDate = parsedEndDate ? formatDate(parsedEndDate) : firstRow[13];
+                            }
+                            // O列：适用地区（索引14）
+                            if (firstRow[14]) {
+                                region = String(firstRow[14]).trim();
                             }
                         }
                         
@@ -1547,11 +1641,12 @@
                             sheetName: sheetName,
                             startDate: startDate,
                             endDate: endDate,
+                            region: region,
                             headers: headers,
                             data: rows
                         });
                         
-                        console.log(`政策表-${sheetName} 读取成功: 表头行=${headerRowIndex}, 数据行数=${rows.length}, 时间段=${startDate} 至 ${endDate}`);
+                        console.log(`政策表-${sheetName} 读取成功: 表头行=${headerRowIndex}, 数据行数=${rows.length}, 时间段=${startDate} 至 ${endDate}, 适用地区=${region || '所有地区'}`);
                     }
                 }
             });
@@ -1581,10 +1676,11 @@
             
             let hasWarning = false;
             activitySheets.forEach((sheet, index) => {
+                const regionText = sheet.region ? `【适用地区：${sheet.region}】` : '【适用地区：所有地区】';
                 if (sheet.startDate && sheet.endDate) {
-                    infoHtml += `  ${index + 1}. ${sheet.sheetName}: ${sheet.startDate} ~ ${sheet.endDate}<br>`;
+                    infoHtml += `  ${index + 1}. ${sheet.sheetName}: ${sheet.startDate} ~ ${sheet.endDate} ${regionText}<br>`;
                 } else {
-                    infoHtml += `  ${index + 1}. ${sheet.sheetName}: <span style="color: #ed8936;">未设置时间段（将匹配所有订单）</span><br>`;
+                    infoHtml += `  ${index + 1}. ${sheet.sheetName}: <span style="color: #ed8936;">未设置时间段（将匹配所有订单）</span> ${regionText}<br>`;
                     hasWarning = true;
                 }
             });
@@ -1594,6 +1690,7 @@
                 infoHtml += `<span style="color: #718096;">建议在M列和N列设置时间段以启用日期匹配功能。</span>`;
             }
             
+            infoHtml += `<br><span style="color: #718096;">💡 提示：在O列设置"杭州"、"金华"等适用地区可启用地区匹配，留空表示适用所有地区。</span>`;
             infoHtml += `</small>`;
             infoElement.innerHTML = infoHtml;
         }
@@ -1917,6 +2014,10 @@
                             record[field.label] = colIndex !== undefined ? (row[colIndex] || '') : '';
                         });
 
+                        // 添加所属地区字段（根据客户店名判断）
+                        const storeName = record['客户店名'] || '';
+                        record['所属地区'] = getStoreRegion(storeName);
+
                         // 获取匹配键（使用规范化）
                         const docNumberRaw = record['单据编号'];
                         const docNumber = normalizeOrderNumber(docNumberRaw);
@@ -2032,15 +2133,16 @@
                             });
                         }
 
-                        // 匹配政策表 - 销售政策（根据订单日期匹配对应时间段的政策）
+                        // 匹配政策表 - 销售政策（根据订单日期和地区匹配对应时间段的政策）
                         if (mappings.policyActivity && Array.isArray(indexes.policyActivity)) {
                             const orderDate = record['日期'];
+                            const orderRegion = record['所属地区']; // 从订单中获取所属地区信息
                             let policyData = null;
                             let matchedSheet = null;
                             let matchType = '';
-                            let dateMatchedSheet = null; // 记录日期匹配到的子表（即使型号不存在）
+                            let timeMatchedSheets = []; // 记录所有时间匹配的子表
                             
-                            // 遍历所有活动子表，找到日期匹配的那个
+                            // 遍历所有活动子表，找到时间和地区都匹配的那个
                             for (let activitySheet of indexes.policyActivity) {
                                 if (!activitySheet) continue;
                                 
@@ -2051,17 +2153,36 @@
                                 // 如果有时间段，则进行日期匹配
                                 if (orderTimestamp && startTimestamp && endTimestamp) {
                                     if (orderTimestamp >= startTimestamp && orderTimestamp <= endTimestamp) {
-                                        // 找到日期匹配的子表
-                                        dateMatchedSheet = activitySheet;
+                                        // 时间匹配，检查地区
+                                        const policyRegion = activitySheet.region;
+                                        let regionMatched = false;
                                         
-                                        // 从该子表的索引中查找型号
-                                        if (activitySheet.index[model]) {
+                                        // 地区匹配逻辑
+                                        if (!policyRegion || policyRegion === '') {
+                                            // 政策未指定地区，适用所有地区
+                                            regionMatched = true;
+                                        } else if (orderRegion && orderRegion.trim() !== '') {
+                                            // 政策指定了地区，订单也有地区，进行匹配
+                                            if (policyRegion === orderRegion || 
+                                                policyRegion.includes(orderRegion) || 
+                                                orderRegion.includes(policyRegion)) {
+                                                regionMatched = true;
+                                            }
+                                        }
+                                        
+                                        // 记录时间匹配的子表（用于错误提示）
+                                        timeMatchedSheets.push({
+                                            sheet: activitySheet,
+                                            regionMatched: regionMatched
+                                        });
+                                        
+                                        // 如果时间和地区都匹配，查找型号
+                                        if (regionMatched && activitySheet.index[model]) {
                                             policyData = activitySheet.index[model];
                                             matchedSheet = activitySheet;
-                                            matchType = 'date';
+                                            matchType = 'full';
                                             break;
                                         }
-                                        // 找到了日期匹配的表，但没有这个型号，继续看是否有其他时间段
                                     }
                                 } 
                                 // 如果没有时间段设置，直接匹配型号（向后兼容）
@@ -2081,8 +2202,9 @@
                                 });
                                 
                                 // 添加匹配说明
-                                if (matchType === 'date') {
-                                    record['销售政策匹配说明'] = `匹配成功：${matchedSheet.sheetName}（${matchedSheet.startDate} ~ ${matchedSheet.endDate}）`;
+                                if (matchType === 'full') {
+                                    const regionText = matchedSheet.region ? `【适用地区：${matchedSheet.region}】` : '【适用地区：所有地区】';
+                                    record['销售政策匹配说明'] = `匹配成功：${matchedSheet.sheetName}（${matchedSheet.startDate} ~ ${matchedSheet.endDate}）${regionText}`;
                                 } else if (matchType === 'direct') {
                                     record['销售政策匹配说明'] = `匹配成功：${matchedSheet.sheetName}（未设置时间段）`;
                                 }
@@ -2093,20 +2215,43 @@
                                     record[field.label] = '';
                                 });
                                 
-                                // 未匹配时的精确说明
-                                if (dateMatchedSheet) {
-                                    // 情况1：找到了日期匹配的政策表，但型号不在表中
-                                    record['销售政策匹配说明'] = `未匹配：型号"${model}"不在政策表"${dateMatchedSheet.sheetName}"（${dateMatchedSheet.startDate} ~ ${dateMatchedSheet.endDate}）中`;
+                                // 未匹配时的精确说明（区分时间和地区不匹配）
+                                if (timeMatchedSheets.length > 0) {
+                                    // 有时间匹配的政策，进一步分析
+                                    const regionMatchedSheets = timeMatchedSheets.filter(item => item.regionMatched);
+                                    
+                                    if (regionMatchedSheets.length > 0) {
+                                        // 情况1：时间和地区都匹配，但型号不在表中
+                                        const sheet = regionMatchedSheets[0].sheet;
+                                        const regionText = sheet.region ? `【适用地区：${sheet.region}】` : '【适用地区：所有地区】';
+                                        record['销售政策匹配说明'] = `未匹配：型号"${model}"不在政策表"${sheet.sheetName}"（${sheet.startDate} ~ ${sheet.endDate}）${regionText}中`;
+                                    } else {
+                                        // 情况2：时间匹配但地区不匹配
+                                        const timeMatchedInfo = timeMatchedSheets.map(item => {
+                                            const sheet = item.sheet;
+                                            const regionText = sheet.region ? `适用${sheet.region}` : '适用所有地区';
+                                            return `${sheet.sheetName}（${regionText}）`;
+                                        }).join('、');
+                                        
+                                        if (!orderRegion || orderRegion.trim() === '') {
+                                            record['销售政策匹配说明'] = `未匹配：订单所属地区未识别，无法匹配需要指定适用地区的政策（时间段内的政策：${timeMatchedInfo}）`;
+                                        } else {
+                                            record['销售政策匹配说明'] = `未匹配：订单所属地区"${orderRegion}"与时间段内政策的适用地区不符（时间段内的政策：${timeMatchedInfo}）`;
+                                        }
+                                    }
                                 } else if (indexes.policyActivity.length > 0) {
-                                    // 情况2：有政策表，但订单日期不在任何时间段内
+                                    // 情况3：没有时间匹配的政策
                                     const hasTimeRange = indexes.policyActivity.some(s => s && s.startDate && s.endDate);
                                     if (hasTimeRange) {
-                                        // 列出所有可用的时间段
+                                        // 列出所有可用的时间段和地区
                                         const periods = indexes.policyActivity
                                             .filter(s => s && s.startDate && s.endDate)
-                                            .map(s => `${s.startDate}~${s.endDate}`)
+                                            .map(s => {
+                                                const regionText = s.region ? `【适用${s.region}】` : '【适用所有地区】';
+                                                return `${s.startDate}~${s.endDate}${regionText}`;
+                                            })
                                             .join('、');
-                                        record['销售政策匹配说明'] = `未匹配：订单日期"${orderDate || '缺失'}"不在任何政策时间段内（可用时间段：${periods}）`;
+                                        record['销售政策匹配说明'] = `未匹配：订单日期"${orderDate || '缺失'}"不在任何政策时间段内（可用政策：${periods}）`;
                                     } else {
                                         // 没有设置时间段，型号也不在表中
                                         record['销售政策匹配说明'] = `未匹配：型号"${model}"不在政策表中`;
