@@ -708,7 +708,7 @@
 
         <!-- 旧套餐规则 -->
         <div class="policy-section">
-          <h4>📦 旧套餐匹配规则（7种固定组合）</h4>
+          <h4>📦 季度套餐政策（7种固定组合）</h4>
           <button class="toggle-btn" onclick="toggleSection('oldPackageDetail')">👆 点击展开查看所有旧套餐</button>
           <div id="oldPackageDetail" class="collapsible-content">
             <div class="old-package-list">
@@ -759,7 +759,7 @@
 
         <!-- 活动机型政策 -->
         <div class="policy-section">
-          <h4>🔥 活动机型专项激励（15种机型）</h4>
+          <h4>🔥 月度活动机型政策（15种机型）</h4>
           <button class="toggle-btn" onclick="toggleSection('activityModelDetail')">👆 点击展开查看所有活动机型</button>
           <div id="activityModelDetail" class="collapsible-content">
             <div class="activity-model-explain">
@@ -1087,8 +1087,8 @@
           const wb = XLSX.read(data,{type:'array'});
           
           // 解析旧套餐规则 Sheet
-          if(wb.SheetNames.includes('旧套餐规则')){
-            const ws1 = wb.Sheets['旧套餐规则'];
+          if(wb.SheetNames.includes('季度套餐政策')){
+            const ws1 = wb.Sheets['季度套餐政策'];
             const jsonData = XLSX.utils.sheet_to_json(ws1);
             oldPackageRules.length = 0;
             jsonData.forEach(row=>{
@@ -1163,8 +1163,8 @@
           }
 
           // 解析活动机型政策 Sheet
-          if(wb.SheetNames.includes('活动机型政策')){
-            const ws3 = wb.Sheets['活动机型政策'];
+          if(wb.SheetNames.includes('月度活动机型政策')){
+            const ws3 = wb.Sheets['月度活动机型政策'];
             const jsonData = XLSX.utils.sheet_to_json(ws3);
             Object.keys(activityModels).forEach(k=>delete activityModels[k]);
             jsonData.forEach(row=>{
@@ -1287,10 +1287,10 @@
       const statusText = document.getElementById('policyStatusText');
       
       if(isCustom){
-        statusText.innerHTML = `使用自定义配置（旧套餐${oldPackageRules.length}个 / 组合政策${comboPolicyDefs.length}个 / 活动机型${Object.keys(activityModels).length}个） <a href="#" onclick="resetToDefaultPolicy();return false;" style="color:#dc2626;margin-left:12px;text-decoration:underline;">恢复默认</a>`;
+        statusText.innerHTML = `使用自定义配置（季度套餐政策${oldPackageRules.length}个 / 组合政策${comboPolicyDefs.length}个 / 月度活动机型政策${Object.keys(activityModels).length}个） <a href="#" onclick="resetToDefaultPolicy();return false;" style="color:#dc2626;margin-left:12px;text-decoration:underline;">恢复默认</a>`;
         statusBox.style.display = 'block';
       } else {
-        statusText.innerHTML = `使用默认配置（旧套餐${oldPackageRules.length}个 / 组合政策${comboPolicyDefs.length}个 / 活动机型${Object.keys(activityModels).length}个）`;
+        statusText.innerHTML = `使用默认配置（季度套餐政策${oldPackageRules.length}个 / 组合政策${comboPolicyDefs.length}个 / 月度活动机型政策${Object.keys(activityModels).length}个）`;
         statusBox.style.display = 'block';
       }
     }
@@ -1373,7 +1373,7 @@
         [7,'DWQ15-R3wi',9388,'DR1600HF2',7988,'','','','',10598,600]
       ];
       const ws1 = XLSX.utils.aoa_to_sheet(oldPackageData);
-      XLSX.utils.book_append_sheet(wb, ws1, '旧套餐规则');
+      XLSX.utils.book_append_sheet(wb, ws1, '季度套餐政策');
       
       // Sheet 2: 组合套餐政策
       const comboPolicyData = [
@@ -1408,7 +1408,7 @@
         ['CEWH-60GA','其他','flat',100,'','加提100元/台（包销）']
       ];
       const ws3 = XLSX.utils.aoa_to_sheet(activityData);
-      XLSX.utils.book_append_sheet(wb, ws3, '活动机型政策');
+      XLSX.utils.book_append_sheet(wb, ws3, '月度活动机型政策');
       
       // 设置列宽
       ws1['!cols'] = [{wch:10},{wch:18},{wch:8},{wch:18},{wch:8},{wch:18},{wch:8},{wch:18},{wch:8},{wch:10},{wch:10}];
@@ -2018,18 +2018,18 @@
           ...baseHeaders,
           '提成计算状态',
           '计算优先级',
-          '旧套餐提成金额',
-          '旧套餐类型',
-          '旧套餐编号',
+          '季度套餐政策提成金额',
+          '季度套餐政策类型',
+          '季度套餐政策编号',
           '套餐政策提成金额',
           '套餐政策类型',
           '套餐政策套数',
           '套餐政策组号',
           '套餐政策组合明细',
-          '活动机型提成金额',
-          '活动机型类型',
-          '活动机型单台激励',
-          '活动机型说明'
+          '月度活动机型政策提成金额',
+          '月度活动机型政策类型',
+          '月度活动机型政策单台激励',
+          '月度活动机型政策说明'
         ];
         exportData.push(newHeaders);
 
@@ -2049,7 +2049,7 @@
             }
             rowCalculations[record.rowIndex].oldPackage = {
               commission: pkg.commission,
-              type: '旧套餐',
+              type: '季度套餐政策',
               packageId: '套餐' + pkg.packageId
             };
           });
@@ -2220,7 +2220,7 @@
           newRow.push('activity_package'); // 状态
           newRow.push('1');                // 优先级
           newRow.push(pkg.commission);     // 金额（整套一致）
-          newRow.push('旧套餐');           // 类型
+          newRow.push('季度套餐政策');           // 类型
           newRow.push('套餐'+pkg.packageId); // 套餐编号（规则ID）
           exportData.push(newRow);
         });
@@ -2234,7 +2234,7 @@
           exportData.push(newRow);
         }
       }
-      exportSheet(exportData,'活动套餐提成_旧套餐');
+      exportSheet(exportData,'活动套餐提成_季度套餐政策');
     }
 
     function exportCombo(){
@@ -2295,7 +2295,7 @@
           exportData.push(newRow);
         }
       }
-      exportSheet(exportData,'活动套餐提成_活动机型');
+      exportSheet(exportData,'活动套餐提成_月度活动机型政策');
     }
 
     function exportSheet(data, sheetName){
