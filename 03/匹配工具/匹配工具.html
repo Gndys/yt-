@@ -866,6 +866,21 @@
                             </div>
                         </div>
 
+                        <div class="upload-card optional" id="energyBox" data-type="energy">
+                            <div class="upload-card-header">
+                                能效表 <span class="upload-tag">可选</span>
+                            </div>
+                            <div class="upload-icon">⚡</div>
+                            <input type="file" id="energyFile" class="file-input" accept=".xlsx,.xls" />
+                            <button class="btn btn-secondary btn-sm upload-button" onclick="document.getElementById('energyFile').click()">
+                                选择文件
+                            </button>
+                            <div class="file-info-display" id="energyInfo"></div>
+                            <div class="sheet-selector-wrapper" id="energySheetSelector">
+                                <select id="energySheet"></select>
+                            </div>
+                        </div>
+
                         <div class="upload-card optional" id="policyBox" data-type="policy">
                             <div class="upload-card-header">
                                 政策表 <span class="upload-tag">可选</span>
@@ -1012,6 +1027,7 @@
             salesOrder: { data: null, headers: [], workbook: null },
             payment: { data: null, headers: [], workbook: null },
             commission: { data: null, headers: [], workbook: null },
+            energy: { data: null, headers: [], workbook: null },
             policy: { 
                 workbook: null,
                 sheets: {
@@ -1385,6 +1401,13 @@
                 ],
                 matchBy: 'docNumber'
             },
+            energy: {
+                title: '能效表',
+                fields: [
+                    { key: 'model', label: '商品型号', matchKey: '商品型号' },
+                    { key: 'energyLabel', label: '能效标识', matchKey: '能效标识' }
+                ]
+            },
             policySpecialMachine: {
                 title: '政策表 - 特价机整理',
                 sheetName: '特价机整理',
@@ -1450,6 +1473,10 @@
 
         document.getElementById('commissionFile').addEventListener('change', function(e) {
             handleFileUpload(e, 'commission');
+        });
+
+        document.getElementById('energyFile').addEventListener('change', function(e) {
+            handleFileUpload(e, 'energy');
         });
 
         document.getElementById('policyFile').addEventListener('change', function(e) {
@@ -1720,6 +1747,11 @@
                 createMappingAccordion('commission', fieldConfigs.commission, dataStore.commission.headers, container, false, false);
             }
 
+            // 能效表映射（可选）
+            if (dataStore.energy.data) {
+                createMappingAccordion('energy', fieldConfigs.energy, dataStore.energy.headers, container, false, false);
+            }
+
             // 政策表各子表映射
             if (dataStore.policy.workbook) {
                 const policyConfigs = [
@@ -1965,7 +1997,8 @@
                         chanet: 0,
                         boiler: 0,
                         activity: 0,
-                        priceTable: 0
+                        priceTable: 0,
+                        energy: 0
                     };
 
                     // 检测销售订单中的相似订单号
@@ -2021,6 +2054,9 @@
                             const colIndex = mappings.salesOrder[field.key];
                             record[field.label] = colIndex !== undefined ? (row[colIndex] || '') : '';
                         });
+
+                        // 默认添加能效标识列，方便后续匹配或导出
+                        record['能效标识'] = '';
 
                         // 添加所属地区字段（根据客户店名判断）
                         const storeName = record['客户店名'] || '';
@@ -2384,6 +2420,15 @@
                             });
                         }
 
+                        // 匹配能效标识（按商品型号）
+                        if (mappings.energy && indexes.energy) {
+                            const energyData = indexes.energy[model];
+                            if (energyData) {
+                                record['能效标识'] = energyData.energyLabel || '';
+                                stats.energy++;
+                            }
+                        }
+
                         matchResult.push(record);
                     });
 
@@ -2554,6 +2599,24 @@
                                 });
                             }
                         }
+                    });
+                }
+            }
+
+            // 能效表索引（按商品型号）
+            if (mappings.energy && dataStore.energy.data) {
+                indexes.energy = {};
+                const modelColIndex = mappings.energy.model;
+                const labelColIndex = mappings.energy.energyLabel;
+                if (modelColIndex !== undefined && labelColIndex !== undefined) {
+                    dataStore.energy.data.forEach(row => {
+                        const modelValue = row[modelColIndex];
+                        if (!modelValue) return;
+                        const key = modelValue.toString().trim();
+                        if (!key) return;
+                        indexes.energy[key] = {
+                            energyLabel: row[labelColIndex] || ''
+                        };
                     });
                 }
             }
@@ -2826,7 +2889,8 @@
                 { icon: '🏷️', label: '特价机匹配', value: stats.specialMachine, total: total, color: 'var(--color-warning)' },
                 { icon: '💧', label: '佳尼特匹配', value: stats.chanet, total: total, color: 'var(--accent-blue)' },
                 { icon: '🔥', label: '壁挂炉匹配', value: stats.boiler, total: total, color: 'var(--color-danger)' },
-                { icon: '📋', label: '销售政策匹配', value: stats.activity, total: total, color: 'var(--color-success)' }
+                { icon: '📋', label: '销售政策匹配', value: stats.activity, total: total, color: 'var(--color-success)' },
+                { icon: '⚡', label: '能效标识匹配', value: stats.energy, total: total, color: 'var(--accent-gold)' }
             ];
 
             matchStats.forEach(item => {

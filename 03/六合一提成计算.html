@@ -572,6 +572,64 @@
         row["最终折扣率"] = null;
       }
     }
+    function parseOrderDate(row){
+      const raw = normalizeString(row["日期"]);
+      if (!raw) return null;
+      const numericValue = Number(raw);
+      if (!isNaN(numericValue) && raw === String(numericValue)){
+        const excelDate = new Date(Math.round((numericValue - 25569) * 86400000));
+        if (!isNaN(excelDate.getTime())) return excelDate;
+      }
+      const normalized = raw.replace(/[.]/g,"/").replace(/-/g,"/");
+      const date = new Date(normalized);
+      return isNaN(date.getTime()) ? null : date;
+    }
+    function determineRegion(row){
+      let region = normalizeString(row["所属地区"] || row["地区"]);
+      if (region.includes("杭州")) region = "杭州";
+      else if (region.includes("金华")) region = "金华";
+      if (!region){
+        const store = normalizeString(row["客户店名"] || row["客户"]);
+        if (store.includes("杭州")) region = "杭州";
+        else if (store.includes("金华")) region = "金华";
+      }
+      return region;
+    }
+    function getOilHoodThreshold(date){
+      const result = { threshold: 0.7, note: "" };
+      if (!date) return result;
+      const year = date.getFullYear();
+      const start = new Date(year, 9, 24);
+      const end = new Date(year, 11, 31, 23, 59, 59, 999);
+      if (date >= start && date <= end){
+        return { threshold: 0.65, note: "（10.24-12.31特惠）" };
+      }
+      return result;
+    }
+    function normalizeEnergyCode(label){
+      let str = normalizeString(label);
+      if (!str) return "";
+      str = str.replace(/能效|级/g,"");
+      const match = str.match(/\d+/);
+      if (match) return match[0];
+      const map = {"一":"1","二":"2","三":"3","Ⅰ":"1","Ⅱ":"2","Ⅲ":"3"};
+      return map[str] || str;
+    }
+    function getDiscountRule(region, energyCode){
+      if (region === "杭州"){
+        if (energyCode === "1"){
+          return {min:0.728, max:0.773, base:0.728, desc:"杭州·能效标识=1", label:"能效标识=1"};
+        }
+        if (energyCode === "2"){
+          return {min:0.731, max:0.776, base:0.731, desc:"杭州·能效标识=2", label:"能效标识=2"};
+        }
+        return {min:0.755, max:0.80, base:0.755, desc:"杭州·其他能效标识", label:"其他能效标识"};
+      }
+      if (region === "金华"){
+        return {min:0.72, max:0.765, base:0.72, desc:"金华地区", label:"金华区域范围"};
+      }
+      return null;
+    }
     function markReturn(row){
       const q = normalizeNumber(row["销售数量"]);
       const t = normalizeString(row["单据类型"]);
@@ -985,6 +1043,7 @@
         const majorCat = normalizeString(r["大类型"]);
         const actualDiscount = normalizeNumber(r["卖出的实际折扣"]);
         const paymentAmount = normalizeNumber(r["回款收款金额"]);
+        const orderDate = parseOrderDate(r);
 
         const isSmokeRelated = majorCat.includes("油烟机") || majorCat.includes("净烟机") ||
                                 majorCat.includes("蒸烤") || majorCat.includes("洗碗机");
@@ -992,16 +1051,24 @@
         if (isSmokeRelated && actualDiscount !== null && paymentAmount !== null){
           let threshold = 0;
           let categoryName = "";
+          let thresholdNote = "";
           if (majorCat.includes("油烟机")){ threshold = 0.7; categoryName = "油烟机"; }
           else if (majorCat.includes("净烟机")){ threshold = 0.65; categoryName = "净烟机"; }
           else if (majorCat.includes("蒸烤")){ threshold = 0.65; categoryName = "蒸烤"; }
           else if (majorCat.includes("洗碗机")){ threshold = 0.65; categoryName = "洗碗机"; }
 
+          if (categoryName === "油烟机"){
+            const info = getOilHoodThreshold(orderDate);
+            threshold = info.threshold;
+            thresholdNote = info.note;
+          }
+          const thresholdDisplay = `${fmtPercent(threshold)}${thresholdNote}`;
+
           if (actualDiscount >= threshold){
             r["烟灶提成"] = paymentAmount * 0.1;
-            r["烟灶提成说明"] = `${categoryName}：实际折扣${fmtPercent(actualDiscount)} ≥ ${fmtPercent(threshold)} → 收款×10% = ${fmtCurrency(r["烟灶提成"])}`;
+            r["烟灶提成说明"] = `${categoryName}：实际折扣${fmtPercent(actualDiscount)} ≥ ${thresholdDisplay} → 收款×10% = ${fmtCurrency(r["烟灶提成"])}`;
           } else {
-            r["烟灶提成说明"] = `${categoryName}：实际折扣${fmtPercent(actualDiscount)} < ${fmtPercent(threshold)}，提成=0`;
+            r["烟灶提成说明"] = `${categoryName}：实际折扣${fmtPercent(actualDiscount)} < ${thresholdDisplay}，提成=0`;
           }
           count++;
         } else {
@@ -1097,21 +1164,32 @@
         r["折扣机提成说明"] = "";
         const finalDiscount = r["最终折扣率"];
         const amountTax = normalizeNumber(r["价税合计"]);
-        const allZero = (c_special === 0 && c_boiler === 0 && c_policy === 0 && c_smoke === 0 && c_national === 0);
+        const energyCode = normalizeEnergyCode(r["能效标识"]);
+        const region = determineRegion(r);
+        const allZero = (c_special === 0 && c_boiler === 0 && c_policy === 0 && c_policy_extra === 0 && c_smoke === 0 && c_national === 0);
 
-        if (allZero && finalDiscount !== null && finalDiscount > 0.755 && finalDiscount < 0.80){
-          if (amountTax !== null){
-            r["折扣机提成"] = (finalDiscount - 0.755) * amountTax;
-            r["折扣机提成说明"] = `条件满足：(${fmtPercent(finalDiscount)} - 75.5%) × 价税合计${fmtCurrency(amountTax)} = ${fmtCurrency(r["折扣机提成"])}`;
-          } else {
-            r["折扣机提成说明"] = "符合折扣条件但缺少价税合计，折扣机提成=0";
-          }
-        } else if (!allZero){
+        if (!allZero){
           r["折扣机提成说明"] = "前五模块提成不全为0，不符合折扣机条件，折扣机提成=0";
+        } else if (!region){
+          r["折扣机提成说明"] = "缺少所属地区，无法判断折扣机规则，折扣机提成=0";
+        } else if (region !== "杭州" && region !== "金华"){
+          r["折扣机提成说明"] = `所属地区${region}不在杭州/金华范围，折扣机提成=0`;
+        } else if (region === "杭州" && !energyCode){
+          r["折扣机提成说明"] = "杭州地区需提供能效标识，当前为空，折扣机提成=0";
         } else if (finalDiscount === null){
           r["折扣机提成说明"] = "缺少系统定价或价税合计，无法计算折扣率，折扣机提成=0";
         } else {
-          r["折扣机提成说明"] = `最终折扣率${fmtPercent(finalDiscount)}不在(0.755,0.80)内，折扣机提成=0`;
+          const rule = getDiscountRule(region, energyCode);
+          if (!rule){
+            r["折扣机提成说明"] = "未匹配到地区对应的折扣机规则，折扣机提成=0";
+          } else if (finalDiscount < rule.min || finalDiscount > rule.max){
+            r["折扣机提成说明"] = `${rule.desc}：最终折扣率${fmtPercent(finalDiscount)}不在${fmtPercent(rule.min)}-${fmtPercent(rule.max)}范围，折扣机提成=0`;
+          } else if (amountTax === null){
+            r["折扣机提成说明"] = `${rule.desc}：符合折扣条件但缺少价税合计，折扣机提成=0`;
+          } else {
+            r["折扣机提成"] = (finalDiscount - rule.base) * amountTax;
+            r["折扣机提成说明"] = `${rule.desc}（${rule.label}，范围${fmtPercent(rule.min)}-${fmtPercent(rule.max)}）：(${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × 价税合计${fmtCurrency(amountTax)} = ${fmtCurrency(r["折扣机提成"])}`;
+          }
         }
         r["最终总提成"] = r["折扣前小计"] + c_national + ensureNumeric(r["折扣机提成"]);
         r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])} + 国补${fmtCurrency(c_national)} + 折扣机${fmtCurrency(r["折扣机提成"])} → ${fmtCurrency(r["最终总提成"])}`;
