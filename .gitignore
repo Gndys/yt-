@@ -30,3 +30,8 @@ venv/
 *.log
 .cache/
 
+# 大型视频文件
+*.mp4
+*.avi
+*.mov
+*.mkv

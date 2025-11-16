@@ -4,7 +4,7 @@ let employeeFileData = null;
 let resultWorkbook = null;
 
 // 月份列表
-const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月'];
+const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月'];
 
 // 销售组织
 const salesOrg = "杭州中冠电器有限公司";
@@ -186,7 +186,7 @@ async function processData() {
             '7月': monthlyData['7月'] || 0,
             '8月': monthlyData['8月'] || 0,
             '9月': monthlyData['9月'] || 0,
-            '10月': 0,
+            '10月': monthlyData['10月'] || 0,
             '11月': 0,
             '12月': 0,
             '参考总额': total,
@@ -357,7 +357,7 @@ function processRegionSheet(workbook, sheetName, salesmanData) {
     for (const [salesman, monthlyData] of Object.entries(salesmanData)) {
         const total = monthNames.reduce((sum, month) => sum + (monthlyData[month] || 0), 0);
         if (total > 0) {
-            console.log(`  业务员 [${salesman}]: 1-9月合计 = ${total.toFixed(2)}`);
+            console.log(`  业务员 [${salesman}]: 1-10月合计 = ${total.toFixed(2)}`);
         }
     }
 }
@@ -375,7 +375,7 @@ downloadBtn.addEventListener('click', () => {
     // 生成文件名（包含当前日期）
     const date = new Date();
     const dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-    const fileName = `销售员回款汇总表_1-9月_2025年数据_${dateStr}.xlsx`;
+    const fileName = `销售员回款汇总表_1-10月_2025年数据_${dateStr}.xlsx`;
     
     // 导出文件
     XLSX.writeFile(resultWorkbook, fileName);

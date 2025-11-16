@@ -267,7 +267,7 @@
     <a href="../index.html" class="back-nav">← 返回首页</a>
     
     <h1>六合一提成与折扣计算工具</h1>
-    <div class="subtitle">支持上传 / 分步计算 / activity_package 跳过 / 卖出折扣重算 / 销售政策档位简化 / 新增国补提成模块</div>
+    <div class="subtitle">支持上传 / 分步计算 / activity_package 跳过 / 卖出折扣重算 / 销售政策档位简化 / 国补提成(9.15-10.8)</div>
     
     <div class="top-actions">
       <button id="btnRecalcActual" disabled title="(回款收款金额 - 支付带单提成点位) ÷ 销售数量 ÷ 系统定价">
@@ -340,7 +340,7 @@
               <div class="status-dot" id="dot-nationalSubsidy"></div>
               <div class="mod-name">⑤ 国补提成</div>
             </div>
-            <div class="mod-desc">前四模块为0 且订单类型=非国补 且 0.705<折扣<0.750。</div>
+            <div class="mod-desc">9.15-10.8期间 且前四模块为0 且订单类型=非国补 且 0.705<折扣<0.750。</div>
             <div class="mod-action">执行计算 →</div>
           </button>
           <button id="btnDiscount" data-module="discount" disabled>
@@ -793,7 +793,7 @@
 
       const ruleSheet = XLSX.utils.aoa_to_sheet([
         ["规则版本", state.ruleVersion],
-        ["计算规则", "六合一提成计算：特价机、壁挂炉、销售政策、烟灶、国补提成、折扣机。销售政策规则精简：70%/75%档满档4.5%，未达档0。国补提成：前4个模块为0且订单类型=非国补且折扣在(70.5%,75%)区间。"]
+        ["计算规则", "六合一提成计算：特价机、壁挂炉、销售政策、烟灶、国补提成、折扣机。销售政策规则精简：70%/75%档满档4.5%，未达档0。国补提成：仅限2025.9.15-10.8期间，前4个模块为0且订单类型=非国补且折扣在(70.5%,75%)区间。"]
       ]);
       XLSX.utils.book_append_sheet(wb, ruleSheet, "规则版本");
 
@@ -1090,6 +1090,10 @@
     function calculateNationalSubsidy(){
       log("开始执行模块：nationalSubsidy（含 activity_package 跳过）");
       let count = 0;
+      // 国补提成时间段：2025年9月15日至10月8日
+      const subsidyStartDate = new Date(2025, 8, 15); // 月份从0开始，8代表9月
+      const subsidyEndDate = new Date(2025, 9, 8, 23, 59, 59, 999); // 9代表10月
+      
       state.rows.forEach(r=>{
         if (isActivityPackageRow(r)){
           r["国补提成"] = 0;
@@ -1098,6 +1102,10 @@
         }
         r["国补提成"] = 0;
         r["国补提成说明"] = "";
+        
+        // 检查订单日期是否在国补时间段内
+        const orderDate = parseOrderDate(r);
+        const inSubsidyPeriod = orderDate && orderDate >= subsidyStartDate && orderDate <= subsidyEndDate;
         
         const c_special = ensureNumeric(r["特价机提成"]);
         const c_boiler = ensureNumeric(r["壁挂炉提成"]);
@@ -1108,6 +1116,16 @@
         const orderType = normalizeString(r["订单类型"]);
         const finalDiscount = r["最终折扣率"];
         const amountTax = normalizeNumber(r["价税合计"]);
+        
+        // 必须在国补时间段内才计算
+        if (!inSubsidyPeriod){
+          if (orderDate){
+            r["国补提成说明"] = `订单日期${orderDate.toLocaleDateString('zh-CN')}不在国补时间段(2025.9.15-10.8)内，国补提成=0`;
+          } else {
+            r["国补提成说明"] = "缺少订单日期，无法判断是否在国补时间段内，国补提成=0";
+          }
+          return;
+        }
         
         if (allPrevZero && orderType === "非国补"){
           if (finalDiscount !== null && finalDiscount > 0.705 && finalDiscount < 0.750){
@@ -1278,7 +1296,7 @@
 
       log("系统初始化完成。");
       log("已启用：六合一提成计算（特价机、壁挂炉、销售政策、烟灶、国补提成、折扣机）","ok");
-      log("销售政策规则精简：70/75%档满档=4.5%，未达=0；国补提成：前4个模块为0且订单类型=非国补且折扣在(70.5%,75%)","ok");
+      log("销售政策规则精简：70/75%档满档=4.5%，未达=0；国补提成：仅限2025.9.15-10.8期间，前4个模块为0且订单类型=非国补且折扣在(70.5%,75%)","ok");
       refreshStats();
     });
 

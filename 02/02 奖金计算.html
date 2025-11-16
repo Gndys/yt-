@@ -240,6 +240,9 @@
       font-size: 14px;
       cursor: pointer;
       transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .btn-secondary:hover {
@@ -1369,10 +1372,16 @@
 
         <!-- 右侧：分析结果面板 -->
         <div class="ai-analysis-panel" id="ai-analysis-panel">
-          <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-            <span>📈</span>
-            <span>分析结果</span>
-          </h3>
+          <div style="margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+              <span>📈</span>
+              <span>分析结果</span>
+            </h3>
+            <button id="btn-export-report" class="btn-secondary" onclick="exportAIReportPDF()" style="display: none;">
+              <span>📥</span>
+              <span>导出PDF</span>
+            </button>
+          </div>
           <div id="analysis-content" style="color: var(--text-secondary); text-align: center; padding: 60px 20px;">
             <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
             <p>选择上方功能卡片开始分析</p>
@@ -3187,6 +3196,7 @@ ${context.employeeAnalysis.slice(-5).reverse().map((e, i) =>
         addChatMessage('user', userMessage);
       } else {
         // 系统触发的分析，在右侧面板显示加载状态
+        document.getElementById('btn-export-report').style.display = 'none';
         document.getElementById('analysis-content').innerHTML = `
           <div style="text-align: center; color: var(--primary-color);">
             <div class="loading-dots" style="justify-content: center; margin-bottom: 12px;">
@@ -3255,6 +3265,7 @@ ${context.employeeAnalysis.slice(-5).reverse().map((e, i) =>
         addChatMessage('ai', `❌ ${error.message || 'AI服务出现错误，请稍后重试'}`);
         
         if (isSystemTriggered) {
+          document.getElementById('btn-export-report').style.display = 'none';
           document.getElementById('analysis-content').innerHTML = `
             <div style="color: var(--error-color); text-align: center; padding: 40px;">
               <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
@@ -3427,6 +3438,318 @@ ${context.employeeAnalysis.slice(-5).reverse().map((e, i) =>
       `;
       
       analysisContent.innerHTML = html;
+      
+      // 显示导出按钮
+      document.getElementById('btn-export-report').style.display = 'flex';
+    }
+    
+    // 导出AI报告为PDF
+    function exportAIReportPDF() {
+      const analysisContent = document.getElementById('analysis-content');
+      
+      if (!analysisContent || analysisContent.textContent.includes('选择上方功能卡片开始分析')) {
+        showMessage('暂无分析报告可导出', 'warning');
+        return;
+      }
+      
+      try {
+        // 创建一个新窗口用于打印
+        const printWindow = window.open('', '_blank');
+        
+        if (!printWindow) {
+          showMessage('请允许弹出窗口以导出PDF', 'warning');
+          return;
+        }
+        
+        // 生成打印用的HTML
+        const printHTML = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI分析报告 - ${new Date().toLocaleDateString('zh-CN')}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: #262626;
+      line-height: 1.6;
+      font-size: 12pt;
+    }
+    
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+      margin-bottom: 20px;
+      page-break-after: avoid;
+    }
+    
+    .header h1 {
+      font-size: 24pt;
+      color: #262626;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    
+    .header .meta {
+      color: #666;
+      font-size: 10pt;
+      margin-top: 8px;
+    }
+    
+    .section {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 15px;
+      page-break-inside: avoid;
+    }
+    
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 14pt;
+      color: #262626;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e0e0e0;
+      page-break-after: avoid;
+    }
+    
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .kpi-card {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+    }
+    
+    .kpi-value {
+      font-size: 18pt;
+      font-weight: 700;
+      color: #1890ff;
+      margin-bottom: 4px;
+    }
+    
+    .kpi-label {
+      font-size: 9pt;
+      color: #666;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 9pt;
+      font-weight: 500;
+    }
+    
+    .badge-danger {
+      background: #fff2f0;
+      color: #f5222d;
+      border: 1px solid #ffccc7;
+    }
+    
+    .badge-warn {
+      background: #fffbe6;
+      color: #faad14;
+      border: 1px solid #ffe58f;
+    }
+    
+    .badge-ok {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+    
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+    
+    .list-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      align-items: start;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: #fafafa;
+      page-break-inside: avoid;
+    }
+    
+    .list-item .title {
+      font-weight: 600;
+      color: #262626;
+      line-height: 1.4;
+      font-size: 10pt;
+    }
+    
+    .list-item .desc {
+      color: #666;
+      line-height: 1.6;
+      font-size: 10pt;
+    }
+    
+    .list-item .desc small {
+      display: block;
+      margin-top: 6px;
+      font-size: 9pt;
+      opacity: 0.8;
+    }
+    
+    .ai-analysis-content {
+      line-height: 1.8;
+      color: #262626;
+      font-size: 11pt;
+    }
+    
+    .ai-analysis-content p {
+      margin-bottom: 12px;
+      line-height: 1.8;
+    }
+    
+    .ai-analysis-content ul,
+    .ai-analysis-content ol {
+      margin: 12px 0;
+      padding-left: 20px;
+    }
+    
+    .ai-analysis-content li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    
+    .ai-analysis-content h1,
+    .ai-analysis-content h2,
+    .ai-analysis-content h3 {
+      margin-top: 16px;
+      margin-bottom: 10px;
+      line-height: 1.4;
+      page-break-after: avoid;
+    }
+    
+    .ai-analysis-content h1 { font-size: 16pt; }
+    .ai-analysis-content h2 { font-size: 14pt; }
+    .ai-analysis-content h3 { font-size: 12pt; }
+    
+    .ai-analysis-content strong {
+      color: #262626;
+      font-weight: 600;
+    }
+    
+    .ai-analysis-content code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 10pt;
+    }
+    
+    .ai-analysis-content blockquote {
+      border-left: 3px solid #1890ff;
+      padding-left: 12px;
+      margin: 12px 0;
+      color: #666;
+      font-style: italic;
+    }
+    
+    .footer {
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+      color: #999;
+      font-size: 9pt;
+      page-break-inside: avoid;
+    }
+    
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💰 业务员奖金计算系统 - AI分析报告</h1>
+      <div class="meta">
+        <div>生成时间：${new Date().toLocaleString('zh-CN')}</div>
+        <div style="margin-top: 4px;">计算月份：${AppData.config.selectedMonth ? AppData.config.selectedMonth + '月' : '未选择'}</div>
+      </div>
+    </div>
+    
+    ${analysisContent.innerHTML}
+    
+    <div class="footer">
+      <p>本报告由 AI 智能分析系统自动生成</p>
+      <p style="margin-top: 4px;">© 2025 业务员奖金计算系统</p>
+    </div>
+  </div>
+  
+  <script>
+    // 页面加载完成后自动打开打印对话框
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 500);
+    };
+    
+    // 打印后关闭窗口（可选）
+    window.onafterprint = function() {
+      setTimeout(function() {
+        window.close();
+      }, 100);
+    };
+  <\/script>
+</body>
+</html>
+`;
+        
+        // 写入HTML到新窗口
+        printWindow.document.write(printHTML);
+        printWindow.document.close();
+        
+        showMessage('正在准备PDF导出，请在打印对话框中选择"另存为PDF"', 'info');
+        
+      } catch (error) {
+        console.error('导出失败:', error);
+        showMessage('导出失败：' + error.message, 'error');
+      }
     }
     
     // 解析AI回复（提取关键信息）
@@ -3489,6 +3812,9 @@ ${context.employeeAnalysis.slice(-5).reverse().map((e, i) =>
           <p style="font-size: 13px; margin-top: 8px;">或在左侧对话框中提问</p>
         </div>
       `;
+      
+      // 隐藏导出按钮
+      document.getElementById('btn-export-report').style.display = 'none';
       
       showMessage('对话已清空', 'success');
     }
