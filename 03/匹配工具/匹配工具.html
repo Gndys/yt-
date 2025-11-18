@@ -1446,7 +1446,9 @@
                     { key: 'activityDiscount', label: '销售政策折扣率', matchKey: '折扣率' },
                     { key: 'activityCommission', label: '销售政策提成原始', matchKey: '提成' },
                     { key: 'activityExtra', label: '销售政策加提原始', matchKey: '加提' },
-                    { key: 'activityRequire', label: '销售政策要求', matchKey: '加提要求' }
+                    { key: 'activityRequire', label: '销售政策要求', matchKey: '加提要求' },
+                    { key: 'policyStartDate', label: '政策开始时间', matchKey: '政策开始时间' },
+                    { key: 'policyEndDate', label: '政策结束时间', matchKey: '政策结束时间' }
                 ],
                 matchBy: 'model',
                 matchKey: '型号'
@@ -1641,40 +1643,27 @@
                         const headers = jsonData[headerRowIndex];
                         const rows = jsonData.slice(headerRowIndex + 1).filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
                         
-                        // 从第一行数据中提取开始和结束时间（M列和N列，索引12和13）以及地区（O列，索引14）
-                        let startDate = null;
-                        let endDate = null;
+                        // 从子表名称中提取地区信息（如"活动-杭州"中的"杭州"）
                         let region = null;
-                        
-                        if (rows.length > 0) {
-                            const firstRow = rows[0];
-                            // M列：政策开始时间（索引12）
-                            if (firstRow[12]) {
-                                const parsedStartDate = parseDate(firstRow[12]);
-                                startDate = parsedStartDate ? formatDate(parsedStartDate) : firstRow[12];
-                            }
-                            // N列：政策结束时间（索引13）
-                            if (firstRow[13]) {
-                                const parsedEndDate = parseDate(firstRow[13]);
-                                endDate = parsedEndDate ? formatDate(parsedEndDate) : firstRow[13];
-                            }
-                            // O列：适用地区（索引14）
-                            if (firstRow[14]) {
-                                region = String(firstRow[14]).trim();
+                        const regionMatch = sheetName.match(/活动-(.+)/);
+                        if (regionMatch) {
+                            const extractedRegion = regionMatch[1];
+                            // 如果是"所有地区"，则region保持为null（表示适用所有地区）
+                            if (extractedRegion !== '所有地区') {
+                                region = extractedRegion;
                             }
                         }
                         
                         // 添加到Map中，按子表名称索引
+                        // 注意：不再在sheet级别存储startDate和endDate，因为每条记录都有自己的时间段
                         dataStore.policy.sheets.activity.set(sheetName, {
                             sheetName: sheetName,
-                            startDate: startDate,
-                            endDate: endDate,
                             region: region,
                             headers: headers,
                             data: rows
                         });
                         
-                        console.log(`政策表-${sheetName} 读取成功: 表头行=${headerRowIndex}, 数据行数=${rows.length}, 时间段=${startDate} 至 ${endDate}, 适用地区=${region || '所有地区'}`);
+                        console.log(`政策表-${sheetName} 读取成功: 表头行=${headerRowIndex}, 数据行数=${rows.length}, 适用地区=${region || '所有地区'}`);
                     }
                 }
             });
@@ -1700,27 +1689,18 @@
             }
             
             let infoHtml = `✓ 政策表已加载<br><small style="color: #4299e1; margin-top: 4px; display: block;">`;
-            infoHtml += `📅 销售政策时间段（${activitySheets.size}个）：<br>`;
+            infoHtml += `📅 销售政策子表（${activitySheets.size}个）：<br>`;
             
-            let hasWarning = false;
             let index = 1;
             for (const [sheetName, sheet] of activitySheets) {
                 const regionText = sheet.region ? `【适用地区：${sheet.region}】` : '【适用地区：所有地区】';
-                if (sheet.startDate && sheet.endDate) {
-                    infoHtml += `  ${index}. ${sheetName}: ${sheet.startDate} ~ ${sheet.endDate} ${regionText}<br>`;
-                } else {
-                    infoHtml += `  ${index}. ${sheetName}: <span style="color: #ed8936;">未设置时间段（将匹配所有订单）</span> ${regionText}<br>`;
-                    hasWarning = true;
-                }
+                infoHtml += `  ${index}. ${sheetName} ${regionText}<br>`;
                 index++;
             }
             
-            if (hasWarning) {
-                infoHtml += `<br><span style="color: #ed8936;">⚠️ 提示：未设置时间段的子表将对所有订单生效，不会根据日期筛选。</span><br>`;
-                infoHtml += `<span style="color: #718096;">建议在M列和N列设置时间段以启用日期匹配功能。</span>`;
-            }
-            
-            infoHtml += `<br><span style="color: #718096;">💡 提示：在O列设置"杭州"、"金华"等适用地区可启用地区匹配，留空表示适用所有地区。</span>`;
+            infoHtml += `<br><span style="color: #718096;">💡 提示：</span><br>`;
+            infoHtml += `<span style="color: #718096;">• 每条政策记录的时间段通过"政策开始时间"和"政策结束时间"字段设置</span><br>`;
+            infoHtml += `<span style="color: #718096;">• 请在字段映射中正确配置这两个字段，以启用基于日期的精确匹配</span>`;
             infoHtml += `</small>`;
             infoElement.innerHTML = infoHtml;
         }
@@ -2230,8 +2210,6 @@
                                 console.log(`调试: 检查活动表: ${sheetName}`);
                                 
                                 const orderTimestamp = parseDate(orderDate);
-                                const startTimestamp = parseDate(activitySheet.startDate);
-                                const endTimestamp = parseDate(activitySheet.endDate);
                                 
                                 // 初始化该表的匹配结果
                                 let sheetMatchResult = {
@@ -2239,79 +2217,98 @@
                                     timeMatch: false,
                                     regionMatch: false,
                                     modelMatch: false,
-                                    hasTimeRange: !!(startTimestamp && endTimestamp),
-                                    timeRange: activitySheet.startDate && activitySheet.endDate ?
-                                        `${activitySheet.startDate} ~ ${activitySheet.endDate}` : '未设置时间段',
                                     region: activitySheet.region || '所有地区',
                                     reason: ''
                                 };
                                 
-                                // 如果有时间段，则进行日期匹配
-                                if (orderTimestamp && startTimestamp && endTimestamp) {
-                                    if (orderTimestamp >= startTimestamp && orderTimestamp <= endTimestamp) {
-                                        sheetMatchResult.timeMatch = true;
-                                        
-                                        // 时间匹配，检查地区
-                                        const policyRegion = activitySheet.region;
-                                        let regionMatched = false;
-                                        
-                                        // 地区匹配逻辑 - 修复：所有地区表应该总是匹配
-                                        if (!policyRegion || policyRegion === '' || sheetName === '活动-所有地区') {
-                                            // 政策未指定地区，或者是"所有地区"表，适用所有地区
-                                            regionMatched = true;
-                                        } else if (orderRegion && orderRegion.trim() !== '') {
-                                            // 政策指定了地区，订单也有地区，进行匹配
-                                            if (policyRegion === orderRegion ||
-                                                policyRegion.includes(orderRegion) ||
-                                                orderRegion.includes(policyRegion)) {
-                                                regionMatched = true;
-                                            }
-                                        }
-                                        
-                                        sheetMatchResult.regionMatch = regionMatched;
-                                        
-                                        // 记录时间匹配的子表（用于错误提示）
-                                        timeMatchedSheets.push({
-                                            sheet: activitySheet,
-                                            regionMatched: regionMatched
-                                        });
-                                        
-                                        // 如果时间和地区都匹配，检查型号
-                                        if (regionMatched) {
-                                            if (activitySheet.index && activitySheet.index[model]) {
-                                                sheetMatchResult.modelMatch = true;
-                                                console.log(`✅ 匹配成功: ${sheetName} 中找到型号 "${model}"`);
-                                                policyData = activitySheet.index[model];
-                                                matchedSheet = activitySheet;
-                                                matchType = 'full';
-                                                matchProcess.push(sheetMatchResult);
-                                                break; // 找到匹配后立即退出循环
-                                            } else {
-                                                sheetMatchResult.reason = `型号"${model}"不存在`;
-                                                console.log(`❌ 匹配失败: ${sheetName} 中未找到型号 "${model}"`);
-                                            }
-                                        } else {
-                                            sheetMatchResult.reason = `订单地区"${orderRegion}"与政策地区"${policyRegion}"不符`;
-                                        }
-                                    } else {
-                                        sheetMatchResult.reason = `订单日期不在政策时间段内`;
+                                // 先检查地区匹配
+                                const policyRegion = activitySheet.region;
+                                let regionMatched = false;
+                                
+                                // 地区匹配逻辑
+                                if (!policyRegion || policyRegion === '' || sheetName === '活动-所有地区') {
+                                    // 政策未指定地区，或者是"所有地区"表，适用所有地区
+                                    regionMatched = true;
+                                } else if (orderRegion && orderRegion.trim() !== '') {
+                                    // 政策指定了地区，订单也有地区，进行匹配
+                                    if (policyRegion === orderRegion ||
+                                        policyRegion.includes(orderRegion) ||
+                                        orderRegion.includes(policyRegion)) {
+                                        regionMatched = true;
                                     }
                                 }
-                                // 如果没有时间段设置，直接匹配型号（向后兼容）
-                                else if (!startTimestamp || !endTimestamp) {
-                                    sheetMatchResult.timeMatch = true; // 无时间段视为时间匹配
-                                    sheetMatchResult.regionMatch = true; // 无地区限制视为地区匹配
-                                    if (activitySheet.index[model]) {
-                                        sheetMatchResult.modelMatch = true;
-                                        console.log(`✅ 匹配成功: ${sheetName} 中找到型号 "${model}"（无时间段）`);
-                                        policyData = activitySheet.index[model];
-                                        matchedSheet = activitySheet;
-                                        matchType = 'direct';
-                                        matchProcess.push(sheetMatchResult);
-                                        break; // 找到匹配后立即退出循环
+                                
+                                sheetMatchResult.regionMatch = regionMatched;
+                                
+                                // 如果地区匹配，检查型号和时间
+                                if (regionMatched) {
+                                    if (activitySheet.index && activitySheet.index[model]) {
+                                        const modelRecords = activitySheet.index[model];
+                                        
+                                        // 如果是数组,遍历所有记录找到时间匹配的那一条
+                                        if (Array.isArray(modelRecords)) {
+                                            let foundMatch = false;
+                                            for (const record of modelRecords) {
+                                                // 检查该记录的时间段
+                                                const recordStartTimestamp = parseDate(record.startDate);
+                                                const recordEndTimestamp = parseDate(record.endDate);
+                                                
+                                                console.log(`调试: 检查记录 - 型号: "${model}", 开始: "${record.startDate}" => ${recordStartTimestamp}, 结束: "${record.endDate}" => ${recordEndTimestamp}`);
+                                                
+                                                if (recordStartTimestamp && recordEndTimestamp && orderTimestamp) {
+                                                    // 该记录有时间段,检查订单日期是否在范围内
+                                                    const recordIsInRange = orderTimestamp >= recordStartTimestamp && orderTimestamp <= recordEndTimestamp;
+                                                    console.log(`调试: 时间比较 - ${orderTimestamp.getTime()} >= ${recordStartTimestamp.getTime()} && ${orderTimestamp.getTime()} <= ${recordEndTimestamp.getTime()} = ${recordIsInRange}`);
+                                                    
+                                                    if (recordIsInRange) {
+                                                        sheetMatchResult.timeMatch = true;
+                                                        sheetMatchResult.modelMatch = true;
+                                                        console.log(`✅ 匹配成功: ${sheetName} 中找到型号 "${model}", 时间段: ${record.startDate} ~ ${record.endDate}`);
+                                                        policyData = record;
+                                                        matchedSheet = activitySheet;
+                                                        matchType = 'full';
+                                                        foundMatch = true;
+                                                        break;
+                                                    } else {
+                                                        console.log(`❌ 时间不匹配: 订单日期 ${orderDate} 不在记录时间段 ${record.startDate} ~ ${record.endDate} 内`);
+                                                    }
+                                                } else if (!recordStartTimestamp && !recordEndTimestamp) {
+                                                    // 该记录没有时间段,直接使用(向后兼容)
+                                                    sheetMatchResult.timeMatch = true;
+                                                    sheetMatchResult.modelMatch = true;
+                                                    console.log(`✅ 匹配成功: ${sheetName} 中找到型号 "${model}"(无时间段)`);
+                                                    policyData = record;
+                                                    matchedSheet = activitySheet;
+                                                    matchType = 'direct';
+                                                    foundMatch = true;
+                                                    break;
+                                                }
+                                            }
+                                            
+                                            if (foundMatch) {
+                                                matchProcess.push(sheetMatchResult);
+                                                break; // 找到匹配后立即退出子表循环
+                                            } else {
+                                                sheetMatchResult.reason = `型号"${model}"存在但订单日期不在任何记录的时间段内`;
+                                                console.log(`❌ 匹配失败: ${sheetName} 中型号 "${model}" 有 ${modelRecords.length} 条记录,但订单日期 ${orderDate} 不在任何记录的时间段内`);
+                                            }
+                                        } else {
+                                            // 旧数据结构兼容:不是数组,直接使用
+                                            sheetMatchResult.timeMatch = true;
+                                            sheetMatchResult.modelMatch = true;
+                                            console.log(`✅ 匹配成功: ${sheetName} 中找到型号 "${model}"(旧格式)`);
+                                            policyData = modelRecords;
+                                            matchedSheet = activitySheet;
+                                            matchType = 'full';
+                                            matchProcess.push(sheetMatchResult);
+                                            break;
+                                        }
                                     } else {
                                         sheetMatchResult.reason = `型号"${model}"不存在`;
+                                        console.log(`❌ 匹配失败: ${sheetName} 中未找到型号 "${model}"`);
                                     }
+                                } else {
+                                    sheetMatchResult.reason = `订单地区"${orderRegion}"与政策地区"${policyRegion}"不符`;
                                 }
                                 
                                 matchProcess.push(sheetMatchResult);
@@ -2650,26 +2647,46 @@
                                 const matchValue = row[matchColIndex];
                                 if (matchValue) {
                                     const key = matchValue.toString().trim();
-                                    activityIndex[key] = {};
+                                    
+                                    // 构建该行的数据对象
+                                    const rowData = {};
+                                    
                                     config.fields.forEach(field => {
                                         const colIndex = mapping[field.key];
                                         if (colIndex !== undefined) {
                                             let value = row[colIndex];
+                                            
+                                            // 对时间字段进行解析和格式化
+                                            if (field.key === 'policyStartDate' || field.key === 'policyEndDate') {
+                                                if (value) {
+                                                    const parsedDate = parseDate(value);
+                                                    value = parsedDate ? formatDate(parsedDate) : value;
+                                                }
+                                            }
                                             // 对折扣率字段进行规范化处理
-                                            if (percentageFields.includes(field.key)) {
+                                            else if (percentageFields.includes(field.key)) {
                                                 value = normalizePercentage(value);
                                             }
-                                            activityIndex[key][field.key] = value;
+                                            
+                                            rowData[field.key] = value;
                                         }
                                     });
+                                    
+                                    // 为了兼容性,同时保存startDate和endDate(从policyStartDate和policyEndDate复制)
+                                    rowData.startDate = rowData.policyStartDate || null;
+                                    rowData.endDate = rowData.policyEndDate || null;
+                                    
+                                    // 将同一型号的多条记录保存为数组
+                                    if (!activityIndex[key]) {
+                                        activityIndex[key] = [];
+                                    }
+                                    activityIndex[key].push(rowData);
                                 }
                             });
                         }
                         
                         indexes.policyActivity.set(sheetName, {
                             index: activityIndex,
-                            startDate: activitySheet.startDate,
-                            endDate: activitySheet.endDate,
                             region: activitySheet.region,
                             sheetName: activitySheet.sheetName
                         });

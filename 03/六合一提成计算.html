@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8"/>
-  <title>六合一提成计算工具 - A.O.史密斯业务工具平台</title>
+  <title>A.O.史密斯业务工具平台</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   
   <!-- 统一样式文件 -->
@@ -266,7 +266,7 @@
     <!-- 返回导航 -->
     <a href="../index.html" class="back-nav">← 返回首页</a>
     
-    <h1>六合一提成与折扣计算工具</h1>
+    <h1>第三模块计算工具</h1>
     <div class="subtitle">支持上传 / 分步计算 / activity_package 跳过 / 卖出折扣重算 / 销售政策档位简化 / 国补提成(9.15-10.8)</div>
     
     <div class="top-actions">
@@ -472,9 +472,10 @@
         "折扣机提成","折扣机提成说明",
         "折扣前小计","折扣前小计说明",
         "最终总提成","最终总提成说明",
+        "常规机说明",
         "提成计算状态"
       ],
-      final: ["日期","单据编号","规格型号","大类型","销售数量","最终折扣率","最终总提成","提成计算状态"],
+      final: ["日期","单据编号","规格型号","大类型","销售数量","最终折扣率","最终总提成","常规机说明","提成计算状态"],
       all: "ALL"
     };
 
@@ -525,6 +526,7 @@
       "折扣前小计说明":"折扣前小计说明",
       "最终总提成":"最终总提成",
       "最终总提成说明":"最终总提成说明",
+      "常规机说明":"常规机说明",
       "是否退货":"是否退货",
       "提成计算状态":"提成计算状态",
       "计算优先级":"计算优先级"
@@ -758,7 +760,12 @@
             if (Math.abs(val) > 1000000) {
               val = val.toExponential(2);
             } else {
-              val = (Math.round(val*100)/100).toString();
+              // 销售政策折扣率保留四位小数
+              if (col === "销售政策折扣率") {
+                val = (Math.round(val*10000)/10000).toString();
+              } else {
+                val = (Math.round(val*100)/100).toString();
+              }
             }
           }
           if (val===null || val===undefined || val==="") val = "";
@@ -1170,17 +1177,26 @@
         r["折扣前小计"] = c_special + c_boiler + c_policy + c_policy_extra + c_smoke;
         r["折扣前小计说明"] = `小计 = 特价${fmtCurrency(c_special)} + 壁挂炉${fmtCurrency(c_boiler)} + 销售政策${fmtCurrency(c_policy)} + 销售政策加提${fmtCurrency(c_policy_extra)} + 烟灶${fmtCurrency(c_smoke)} → ${fmtCurrency(r["折扣前小计"])}`;
 
+        // 提前获取最终折扣率，供后续判断使用
+        const finalDiscount = r["最终折扣率"];
+
         if (isActivityPackageRow(r)){
           r["折扣机提成"] = 0;
           r["折扣机提成说明"] = "已计算活动套餐提成，跳过折扣机计算";
-          r["最终总提成"] = r["折扣前小计"] + c_national;
-          r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])} + 国补${fmtCurrency(c_national)}（activity_package跳过折扣）`;
+          
+          // 新规则：折扣前小计=0、折扣机提成=0且最终折扣率≥0.755时，最终总提成留空
+          if (r["折扣前小计"] === 0 && finalDiscount !== null && finalDiscount >= 0.755){
+            r["最终总提成"] = "";
+            r["最终总提成说明"] = `折扣前小计和折扣机提成均为0，且最终折扣率${fmtPercent(finalDiscount)}≥75.5%，最终总提成留空待人工审核`;
+          } else {
+            r["最终总提成"] = r["折扣前小计"] + c_national;
+            r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])} + 国补${fmtCurrency(c_national)}（activity_package跳过折扣）`;
+          }
           return;
         }
 
         r["折扣机提成"] = 0;
         r["折扣机提成说明"] = "";
-        const finalDiscount = r["最终折扣率"];
         const amountTax = normalizeNumber(r["价税合计"]);
         const energyCode = normalizeEnergyCode(r["能效标识"]);
         const region = determineRegion(r);
@@ -1200,19 +1216,59 @@
           const rule = getDiscountRule(region, energyCode);
           if (!rule){
             r["折扣机提成说明"] = "未匹配到地区对应的折扣机规则，折扣机提成=0";
-          } else if (finalDiscount < rule.min || finalDiscount > rule.max){
-            r["折扣机提成说明"] = `${rule.desc}：最终折扣率${fmtPercent(finalDiscount)}不在${fmtPercent(rule.min)}-${fmtPercent(rule.max)}范围，折扣机提成=0`;
           } else if (amountTax === null){
-            r["折扣机提成说明"] = `${rule.desc}：符合折扣条件但缺少价税合计，折扣机提成=0`;
-          } else {
+            r["折扣机提成说明"] = `${rule.desc}：缺少价税合计，折扣机提成=0`;
+          } else if (finalDiscount < rule.min){
+            // 低于区间下限，提成为0
+            r["折扣机提成说明"] = `${rule.desc}：最终折扣率${fmtPercent(finalDiscount)}低于${fmtPercent(rule.min)}，折扣机提成=0`;
+          } else if (finalDiscount >= rule.min && finalDiscount <= rule.max){
+            // 在区间内，按差值计算
             r["折扣机提成"] = (finalDiscount - rule.base) * amountTax;
-            r["折扣机提成说明"] = `${rule.desc}（${rule.label}，范围${fmtPercent(rule.min)}-${fmtPercent(rule.max)}）：(${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × 价税合计${fmtCurrency(amountTax)} = ${fmtCurrency(r["折扣机提成"])}`;
+            r["折扣机提成说明"] = `${rule.desc}（${rule.label}，区间${fmtPercent(rule.min)}-${fmtPercent(rule.max)}）：(${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × 价税合计${fmtCurrency(amountTax)} = ${fmtCurrency(r["折扣机提成"])}`;
+          } else {
+            // 超过区间上限，给固定4.5%
+            r["折扣机提成"] = 0.045 * amountTax;
+            r["折扣机提成说明"] = `${rule.desc}（${rule.label}）：最终折扣率${fmtPercent(finalDiscount)}超过${fmtPercent(rule.max)}，给予固定4.5%提成 = 0.045 × 价税合计${fmtCurrency(amountTax)} = ${fmtCurrency(r["折扣机提成"])}`;
           }
         }
-        r["最终总提成"] = r["折扣前小计"] + c_national + ensureNumeric(r["折扣机提成"]);
-        r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])} + 国补${fmtCurrency(c_national)} + 折扣机${fmtCurrency(r["折扣机提成"])} → ${fmtCurrency(r["最终总提成"])}`;
+        // 新规则：折扣前小计=0、折扣机提成=0且最终折扣率≥0.755时，最终总提成留空
+        if (r["折扣前小计"] === 0 && ensureNumeric(r["折扣机提成"]) === 0 && finalDiscount !== null && finalDiscount >= 0.755){
+          r["最终总提成"] = "";
+          r["最终总提成说明"] = `折扣前小计和折扣机提成均为0，且最终折扣率${fmtPercent(finalDiscount)}≥75.5%，最终总提成留空待人工审核`;
+        } else {
+          r["最终总提成"] = r["折扣前小计"] + c_national + ensureNumeric(r["折扣机提成"]);
+          r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])} + 国补${fmtCurrency(c_national)} + 折扣机${fmtCurrency(r["折扣机提成"])} → ${fmtCurrency(r["最终总提成"])}`;
+        }
         count++;
       });
+      
+      // 计算常规机说明
+      state.rows.forEach(r=>{
+        r["常规机说明"] = "";
+        
+        // 跳过activity_package行
+        if (isActivityPackageRow(r)){
+          return;
+        }
+        
+        // 检查5个主要政策是否都未命中
+        const specialNote = normalizeString(r["特价机提成说明"]);
+        const boilerNote = normalizeString(r["壁挂炉提成说明"]);
+        const policyNote = normalizeString(r["销售政策提成说明"]);
+        const smokeNote = normalizeString(r["烟灶提成说明"]);
+        
+        const specialMiss = specialNote.includes("未命中特价机");
+        const boilerMiss = boilerNote.includes("非壁挂炉大类") || boilerNote.includes("跳过");
+        const policyMiss = policyNote.includes("无销售政策相关字段") || policyNote.includes("跳过");
+        const smokeMiss = smokeNote.includes("未命中");
+        const discountMiss = ensureNumeric(r["折扣机提成"]) === 0;
+        
+        // 所有政策都未命中才显示常规机
+        if (specialMiss && boilerMiss && policyMiss && smokeMiss && discountMiss){
+          r["常规机说明"] = "常规机 4.5";
+        }
+      });
+      
       log(`模块 discount 计算完成（含跳过），处理 ${count} 条非 activity_package 记录。`,"ok");
       state.modulesDone.discount = true;
       updateModuleButtonStyle("discount","done");
