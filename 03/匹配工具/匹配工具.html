@@ -1840,11 +1840,17 @@
                     option.value = index;
                     option.textContent = header || `列${index + 1}`;
                     
-                    // 智能匹配
+                    // 智能匹配（优先精确匹配，避免误匹配）
                     if (matchedIndex === -1 && header && field.matchKey) {
                         const headerStr = header.toString().trim();
-                        if (headerStr === field.matchKey ||
-                            headerStr.includes(field.matchKey)) {
+                        // 先尝试精确匹配
+                        if (headerStr === field.matchKey) {
+                            matchedIndex = index;
+                            option.selected = true;
+                            row.classList.add('matched');
+                        }
+                        // 如果没有精确匹配，再尝试包含匹配（但要求matchKey在header中）
+                        else if (headerStr.includes(field.matchKey) && field.matchKey.length >= 3) {
                             matchedIndex = index;
                             option.selected = true;
                             row.classList.add('matched');
@@ -2665,7 +2671,13 @@
                                             }
                                             // 对折扣率字段进行规范化处理
                                             else if (percentageFields.includes(field.key)) {
-                                                value = normalizePercentage(value);
+                                                // 销售政策折扣率保留4位小数,其他折扣率保留2位小数
+                                                if (field.key === 'activityDiscount') {
+                                                    const num = parseFloat(value);
+                                                    value = isNaN(num) ? value : parseFloat(num.toFixed(4));
+                                                } else {
+                                                    value = normalizePercentage(value);
+                                                }
                                             }
                                             
                                             rowData[field.key] = value;
@@ -2704,6 +2716,19 @@
                 const data = dataStore.policy.sheets[storeKey].data;
                 const headers = dataStore.policy.sheets[storeKey].headers;
                 
+                // 调试：输出列映射信息
+                if (configKey === 'policySpecialMachine') {
+                    console.log('🔍 特价机列映射调试信息:');
+                    console.log('表头:', headers);
+                    console.log('字段映射:', mappings[configKey]);
+                    config.fields.forEach(field => {
+                        const colIndex = mappings[configKey][field.key];
+                        if (colIndex !== undefined) {
+                            console.log(`  ${field.label} (${field.key}) -> 列${colIndex}: "${headers[colIndex]}"`);
+                        }
+                    });
+                }
+                
                 // 需要规范化的折扣率字段
                 const percentageFields = ['activityDiscount', 'boilerDiscount', 'minDiscount'];
                 
@@ -2722,7 +2747,13 @@
                                     let value = row[colIndex];
                                     // 对折扣率字段进行规范化处理
                                     if (percentageFields.includes(field.key)) {
-                                        value = normalizePercentage(value);
+                                        // 销售政策折扣率保留4位小数,其他折扣率保留2位小数
+                                        if (field.key === 'activityDiscount') {
+                                            const num = parseFloat(value);
+                                            value = isNaN(num) ? value : parseFloat(num.toFixed(4));
+                                        } else {
+                                            value = normalizePercentage(value);
+                                        }
                                     }
                                     indexes[configKey][key][field.key] = value;
                                 }
@@ -3028,7 +3059,13 @@
                     const tr = document.createElement('tr');
                     headers.forEach(key => {
                         const td = document.createElement('td');
-                        const value = record[key];
+                        let value = record[key];
+                        
+                        // 销售政策折扣率显示4位小数
+                        if (key === '销售政策折扣率' && typeof value === 'number') {
+                            value = value.toFixed(4);
+                        }
+                        
                         td.textContent = value !== undefined && value !== null ? value : '';
                         
                         // 高亮重要列
@@ -3266,7 +3303,15 @@
                 const newRecord = { ...record };
                 discountFields.forEach(field => {
                     if (field in newRecord) {
-                        newRecord[field] = normalizePercentage(newRecord[field]);
+                        // 销售政策折扣率保留4位小数,其他字段保留2位小数
+                        if (field === '销售政策折扣率') {
+                            const num = parseFloat(newRecord[field]);
+                            if (!isNaN(num)) {
+                                newRecord[field] = parseFloat(num.toFixed(4));
+                            }
+                        } else {
+                            newRecord[field] = normalizePercentage(newRecord[field]);
+                        }
                     }
                 });
                 return newRecord;

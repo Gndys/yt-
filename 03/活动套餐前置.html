@@ -591,7 +591,7 @@
           <select id="orderField"><option value="">请选择...</option></select>
         </div>
         <div class="field-group">
-          <label>客户</label>
+          <label>客户姓名 (用户姓名)</label>
           <select id="customerField"><option value="">请选择...</option></select>
         </div>
         <div class="field-group">
@@ -1465,7 +1465,7 @@
     function autoMatch(headers){
       const mapKeys = {
         orderField:['单据编号','单据号','单据','订单编号','订单'],
-        customerField:['客户店名','客户名称','客户'],
+        customerField:['用户姓名','客户姓名','姓名','客户名称','客户'],
         modelField:['规格型号','规格','型号','机型'],
         salesmanField:['促销员','销售员','导购'],
         quantityField:['销售数量','数量'],
@@ -1576,21 +1576,65 @@
           modelPool[nm].push({ record: rec, used:false });
         });
 
-        oldPackageRules.forEach(rule=>{
+        // 调试日志：显示该客户的所有产品
+        const debugThis = customer.includes('钟正祥');
+        if (debugThis) {
+          console.log(`\n=== 客户姓名: ${customer} (促销员: ${info.salesman}) ===`);
+          console.log('产品池:', Object.keys(modelPool).map(k => `${k}(${modelPool[k].length}台)`).join(', '));
+          console.log('原始产品:', info.items.map(it => `${it.model}(标准化:${it.modelNorm}, 订单:${it.orderNo})`).join(', '));
+        }
+
+        // 按套餐产品数量从少到多排序，优先匹配小套餐；相同数量时按套餐ID排序
+        const sortedRules = oldPackageRules.slice().sort((a, b) => {
+          if (a.products.length !== b.products.length) {
+            return a.products.length - b.products.length;
+          }
+          return a.id - b.id;
+        });
+        
+        if (debugThis) {
+          console.log('套餐匹配顺序:', sortedRules.map(r => `套餐${r.id}(${r.products.length}件)`).join(' → '));
+        }
+        
+        sortedRules.forEach(rule=>{
           const needModels = [];
           let canMatch = true;
           const tempPick = [];
 
+            if (debugThis) {
+              console.log(`\n尝试匹配套餐${rule.id}，需要产品:`, rule.products.map(p => `${p}(标准化:${normalizeModel(p)})`).join(', '));
+            }
+
             rule.products.forEach(req=>{
               const reqNorm = normalizeModel(req);
               const poolArr = modelPool[reqNorm];
-              if(!poolArr) { canMatch = false; return; }
+              if(!poolArr) { 
+                if (debugThis) {
+                  console.log(`  套餐${rule.id}: ❌ 缺少产品 ${req} (标准化: ${reqNorm})`);
+                }
+                canMatch = false; 
+                return; 
+              }
               const pick = poolArr.find(p=>!p.used);
-              if(!pick){ canMatch = false; return; }
+              if(!pick){ 
+                if (debugThis) {
+                  console.log(`  套餐${rule.id}: ❌ 产品 ${req} 已被使用完`);
+                }
+                canMatch = false; 
+                return; 
+              }
+              if (debugThis) {
+                console.log(`  套餐${rule.id}: ✓ 找到产品 ${req} → ${pick.record.model} (订单:${pick.record.orderNo})`);
+              }
               tempPick.push({ required:req, norm:reqNorm, pick });
             });
           if(!canMatch) return;
 
+          // 匹配成功
+          if (debugThis) {
+            console.log(`  ✅ 套餐${rule.id} 匹配成功: ${rule.products.join(' + ')} → 提成¥${rule.commission}`);
+          }
+          
           tempPick.forEach(p=>{ p.pick.used = true; });
 
           const productDetails = tempPick.map((p,i)=>{
@@ -2029,7 +2073,9 @@
           '月度活动机型政策提成金额',
           '月度活动机型政策类型',
           '月度活动机型政策单台激励',
-          '月度活动机型政策说明'
+          '月度活动机型政策说明',
+          '对应套餐价',
+          '对应套餐提成金额'
         ];
         exportData.push(newHeaders);
 
@@ -2038,13 +2084,20 @@
 
         // 处理旧套餐结果
         oldPackageResults.forEach(pkg => {
+          // 获取对应的套餐配置
+          const rule = oldPackageRules.find(r => r.id === pkg.packageId);
+          const packagePrice = rule ? rule.packagePrice : 0;
+          const packageCommission = rule ? rule.commission : 0;
+          
           pkg.relatedRecords.forEach(record => {
             if (!rowCalculations[record.rowIndex]) {
               rowCalculations[record.rowIndex] = {
                 record: record,
                 oldPackage: null,
                 comboPackage: null,
-                activityPackage: null
+                activityPackage: null,
+                packagePrice: '',
+                packageCommission: ''
               };
             }
             rowCalculations[record.rowIndex].oldPackage = {
@@ -2052,6 +2105,8 @@
               type: '季度套餐政策',
               packageId: '套餐' + pkg.packageId
             };
+            rowCalculations[record.rowIndex].packagePrice = packagePrice;
+            rowCalculations[record.rowIndex].packageCommission = packageCommission;
           });
         });
 
@@ -2063,7 +2118,9 @@
                 record: record,
                 oldPackage: null,
                 comboPackage: null,
-                activityPackage: null
+                activityPackage: null,
+                packagePrice: '',
+                packageCommission: ''
               };
             }
             rowCalculations[record.rowIndex].comboPackage = {
@@ -2073,6 +2130,13 @@
               groupId: combo.groupId || '',
               productDetails: combo.productDetails || ''
             };
+            // 组合套餐没有固定套餐价，但有单套激励
+            if (!rowCalculations[record.rowIndex].packagePrice) {
+              rowCalculations[record.rowIndex].packagePrice = '';
+            }
+            if (!rowCalculations[record.rowIndex].packageCommission) {
+              rowCalculations[record.rowIndex].packageCommission = combo.commissionPer || '';
+            }
           });
         });
 
@@ -2084,7 +2148,9 @@
                 record: record,
                 oldPackage: null,
                 comboPackage: null,
-                activityPackage: null
+                activityPackage: null,
+                packagePrice: '',
+                packageCommission: ''
               };
             }
             rowCalculations[record.rowIndex].activityPackage = {
@@ -2093,6 +2159,13 @@
               perUnit: activity.perUnit,
               note: activity.note
             };
+            // 活动机型没有套餐价和套餐提成
+            if (!rowCalculations[record.rowIndex].packagePrice) {
+              rowCalculations[record.rowIndex].packagePrice = '';
+            }
+            if (!rowCalculations[record.rowIndex].packageCommission) {
+              rowCalculations[record.rowIndex].packageCommission = '';
+            }
           });
         });
 
@@ -2138,9 +2211,13 @@
             } else {
               newRow.push('', '', '', '');
             }
+            
+            // 对应套餐价和对应套餐提成金额
+            newRow.push(calc.packagePrice || '');
+            newRow.push(calc.packageCommission || '');
           } else {
             // 未被任何规则匹配的原始数据
-            newRow.push('', '', '', '', '', '', '', '', '', '', '', '', '', '');
+            newRow.push('', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
           }
 
           exportData.push(newRow);
@@ -2206,13 +2283,18 @@
     function exportOld(){
       if(oldPackageResults.length===0){ showError('无旧套餐数据可导出'); return; }
       const exportData = [];
-      const headers = [...excelData[0], '提成计算状态', '计算优先级', '活动套餐提成金额', '套餐类型', '套餐编号'];
+      const headers = [...excelData[0], '提成计算状态', '计算优先级', '活动套餐提成金额', '套餐类型', '套餐编号', '对应套餐价', '对应套餐提成金额'];
       exportData.push(headers);
 
       const processedRecords = new Set();
 
       // 修复：按套餐 result.relatedRecords 统一写入
       oldPackageResults.forEach(pkg=>{
+        // 获取对应的套餐配置
+        const rule = oldPackageRules.find(r => r.id === pkg.packageId);
+        const packagePrice = rule ? rule.packagePrice : 0;
+        const packageCommission = rule ? rule.commission : 0;
+        
         pkg.relatedRecords.forEach(record=>{
           if(processedRecords.has(record.rowIndex)) return;
           processedRecords.add(record.rowIndex);
@@ -2222,6 +2304,8 @@
           newRow.push(pkg.commission);     // 金额（整套一致）
           newRow.push('季度套餐政策');           // 类型
           newRow.push('套餐'+pkg.packageId); // 套餐编号（规则ID）
+          newRow.push(packagePrice);       // 对应套餐价
+          newRow.push(packageCommission);  // 对应套餐提成金额
           exportData.push(newRow);
         });
       });
@@ -2230,7 +2314,7 @@
       for(let i=1;i<excelData.length;i++){
         if(!processedRecords.has(i)){
           const newRow = [...excelData[i]];
-          newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');
+          newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');
           exportData.push(newRow);
         }
       }
@@ -2240,10 +2324,11 @@
     function exportCombo(){
       if(comboPolicyResults.length===0){ showError('无套餐政策结果可导出'); return; }
       const exportData = [];
-      const headers = [...excelData[0], '提成计算状态', '计算优先级', '活动套餐提成金额', '套餐类型', '套数', '套餐组号', '组合明细'];
+      const headers = [...excelData[0], '提成计算状态', '计算优先级', '活动套餐提成金额', '套餐类型', '套数', '套餐组号', '组合明细', '对应套餐价', '对应套餐提成金额'];
       exportData.push(headers);
       const processed = new Set();
       comboPolicyResults.forEach(p=>{
+        // 组合套餐没有固定套餐价，这两列留空
         (p.relatedRecords||[]).forEach(r=>{
           if(processed.has(r.rowIndex)) return;
           processed.add(r.rowIndex);
@@ -2255,13 +2340,15 @@
           newRow.push(p.setCount);
           newRow.push(p.groupId || '');
           newRow.push(p.productDetails || '');
+          newRow.push('');  // 对应套餐价（组合套餐无固定套餐价）
+          newRow.push(p.commissionPer || '');  // 对应套餐提成金额（单套激励）
           exportData.push(newRow);
         });
       });
       for(let i=1;i<excelData.length;i++){
         if(!processed.has(i)){
           const newRow = [...excelData[i]];
-          newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');
+          newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');
           exportData.push(newRow);
         }
       }
@@ -2271,10 +2358,11 @@
     function exportActivity(){
       if(activityPolicyResults.length===0){ showError('无活动机型结果可导出'); return; }
       const exportData = [];
-      const headers = [...excelData[0], '提成计算状态', '计算优先级', '活动套餐提成金额', '机型', '单台激励', '说明'];
+      const headers = [...excelData[0], '提成计算状态', '计算优先级', '活动套餐提成金额', '机型', '单台激励', '说明', '对应套餐价', '对应套餐提成金额'];
       exportData.push(headers);
       const processed = new Set();
       activityPolicyResults.forEach(a=>{
+        // 活动机型没有套餐价，这两列留空
         (a.relatedRecords||[]).forEach(r=>{
           if(processed.has(r.rowIndex)) return;
           processed.add(r.rowIndex);
@@ -2285,13 +2373,15 @@
           newRow.push(a.model);
           newRow.push(a.perUnit);
           newRow.push(a.note);
+          newRow.push('');  // 对应套餐价（活动机型无套餐价）
+          newRow.push('');  // 对应套餐提成金额（活动机型无套餐提成）
           exportData.push(newRow);
         });
       });
       for(let i=1;i<excelData.length;i++){
         if(!processed.has(i)){
           const newRow = [...excelData[i]];
-          newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');
+          newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');newRow.push('');
           exportData.push(newRow);
         }
       }

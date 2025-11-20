@@ -274,10 +274,7 @@
         🔄 计算卖出的实际折扣
       </button>
       <div class="recalc-note">
-        销售政策规则：<br/>
-        • 70% / 75% 档：实际折扣达标时，提成 = 回款 × 提成比例<br/>
-        • 折扣率档(0-1)：实际折扣 ≥ 政策折扣率时，提成 = 回款 × 提成比例<br/>
-        • 数值档(>1)：回款 > 阈值时，按原公式计算<br/>
+        销售政策规则已精简：70% / 75% 档仅满档给 4.5% 提成；未达档 0。<br/>
         卖出的实际折扣计算公式： (回款收款金额 - 支付带单提成点位) / 销售数量 / 系统定价 （保留4位）。<br/>
         如已计算提成再重算折扣，不会回溯，请视情况重置。
       </div>
@@ -414,8 +411,8 @@
         discount:false
       },
       running: null,
-      // 更新版本号：添加折扣机新旧规则自动切换
-      ruleVersion: "2025.10.24.v7+discount_rule_switch",
+      // 更新版本号：修复带单费字段映射、金华特价机排除能效、数值精度统一
+      ruleVersion: "2025.11.19.v8+bugfix",
       baseFields: {},
       lastRenderColumns: [],
       hasCalcStatusField:false,
@@ -459,11 +456,7 @@
       "大类型":"大类型",
       "机型":"机型",
       "提成计算状态":"提成计算状态",
-      "计算优先级":"计算优先级",
-      "对应套餐价":"对应套餐价",
-      "对应套餐提成金额":"对应套餐提成金额",
-      "活动套餐提成金额":"活动套餐提成金额",
-      "活动套餐提成说明":"活动套餐提成说明"
+      "计算优先级":"计算优先级"
     };
 
     const COLUMN_PRESETS = {
@@ -478,7 +471,6 @@
         "烟灶提成","烟灶提成说明",
         "国补提成","国补提成说明",
         "折扣机提成","折扣机提成说明",
-        "活动套餐提成金额","活动套餐提成说明","对应套餐价","对应套餐提成金额",
         "折扣前小计","折扣前小计说明",
         "最终总提成","最终总提成说明",
         "常规机说明",
@@ -538,11 +530,7 @@
       "常规机说明":"常规机说明",
       "是否退货":"是否退货",
       "提成计算状态":"提成计算状态",
-      "计算优先级":"计算优先级",
-      "对应套餐价":"对应套餐价",
-      "对应套餐提成金额":"对应套餐提成金额",
-      "活动套餐提成金额":"活动套餐提成金额",
-      "活动套餐提成说明":"活动套餐提成说明"
+      "计算优先级":"计算优先级"
     };
     function getColLabel(col){ return COL_LABELS[col] || col; }
 
@@ -634,15 +622,15 @@
     function getNewDiscountRule(region, energyCode){
       if (region === "杭州"){
         if (energyCode === "1"){
-          return {min:0.728, max:null, base:0.728, desc:"杭州·能效标识=1", label:"能效标识=1", ruleType:"能效规则(邮件审批后)", directRate: true};
+          return {min:0.728, max:0.773, base:0.728, desc:"杭州·能效标识=1", label:"能效标识=1", ruleType:"能效规则(邮件审批后)"};
         }
         if (energyCode === "2"){
-          return {min:0.731, max:null, base:0.731, desc:"杭州·能效标识=2", label:"能效标识=2", ruleType:"能效规则(邮件审批后)", directRate: true};
+          return {min:0.731, max:0.776, base:0.731, desc:"杭州·能效标识=2", label:"能效标识=2", ruleType:"能效规则(邮件审批后)"};
         }
         return {min:0.755, max:0.80, base:0.755, desc:"杭州·其他能效标识", label:"其他能效标识", ruleType:"能效规则(邮件审批后)"};
       }
       if (region === "金华"){
-        return {min:0.728, max:null, base:0.728, desc:"金华地区", label:"金华区域范围", ruleType:"能效规则(邮件审批后)", directRate: true};
+        return {min:0.72, max:0.765, base:0.72, desc:"金华地区", label:"金华区域范围", ruleType:"能效规则(邮件审批后)"};
       }
       return null;
     }
@@ -818,14 +806,7 @@
       const columns = flattenAvailableColumns();
       const data = [columns.map(getColLabel)];
       state.rows.forEach(r=>{
-        const row = columns.map(c=> {
-          if (r[c]===undefined) return "";
-          // 销售政策折扣率保留4位小数
-          if (c === "销售政策折扣率" && typeof r[c] === "number") {
-            return parseFloat(r[c].toFixed(4));
-          }
-          return r[c];
-        });
+        const row = columns.map(c=> r[c]===undefined? "" : r[c]);
         data.push(row);
       });
       const ws = XLSX.utils.aoa_to_sheet(data);
@@ -906,27 +887,6 @@
         if (isActivityPackageRow(r)){
           r["特价机提成"] = 0;
           r["特价机提成说明"] = "已计算活动套餐提成，跳过特价机计算";
-          
-          // 判断是主记录还是从记录：根据回款收款金额是否>0
-          const paymentAmount = normalizeNumber(r["回款收款金额"]) || 0;
-          
-          if (paymentAmount > 0) {
-            // 主记录：有回款，计算活动套餐提成金额
-            const leadFee = normalizeNumber(r["带单费"]) || normalizeNumber(r["支付带单提成点位"]) || 0;
-            const packagePrice = normalizeNumber(r["对应套餐价"]) || 0;
-            const packageCommission = normalizeNumber(r["对应套餐提成金额"]) || 0;
-            
-            // 公式：活动套餐提成金额 = 回款收款金额 - 支付带单提成点位 - 对应套餐价 + 对应套餐提成金额
-            const activityPackageCommission = paymentAmount - leadFee - packagePrice + packageCommission;
-            
-            r["活动套餐提成金额"] = activityPackageCommission;
-            r["活动套餐提成说明"] = `套餐主记录，按新公式：回款${fmtCurrency(paymentAmount)} - 带单费${fmtCurrency(leadFee)} - 套餐价${fmtCurrency(packagePrice)} + 套餐提成${fmtCurrency(packageCommission)} = ${fmtCurrency(activityPackageCommission)}`;
-          } else {
-            // 从记录：无回款，提成为0
-            r["活动套餐提成金额"] = 0;
-            r["活动套餐提成说明"] = "套餐从记录（无回款），提成已计入主记录";
-          }
-          
           return;
         }
     const machineType = normalizeString(r["机型"]);
@@ -945,7 +905,7 @@
     // 保留从政策表匹配来的"特价机公司最低折扣"，不做任何修改
     // 不需要动态计算，因为政策表已经提供了准确的值
 
-    const isSpecial = machineType.includes("特价") || (jntPrice!==null && jntPrice>0) || (scheme && scheme.trim() !== "");
+    const isSpecial = machineType.includes("特价") || (jntPrice!==null && jntPrice>0);
         const isReturn = !!r["是否退货"];
 
         // 折扣校验：如果有公司最低折扣要求，且实际折扣低于最低折扣，则不给提成
@@ -958,8 +918,8 @@
             const match = scheme.match(/(\d+(?:\.\d+)?)元\/台/);
             if (match && salesQty){
               const unitCommission = parseFloat(match[1]);
-              r["特价机提成"] = salesQty * unitCommission;
-              r["特价机提成说明"] = `按元/台：销售数量${salesQty} × ${unitCommission}元/台 → 特价机提成=${fmtCurrency(r["特价机提成"])}`;
+              r["特价机提成"] = Math.round(salesQty * unitCommission * 100) / 100;
+              r["特价机提成说明"] = `按元/台：销售数量${salesQty} × ${unitCommission}元/台 → 特价机提成=${fmtCurrency(r["特价机提成"])}（带单费${fmtCurrency(leadFee)}已在回款中）`;
             } else {
               r["特价机提成说明"] = `方案为元/台但无法解析金额或缺少销售数量，提成=0`;
             }
@@ -967,34 +927,27 @@
             const match = scheme.match(/(\d+(?:\.\d+)?)%/);
             if (match && paymentAmount){
               const rate = parseFloat(match[1]) / 100;
-              const baseAmount = paymentAmount;
-              r["特价机提成"] = baseAmount * rate;
-              r["特价机提成说明"] = `按百分比：回款${fmtCurrency(paymentAmount)} × ${fmtPercent(rate)} = ${fmtCurrency(baseAmount)} × ${fmtPercent(rate)} → 特价机提成=${fmtCurrency(r["特价机提成"])}`;
+              const baseAmount = paymentAmount - leadFee;
+              r["特价机提成"] = Math.round(baseAmount * rate * 100) / 100;
+              r["特价机提成说明"] = `按百分比：(回款${fmtCurrency(paymentAmount)} - 带单费${fmtCurrency(leadFee)}) × ${fmtPercent(rate)} = ${fmtCurrency(baseAmount)} × ${fmtPercent(rate)} → 特价机提成=${fmtCurrency(r["特价机提成"])}`;
             } else {
               r["特价机提成说明"] = `方案为百分比但无法解析比例或缺少回款金额，提成=0`;
             }
-          } else if (scheme && !isNaN(parseFloat(scheme)) && paymentAmount){
-            // 处理纯数字的情况（如 0.01、0.05），视为百分比率
-            const rate = parseFloat(scheme);
-            const baseAmount = paymentAmount;
-            r["特价机提成"] = baseAmount * rate;
-            r["特价机提成说明"] = `按百分比率：回款${fmtCurrency(paymentAmount)} × ${fmtPercent(rate)} = ${fmtCurrency(baseAmount)} × ${fmtPercent(rate)} → 特价机提成=${fmtCurrency(r["特价机提成"])}`;
-          } else if (jntPrice && paymentAmount && salesQty){
+          } else if (jntPrice && paymentAmount){
             const baseAmount = paymentAmount - leadFee;
-            const totalJntPrice = jntPrice * salesQty;
-            if (baseAmount >= totalJntPrice){
-              const diff = baseAmount - totalJntPrice;
-              r["特价机提成"] = diff;
-              r["特价机提成说明"] = `按超底价：(回款${fmtCurrency(paymentAmount)} - 带单费${fmtCurrency(leadFee)}) - 特价${fmtCurrency(jntPrice)} × 数量${salesQty} = ${fmtCurrency(baseAmount)} - ${fmtCurrency(totalJntPrice)} = ${fmtCurrency(diff)} → 特价机提成=${fmtCurrency(r["特价机提成"])}`;
+            if (baseAmount >= jntPrice){
+              const diff = baseAmount - jntPrice;
+              r["特价机提成"] = Math.round(diff * 100) / 100;
+              r["特价机提成说明"] = `按超底价：(回款${fmtCurrency(paymentAmount)} - 带单费${fmtCurrency(leadFee)}) - 特价${fmtCurrency(jntPrice)} = ${fmtCurrency(baseAmount)} - ${fmtCurrency(jntPrice)} = ${fmtCurrency(diff)} → 特价机提成=${fmtCurrency(r["特价机提成"])}`;
             } else {
-              r["特价机提成说明"] = `(回款${fmtCurrency(paymentAmount)} - 带单费${fmtCurrency(leadFee)}) = ${fmtCurrency(baseAmount)} < 特价${fmtCurrency(jntPrice)} × 数量${salesQty} = ${fmtCurrency(totalJntPrice)}，低于底价，提成=0`;
+              r["特价机提成说明"] = `(回款${fmtCurrency(paymentAmount)} - 带单费${fmtCurrency(leadFee)}) = ${fmtCurrency(baseAmount)} < 特价${fmtCurrency(jntPrice)}，低于底价，提成=0`;
             }
           } else {
             r["特价机提成说明"] = `识别为特价机但缺少方案/底价/回款，提成=0`;
           }
       count++;
     } else {
-      r["特价机提成说明"] = `未命中特价机（机型不含"特价"且佳尼特特价≤0且无提成计算方案），提成=0`;
+      r["特价机提成说明"] = `未命中特价机（机型不含"特价"且佳尼特特价≤0），提成=0`;
     }
         if (isReturn){
           r["特价机提成说明"] += "。该行为退货标记，当前规则未额外冲减";
@@ -1029,11 +982,11 @@
           if (boilerDiscount === 0.8 || boilerDiscount === 80){
             if (actualDiscount >= 0.8){
               const commissionRate = 0.05;
-              r["壁挂炉提成"] = paymentAmount * commissionRate;
+              r["壁挂炉提成"] = Math.round(paymentAmount * commissionRate * 100) / 100;
               r["壁挂炉提成说明"] = `80%规则：实际折扣≥80% → 收款×5% = ${fmtCurrency(r["壁挂炉提成"])}`;
             } else if (actualDiscount >= 0.75 && actualDiscount < 0.8){
               const commissionRate = (actualDiscount - 0.75) * 1;
-              r["壁挂炉提成"] = paymentAmount * commissionRate;
+              r["壁挂炉提成"] = Math.round(paymentAmount * commissionRate * 100) / 100;
               r["壁挂炉提成说明"] = `80%规则：(${fmtPercent(actualDiscount)} - 75%)×100点 = ${fmtPercent(commissionRate)} → 收款×该比例 = ${fmtCurrency(r["壁挂炉提成"])}`;
             } else {
               r["壁挂炉提成说明"] = `80%规则：实际折扣${fmtPercent(actualDiscount)} < 75%，提成=0`;
@@ -1041,11 +994,11 @@
           } else if (boilerDiscount === 0.78 || boilerDiscount === 78){
             if (actualDiscount >= 0.78){
               const commissionRate = 0.11;
-              r["壁挂炉提成"] = paymentAmount * commissionRate;
+              r["壁挂炉提成"] = Math.round(paymentAmount * commissionRate * 100) / 100;
               r["壁挂炉提成说明"] = `78%规则：实际折扣≥78% → 收款×11% = ${fmtCurrency(r["壁挂炉提成"])}`;
             } else if (actualDiscount >= 0.67 && actualDiscount < 0.78){
               const commissionRate = (actualDiscount - 0.67) * 1;
-              r["壁挂炉提成"] = paymentAmount * commissionRate;
+              r["壁挂炉提成"] = Math.round(paymentAmount * commissionRate * 100) / 100;
               r["壁挂炉提成说明"] = `78%规则：(${fmtPercent(actualDiscount)} - 67%)×100点 = ${fmtPercent(commissionRate)} → 收款×该比例 = ${fmtCurrency(r["壁挂炉提成"])}`;
             } else {
               r["壁挂炉提成说明"] = `78%规则：实际折扣${fmtPercent(actualDiscount)} < 67%，提成=0`;
@@ -1169,38 +1122,31 @@
           if (policyDiscount > 1){
             // 数值档
             if (paymentAmount > policyDiscount){
-              const leadFee = normalizeNumber(r["支付带单提成点位"]);
-              r["销售政策提成"] = paymentAmount - leadFee - (policyDiscount - policyCommissionSource);
-              r["销售政策提成说明"] = `数值档：回款${fmtCurrency(paymentAmount)} > 阈值${fmtCurrency(policyDiscount)}，销售政策提成 = 回款${fmtCurrency(paymentAmount)} - 带单费${fmtCurrency(leadFee)} - (折扣率${fmtCurrency(policyDiscount)} - 提成来源${fmtCurrency(policyCommissionSource)}) = ${fmtCurrency(r["销售政策提成"])}`;
+              r["销售政策提成"] = policyCommissionSource;
+              r["销售政策提成说明"] = `数值档：回款${fmtCurrency(paymentAmount)} > 阈值${fmtCurrency(policyDiscount)}，销售政策提成 = 销售政策提成(来源) ${fmtCurrency(policyCommissionSource)}`;
             } else {
               r["销售政策提成说明"] = `数值档：回款${fmtCurrency(paymentAmount)} ≤ 阈值${fmtCurrency(policyDiscount)}，提成=0`;
             }
           } else if (policyDiscount === 0.7 || policyDiscount === 70){
             // 70%档
             if (actualDiscount >= 0.70){
-              r["销售政策提成"] = paymentAmount * policyCommissionSource;
-              r["销售政策提成说明"] = `70%档：实际折扣${fmtPercent(actualDiscount)} ≥ 70%，提成 = 回款${fmtCurrency(paymentAmount)} × ${policyCommissionSource} = ${fmtCurrency(r["销售政策提成"])}`;
+              const commissionRate = 0.045;
+              r["销售政策提成"] = Math.round(paymentAmount * commissionRate * 100) / 100;
+              r["销售政策提成说明"] = `70%档：实际折扣≥70% → 收款×4.5% = ${fmtCurrency(r["销售政策提成"])}`;
             } else {
               r["销售政策提成说明"] = `70%档：实际折扣${fmtPercent(actualDiscount)} < 70%，提成=0`;
             }
           } else if (policyDiscount === 0.75 || policyDiscount === 75){
             // 75%档
             if (actualDiscount >= 0.75){
-              r["销售政策提成"] = paymentAmount * policyCommissionSource;
-              r["销售政策提成说明"] = `75%档：实际折扣${fmtPercent(actualDiscount)} ≥ 75%，提成 = 回款${fmtCurrency(paymentAmount)} × ${policyCommissionSource} = ${fmtCurrency(r["销售政策提成"])}`;
+              const commissionRate = 0.045;
+              r["销售政策提成"] = Math.round(paymentAmount * commissionRate * 100) / 100;
+              r["销售政策提成说明"] = `75%档：实际折扣≥75% → 收款×4.5% = ${fmtCurrency(r["销售政策提成"])}`;
             } else {
               r["销售政策提成说明"] = `75%档：实际折扣${fmtPercent(actualDiscount)} < 75%，提成=0`;
             }
-          } else if (policyDiscount > 0 && policyDiscount < 1){
-            // 折扣率档（0-1之间）
-            if (actualDiscount >= policyDiscount){
-              r["销售政策提成"] = paymentAmount * policyCommissionSource;
-              r["销售政策提成说明"] = `折扣率档：实际折扣${fmtPercent(actualDiscount)} ≥ 要求${fmtPercent(policyDiscount)}，提成 = 回款${fmtCurrency(paymentAmount)} × ${policyCommissionSource} = ${fmtCurrency(r["销售政策提成"])}`;
-            } else {
-              r["销售政策提成说明"] = `折扣率档：实际折扣${fmtPercent(actualDiscount)} < 要求${fmtPercent(policyDiscount)}，提成=0`;
-            }
           } else {
-            r["销售政策提成说明"] = `销售政策折扣率${policyDiscount}无法识别，提成=0`;
+            r["销售政策提成说明"] = `销售政策折扣率${policyDiscount} 非 70% / 75% 或数值类型，提成=0`;
           }
 
           // 计算销售政策加提（基于分组统计结果）
@@ -1290,7 +1236,7 @@
           const thresholdDisplay = `${fmtPercent(threshold)}${thresholdNote}`;
 
           if (actualDiscount >= threshold){
-            r["烟灶提成"] = paymentAmount * 0.1;
+            r["烟灶提成"] = Math.round(paymentAmount * 0.1 * 100) / 100;
             r["烟灶提成说明"] = `${categoryName}：实际折扣${fmtPercent(actualDiscount)} ≥ ${thresholdDisplay} → 收款×10% = ${fmtCurrency(r["烟灶提成"])}`;
           } else {
             r["烟灶提成说明"] = `${categoryName}：实际折扣${fmtPercent(actualDiscount)} < ${thresholdDisplay}，提成=0`;
@@ -1339,7 +1285,7 @@
         const allPrevZero = (c_special === 0 && c_boiler === 0 && c_policy === 0 && c_smoke === 0);
         
         const orderType = normalizeString(r["订单类型"]);
-        const finalDiscount = normalizeNumber(r["卖出的实际折扣"]);
+        const finalDiscount = r["最终折扣率"];
         const amountTax = normalizeNumber(r["价税合计"]);
         
         // 必须在国补时间段内才计算
@@ -1355,16 +1301,16 @@
         if (allPrevZero && orderType === "非国补"){
           if (finalDiscount !== null && finalDiscount > 0.705 && finalDiscount < 0.750){
             if (amountTax !== null){
-              r["国补提成"] = (finalDiscount - 0.705) * amountTax;
+              r["国补提成"] = Math.round((finalDiscount - 0.705) * amountTax * 100) / 100;
               r["国补提成说明"] = `非国补机：(${fmtPercent(finalDiscount)} - 70.5%) × 价税合计${fmtCurrency(amountTax)} = ${fmtCurrency(r["国补提成"])}`;
               count++;
             } else {
               r["国补提成说明"] = "符合国补条件但缺少价税合计，国补提成=0";
             }
           } else if (finalDiscount === null){
-            r["国补提成说明"] = "缺少卖出的实际折扣，无法判断国补提成，国补提成=0";
+            r["国补提成说明"] = "缺少最终折扣率，无法判断国补提成";
           } else {
-            r["国补提成说明"] = `卖出的实际折扣${fmtPercent(finalDiscount)}不在(70.5%,75.0%)内，国补提成=0`;
+            r["国补提成说明"] = `最终折扣率${fmtPercent(finalDiscount)}不在(70.5%,75.0%)内，国补提成=0`;
           }
         } else {
           const miss = [];
@@ -1405,23 +1351,20 @@
         r["折扣前小计"] = c_special + c_boiler + c_policy + c_policy_extra + c_smoke;
         r["折扣前小计说明"] = `小计 = 特价${fmtCurrency(c_special)} + 壁挂炉${fmtCurrency(c_boiler)} + 销售政策${fmtCurrency(c_policy)} + 销售政策加提${fmtCurrency(c_policy_extra)} + 烟灶${fmtCurrency(c_smoke)} → ${fmtCurrency(r["折扣前小计"])}`;
 
-        // 提前获取卖出的实际折扣，供后续判断使用
-        const finalDiscount = normalizeNumber(r["卖出的实际折扣"]);
+        // 提前获取最终折扣率，供后续判断使用
+        const finalDiscount = r["最终折扣率"];
 
         if (isActivityPackageRow(r)){
           r["折扣机提成"] = 0;
           r["折扣机提成说明"] = "已计算活动套餐提成，跳过折扣机计算";
           
-          // 获取活动套餐提成金额
-          const activityCommission = ensureNumeric(r["活动套餐提成金额"]);
-          
-          // 新规则：折扣前小计=0、折扣机提成=0且卖出的实际折扣≥0.755时，最终总提成留空
+          // 新规则：折扣前小计=0、折扣机提成=0且最终折扣率≥0.755时，最终总提成留空
           if (r["折扣前小计"] === 0 && finalDiscount !== null && finalDiscount >= 0.755){
             r["最终总提成"] = "";
-            r["最终总提成说明"] = `折扣前小计和折扣机提成均为0，且卖出的实际折扣${fmtPercent(finalDiscount)}≥75.5%，最终总提成留空待人工审核`;
+            r["最终总提成说明"] = `折扣前小计和折扣机提成均为0，且最终折扣率${fmtPercent(finalDiscount)}≥75.5%，最终总提成留空待人工审核`;
           } else {
-            r["最终总提成"] = r["折扣前小计"] + c_national + activityCommission;
-            r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])} + 国补${fmtCurrency(c_national)} + 活动套餐${fmtCurrency(activityCommission)} = ${fmtCurrency(r["最终总提成"])}`;
+            r["最终总提成"] = r["折扣前小计"] + c_national;
+            r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])} + 国补${fmtCurrency(c_national)}（activity_package跳过折扣）`;
           }
           return;
         }
@@ -1429,15 +1372,15 @@
         r["折扣机提成"] = 0;
         r["折扣机提成说明"] = "";
         const amountTax = normalizeNumber(r["价税合计"]);
-        const paymentAmount = normalizeNumber(r["回款收款金额"]);
-        const leadFee = normalizeNumber(r["带单费"]) || normalizeNumber(r["支付带单提成点位"]) || 0;
-        const baseAmount = paymentAmount !== null ? paymentAmount : null;
         const energyCode = normalizeEnergyCode(r["能效标识"]);
         const region = determineRegion(r);
         const orderDate = parseOrderDate(r);
         const allZero = (c_special === 0 && c_boiler === 0 && c_policy === 0 && c_policy_extra === 0 && c_smoke === 0 && c_national === 0);
 
-        if (!allZero){
+        // 金华地区特殊规则：参与过特价机的不参加能效活动
+        if (region === "金华" && c_special > 0){
+          r["折扣机提成说明"] = "金华地区规则：已参与特价机活动，不参加能效活动，折扣机提成=0";
+        } else if (!allZero){
           r["折扣机提成说明"] = "前五模块提成不全为0，不符合折扣机条件，折扣机提成=0";
         } else if (!region){
           r["折扣机提成说明"] = "缺少所属地区，无法判断折扣机规则，折扣机提成=0";
@@ -1445,7 +1388,7 @@
           r["折扣机提成说明"] = `所属地区${region}不在杭州/金华范围，折扣机提成=0`;
           ruleStats["其他"]++;
         } else if (finalDiscount === null){
-          r["折扣机提成说明"] = "缺少卖出的实际折扣，无法判断折扣机区间，折扣机提成=0";
+          r["折扣机提成说明"] = "缺少系统定价或价税合计，无法计算折扣率，折扣机提成=0";
         } else {
           // 判断使用新规则还是旧规则
           let rule = null;
@@ -1478,29 +1421,25 @@
           
           if (!rule){
             r["折扣机提成说明"] = "未匹配到地区对应的折扣机规则，折扣机提成=0";
-          } else if (baseAmount === null){
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】：缺少回款收款金额，折扣机提成=0`;
+          } else if (amountTax === null){
+            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】：缺少价税合计，折扣机提成=0`;
           } else if (finalDiscount < rule.min){
             // 低于区间下限，提成为0
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】：卖出的实际折扣${fmtPercent(finalDiscount)}低于${fmtPercent(rule.min)}，折扣机提成=0`;
-          } else if (rule.directRate){
-            // 能效1、2或金华地区：超过阈值直接给4.5%
-            r["折扣机提成"] = 0.045 * baseAmount;
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}）：卖出的实际折扣${fmtPercent(finalDiscount)} ≥ ${fmtPercent(rule.min)}，直接给予4.5%提成 = 0.045 × 回款${fmtCurrency(paymentAmount)} = ${fmtCurrency(r["折扣机提成"])}`;
+            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】：最终折扣率${fmtPercent(finalDiscount)}低于${fmtPercent(rule.min)}，折扣机提成=0`;
           } else if (finalDiscount >= rule.min && finalDiscount <= rule.max){
-            // 在区间内，按差值计算（仅适用于杭州其他能效）
-            r["折扣机提成"] = (finalDiscount - rule.base) * baseAmount;
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}，区间${fmtPercent(rule.min)}-${fmtPercent(rule.max)}）：(${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × 回款${fmtCurrency(paymentAmount)} = (${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × ${fmtCurrency(baseAmount)} = ${fmtCurrency(r["折扣机提成"])}`;
+            // 在区间内，按差值计算
+            r["折扣机提成"] = Math.round((finalDiscount - rule.base) * amountTax * 100) / 100;
+            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}，区间${fmtPercent(rule.min)}-${fmtPercent(rule.max)}）：(${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × 价税合计${fmtCurrency(amountTax)} = ${fmtCurrency(r["折扣机提成"])}`;
           } else {
             // 超过区间上限，给固定4.5%
-            r["折扣机提成"] = 0.045 * baseAmount;
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}）：卖出的实际折扣${fmtPercent(finalDiscount)}超过${fmtPercent(rule.max)}，给予固定4.5%提成 = 0.045 × 回款${fmtCurrency(paymentAmount)} = 0.045 × ${fmtCurrency(baseAmount)} = ${fmtCurrency(r["折扣机提成"])}`;
+            r["折扣机提成"] = Math.round(0.045 * amountTax * 100) / 100;
+            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}）：最终折扣率${fmtPercent(finalDiscount)}超过${fmtPercent(rule.max)}，给予固定4.5%提成 = 0.045 × 价税合计${fmtCurrency(amountTax)} = ${fmtCurrency(r["折扣机提成"])}`;
           }
         }
-        // 新规则：折扣前小计=0、折扣机提成=0且卖出的实际折扣≥0.755时，最终总提成留空
+        // 新规则：折扣前小计=0、折扣机提成=0且最终折扣率≥0.755时，最终总提成留空
         if (r["折扣前小计"] === 0 && ensureNumeric(r["折扣机提成"]) === 0 && finalDiscount !== null && finalDiscount >= 0.755){
           r["最终总提成"] = "";
-          r["最终总提成说明"] = `折扣前小计和折扣机提成均为0，且卖出的实际折扣${fmtPercent(finalDiscount)}≥75.5%，最终总提成留空待人工审核`;
+          r["最终总提成说明"] = `折扣前小计和折扣机提成均为0，且最终折扣率${fmtPercent(finalDiscount)}≥75.5%，最终总提成留空待人工审核`;
         } else {
           r["最终总提成"] = r["折扣前小计"] + c_national + ensureNumeric(r["折扣机提成"]);
           r["最终总提成说明"] = `最终 = 小计${fmtCurrency(r["折扣前小计"])} + 国补${fmtCurrency(c_national)} + 折扣机${fmtCurrency(r["折扣机提成"])} → ${fmtCurrency(r["最终总提成"])}`;
