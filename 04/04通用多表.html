@@ -75,6 +75,10 @@
           transform: translateY(-2px);
           box-shadow: 0 5px 15px rgba(0, 31, 92, 0.3);
       }
+
+      .upload-btn.secondary {
+          background: linear-gradient(135deg, #64748b, #475569);
+      }
       
       .file-list {
           margin-top: 20px;
@@ -277,6 +281,337 @@
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(0, 31, 92, 0.3);
           background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
+      }
+
+      .import-preview {
+          margin-top: 14px;
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid var(--border-light);
+          border-radius: 10px;
+          padding: 12px;
+      }
+
+      .import-preview-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin-bottom: 10px;
+          flex-wrap: wrap;
+      }
+
+      .import-preview-meta {
+          font-size: 12px;
+          color: #374151;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+
+      .chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 10px;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 600;
+          border: 1px solid rgba(0,0,0,0.06);
+          background: #f8fafc;
+          color: #334155;
+      }
+
+      .chip.ok {
+          background: #ecfdf3;
+          color: #137333;
+          border-color: rgba(19,115,51,0.18);
+      }
+
+      .chip.warn {
+          background: #fff7ed;
+          color: #9a3412;
+          border-color: rgba(154,52,18,0.18);
+      }
+
+      .chip.err {
+          background: #fef2f2;
+          color: #b91c1c;
+          border-color: rgba(185,28,28,0.18);
+      }
+
+      .header-row-selector {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+      }
+
+      .header-row-selector select {
+          padding: 6px 10px;
+          border-radius: 8px;
+          border: 1px solid var(--border-light);
+          background: white;
+          font-size: 12px;
+      }
+
+      .preview-table-wrap {
+          overflow: auto;
+          border-radius: 10px;
+          border: 1px solid rgba(0,0,0,0.06);
+          background: white;
+      }
+
+      .preview-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+      }
+
+      .preview-table th,
+      .preview-table td {
+          border-bottom: 1px solid rgba(0,0,0,0.06);
+          padding: 8px 10px;
+          text-align: left;
+          white-space: nowrap;
+          max-width: 260px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+      }
+
+      .preview-table th {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          background: #f8fafc;
+          color: #0f172a;
+          font-weight: 700;
+      }
+
+      .preview-table th.matched {
+          background: #ecfdf3;
+          color: #137333;
+      }
+
+      .preview-hint {
+          font-size: 12px;
+          color: #64748b;
+          margin-top: 8px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+
+      .workflow-bar {
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          margin: -30px -30px 18px;
+          padding: 14px 18px;
+          background: rgba(255, 255, 255, 0.92);
+          backdrop-filter: blur(10px);
+          border-bottom: 1px solid rgba(0,0,0,0.06);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          flex-wrap: wrap;
+      }
+
+      .workflow-steps {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+
+      .step-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border-radius: 999px;
+          border: 1px solid rgba(0,0,0,0.08);
+          background: #f8fafc;
+          color: #0f172a;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+          user-select: none;
+      }
+
+      .step-pill:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+          background: white;
+      }
+
+      .step-pill .dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #94a3b8;
+          box-shadow: 0 0 0 3px rgba(148,163,184,0.25);
+      }
+
+      .step-pill.done .dot {
+          background: #22c55e;
+          box-shadow: 0 0 0 3px rgba(34,197,94,0.20);
+      }
+
+      .step-pill.warn .dot {
+          background: #f59e0b;
+          box-shadow: 0 0 0 3px rgba(245,158,11,0.22);
+      }
+
+      .step-meta {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+          font-size: 12px;
+          color: #475569;
+      }
+
+      .meta-kv {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: #f1f5f9;
+          border: 1px solid rgba(0,0,0,0.06);
+          font-weight: 700;
+      }
+
+      .meta-kv strong {
+          color: #0f172a;
+      }
+
+      .action-bar {
+          position: sticky;
+          bottom: 14px;
+          z-index: 40;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 14px 16px;
+          border-radius: 14px;
+          background: rgba(0, 31, 92, 0.92);
+          backdrop-filter: blur(10px);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+          border: 1px solid rgba(255,255,255,0.12);
+      }
+
+      .action-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+          color: rgba(255,255,255,0.88);
+          font-size: 12px;
+          font-weight: 600;
+      }
+
+      .action-left .badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.12);
+          border: 1px solid rgba(255,255,255,0.18);
+      }
+
+      .action-right {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+
+      .action-bar .btn {
+          margin: 0;
+          min-width: 160px;
+          border-radius: 999px;
+          box-shadow: none;
+      }
+
+      .action-bar .btn.btn-secondary {
+          background: rgba(255,255,255,0.14);
+          color: white;
+          border: 1px solid rgba(255,255,255,0.22);
+      }
+
+      .action-bar .btn.btn-secondary:hover {
+          background: rgba(255,255,255,0.20);
+      }
+
+      .action-bar .btn:disabled {
+          opacity: 0.65;
+          cursor: not-allowed;
+          transform: none;
+      }
+
+      .file-list-empty {
+          padding: 18px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, rgba(0,31,92,0.04), rgba(255,193,7,0.06));
+          border: 1px dashed rgba(0,0,0,0.12);
+          color: #334155;
+          font-size: 13px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+
+      .file-list-empty strong {
+          color: #0f172a;
+      }
+
+      .section h2 .subhint {
+          font-size: 12px;
+          font-weight: 600;
+          color: #64748b;
+          margin-left: 10px;
+      }
+
+      .compact-summary {
+          margin-top: 10px;
+          padding: 12px 14px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, rgba(0,31,92,0.03), rgba(15,23,42,0.02));
+          border: 1px solid rgba(0,0,0,0.06);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+
+      .compact-summary .summary-text {
+          color: #0f172a;
+          font-size: 13px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+
+      .compact-summary .summary-text span {
+          color: #475569;
+          font-weight: 600;
+      }
+
+      .compact-summary .summary-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
       }
       
       .mapping-grid {
@@ -906,13 +1241,38 @@
       
       <!-- 主内容区 -->
       <main class="tool-content">
+          <div class="workflow-bar" id="workflowBar">
+              <div class="workflow-steps">
+                  <div class="step-pill" id="stepSales" onclick="scrollToSection('salesUpload')">
+                      <span class="dot"></span><span>1 销售数据</span>
+                  </div>
+                  <div class="step-pill" id="stepPolicy" onclick="scrollToSection('policyUpload')">
+                      <span class="dot"></span><span>2 政策表</span>
+                  </div>
+                  <div class="step-pill" id="stepStoreList" onclick="scrollToSection('storeListUpload')">
+                      <span class="dot"></span><span>3 渠道名单</span>
+                  </div>
+                  <div class="step-pill" id="stepCalc" onclick="scrollToSection('calculateBtn')">
+                      <span class="dot"></span><span>4 计算导出</span>
+                  </div>
+              </div>
+              <div class="step-meta" id="workflowMeta">
+                  <span class="meta-kv">文件 <strong id="metaSalesCount">0</strong></span>
+                  <span class="meta-kv">政策 <strong id="metaPolicy">未就绪</strong></span>
+                  <span class="meta-kv">名单 <strong id="metaStoreList">未就绪</strong></span>
+                  <span class="meta-kv">状态 <strong id="metaReady">未满足计算条件</strong></span>
+              </div>
+          </div>
+
           <!-- 上传销售数据 -->
           <section class="section">
-              <h2>📊 上传销售数据表（支持多个文件）</h2>
+              <h2>📊 上传销售数据表（支持多个文件）<span class="subhint">上传后可逐个配置字段映射并预览</span></h2>
               <div class="upload-area" id="salesUpload">
                   <p>📁 拖拽多个Excel文件到此处或点击上传</p>
-                  <button class="upload-btn" onclick="document.getElementById('salesFiles').click()">选择文件</button>
+                  <button class="upload-btn" onclick="document.getElementById('salesFiles').click()">选择多个文件</button>
+                  <button class="upload-btn secondary" onclick="document.getElementById('salesFileSingle').click()">追加一个文件</button>
                   <input type="file" id="salesFiles" accept=".xlsx,.xls" multiple />
+                  <input type="file" id="salesFileSingle" accept=".xlsx,.xls" />
               </div>
               <div class="file-list" id="fileList"></div>
               <div class="file-toolbar">
@@ -929,18 +1289,26 @@
           
           <!-- 上传政策表 -->
           <section class="section">
-              <h2>📋 上传政策表</h2>
-              <div class="upload-area" id="policyUpload">
-                  <p>📁 拖拽Excel文件到此处或点击上传</p>
-                  <button class="upload-btn" onclick="document.getElementById('policyFile').click()">选择文件</button>
-                  <input type="file" id="policyFile" accept=".xlsx,.xls" />
+              <h2>📋 政策表<span class="subhint">已上传会自动保留，下次可直接用</span></h2>
+              <div class="compact-summary" id="policySummary" style="display:none;">
+                  <div class="summary-text" id="policySummaryText">未上传</div>
+                  <div class="summary-actions">
+                      <button class="mini-btn" id="policyToggleBtn" onclick="togglePolicyDetails()">展开</button>
+                      <button class="mini-btn" onclick="document.getElementById('policyFile').click()">更换文件</button>
+                  </div>
               </div>
-              <div class="sheet-selector" id="policySheetSelector">
-                  <label>选择工作表：</label>
-                  <select id="policySheetSelect"></select>
-                  <span class="field-count" id="policyFieldCount"></span>
-              </div>
-              <div class="mapping-container" id="policyMapping">
+              <div id="policyDetails">
+                  <div class="upload-area" id="policyUpload">
+                      <p>📁 拖拽Excel文件到此处或点击上传</p>
+                      <button class="upload-btn" onclick="document.getElementById('policyFile').click()">选择文件</button>
+                      <input type="file" id="policyFile" accept=".xlsx,.xls" />
+                  </div>
+                  <div class="sheet-selector" id="policySheetSelector">
+                      <label>选择工作表：</label>
+                      <select id="policySheetSelect"></select>
+                      <span class="field-count" id="policyFieldCount"></span>
+                  </div>
+                  <div class="mapping-container" id="policyMapping">
                   <h3>
                       字段映射 - 政策表
                       <button class="auto-match-btn" onclick="autoMatchFields('policy')">🎯 智能匹配</button>
@@ -958,22 +1326,31 @@
                       </div>
                   </div>
               </div>
+              </div>
           </section>
           
           <!-- 上传渠道名单 -->
           <section class="section">
-              <h2>👥 上传渠道名单（用于员工门店部门匹配，支持双员工字段）</h2>
-              <div class="upload-area" id="storeListUpload">
-                  <p>📁 拖拽Excel文件到此处或点击上传</p>
-                  <button class="upload-btn" onclick="document.getElementById('storeListFile').click()">选择文件</button>
-                  <input type="file" id="storeListFile" accept=".xlsx,.xls" />
+              <h2>👥 渠道名单<span class="subhint">用于门店/员工匹配（可选但推荐）</span></h2>
+              <div class="compact-summary" id="storeListSummary" style="display:none;">
+                  <div class="summary-text" id="storeListSummaryText">未上传</div>
+                  <div class="summary-actions">
+                      <button class="mini-btn" id="storeListToggleBtn" onclick="toggleStoreListDetails()">展开</button>
+                      <button class="mini-btn" onclick="document.getElementById('storeListFile').click()">更换文件</button>
+                  </div>
               </div>
-              <div class="sheet-selector" id="storeListSheetSelector">
-                  <label>选择工作表：</label>
-                  <select id="storeListSheetSelect"></select>
-                  <span class="field-count" id="storeListFieldCount"></span>
-              </div>
-              <div class="mapping-container" id="storeListMapping">
+              <div id="storeListDetails">
+                  <div class="upload-area" id="storeListUpload">
+                      <p>📁 拖拽Excel文件到此处或点击上传</p>
+                      <button class="upload-btn" onclick="document.getElementById('storeListFile').click()">选择文件</button>
+                      <input type="file" id="storeListFile" accept=".xlsx,.xls" />
+                  </div>
+                  <div class="sheet-selector" id="storeListSheetSelector">
+                      <label>选择工作表：</label>
+                      <select id="storeListSheetSelect"></select>
+                      <span class="field-count" id="storeListFieldCount"></span>
+                  </div>
+                  <div class="mapping-container" id="storeListMapping">
                   <h3>
                       字段映射 - 渠道名单
                       <button class="auto-match-btn" onclick="autoMatchFields('storeList')">🎯 智能匹配</button>
@@ -1020,6 +1397,7 @@
                       <span class="match-confidence" id="employeeName2LeaveDateField_confidence"></span>
                   </div>
               </div>
+          </div>
           </div>
           </section>
           
@@ -1075,9 +1453,17 @@
           
           <!-- 计算按钮 -->
           <section class="section">
-              <button class="btn" id="calculateBtn" onclick="calculateAllCommissions()" disabled>🧮 批量计算提成</button>
-              <button class="btn btn-secondary" onclick="exportAllResults()" id="exportAllBtn" style="display:none;">📤 导出全部结果</button>
-              <button class="btn btn-secondary" onclick="exportSeparateResults()" id="exportSeparateBtn" style="display:none;">📦 分别导出结果</button>
+              <div class="action-bar" id="actionBar">
+                  <div class="action-left">
+                      <span class="badge" id="actionHint">请先上传并完成字段映射</span>
+                      <span class="badge">建议：先配好政策表与渠道名单再批量算</span>
+                  </div>
+                  <div class="action-right">
+                      <button class="btn" id="calculateBtn" onclick="calculateAllCommissions()" disabled>🧮 批量计算提成</button>
+                      <button class="btn btn-secondary" onclick="exportAllResults()" id="exportAllBtn" style="display:none;">📤 导出全部</button>
+                      <button class="btn btn-secondary" onclick="exportSeparateResults()" id="exportSeparateBtn" style="display:none;">📦 分别导出</button>
+                  </div>
+              </div>
           </section>
           
           <div class="error" id="errorMsg"></div>
@@ -1451,6 +1837,7 @@
       // 文件上传处理
       function setupFileUpload() {
           const salesFilesInput = document.getElementById('salesFiles');
+          const salesFileSingleInput = document.getElementById('salesFileSingle');
           const policyFile = document.getElementById('policyFile');
           const storeListFile = document.getElementById('storeListFile');
           const salesUpload = document.getElementById('salesUpload');
@@ -1460,7 +1847,19 @@
           // 销售数据文件上传（多文件）
           salesFilesInput.addEventListener('change', function(e) {
               handleMultipleFiles(Array.from(e.target.files));
+              // 允许再次选择相同文件触发 change
+              e.target.value = '';
           });
+
+          // 销售数据文件上传（单文件追加）
+          if (salesFileSingleInput) {
+              salesFileSingleInput.addEventListener('change', function(e) {
+                  if (e.target.files && e.target.files[0]) {
+                      handleMultipleFiles([e.target.files[0]]);
+                  }
+                  e.target.value = '';
+              });
+          }
           
           // 政策表文件上传
           policyFile.addEventListener('change', function(e) {
@@ -1534,9 +1933,17 @@
       // 处理多个销售文件
       function handleMultipleFiles(files) {
           const startIndex = salesFiles.length;
+          const existingKeys = new Set(salesFiles.map(f => getFileUniqueKey(f.file)));
+          let skipped = 0;
           
           files.forEach(file => {
               if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                  const key = getFileUniqueKey(file);
+                  if (existingKeys.has(key)) {
+                      skipped++;
+                      return;
+                  }
+                  existingKeys.add(key);
                   const fileObj = {
                       file: file,
                       name: file.name,
@@ -1544,6 +1951,8 @@
                       workbook: null,
                       sheetName: null,
                       headers: null,
+                      headerRowIndex: null,
+                      preview: null,
                       data: null,
                       results: null,
                       // 新增：每文件字段映射与状态
@@ -1582,6 +1991,10 @@
                 showSuccess(`已上传 ${newFilesCount} 个文件。正在自动配置第一个文件，其他文件请点击"依次配置全部"按钮或手动展开配置。`);
             }
         }
+
+        if (skipped > 0) {
+            showError(`已跳过 ${skipped} 个重复文件（同名/大小/修改时间一致）`);
+        }
         
         checkCalculateReady();
       }
@@ -1590,6 +2003,22 @@
       function updateFileList() {
           const fileList = document.getElementById('fileList');
           fileList.innerHTML = '';
+
+          if (salesFiles.length === 0) {
+              fileList.innerHTML = `
+                  <div class="file-list-empty">
+                      <div>
+                          <strong>还没有上传销售文件</strong>：支持一次性选择多个文件，或逐个追加。
+                      </div>
+                      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                          <button class="mini-btn" onclick="document.getElementById('salesFiles').click()">选择多个文件</button>
+                          <button class="mini-btn" onclick="document.getElementById('salesFileSingle').click()">追加一个文件</button>
+                      </div>
+                  </div>
+              `;
+              updateWorkflowStatus();
+              return;
+          }
           
           salesFiles.forEach((fileObj, index) => {
               const fileItem = document.createElement('div');
@@ -1636,7 +2065,8 @@
                   xingda: '兴达',
                   shengdu: '圣都', 
                   zheibei: '浙北',
-                  jinhua: '金华五星'
+                  jinhua: '金华五星',
+                  huzhou: '湖州天猫'
               };
               const typeLabel = typeLabels[fileType] || '';
               
@@ -1668,6 +2098,28 @@
                           字段映射 - ${fileObj.name}
                           <button class="auto-match-btn" onclick="autoMatchFileFields(${index})">🎯 智能匹配</button>
                       </h3>
+                      <div class="import-preview" id="importPreview-${index}">
+                          <div class="import-preview-header">
+                              <div class="import-preview-meta" id="importMeta-${index}">
+                                  <span class="chip warn">未解析</span>
+                                  <span style="color:#64748b;">请先选择工作表</span>
+                              </div>
+                              <div class="header-row-selector">
+                                  <span style="font-size:12px;color:#64748b;">表头行</span>
+                                  <select id="headerRowSelect-${index}" onchange="changeHeaderRow(${index}, this.value)">
+                                      <option value="auto">自动</option>
+                                      ${Array.from({length: 20}, (_, i) => `<option value="${i}">第 ${i+1} 行</option>`).join('')}
+                                  </select>
+                              </div>
+                          </div>
+                          <div class="preview-table-wrap" id="previewWrap-${index}" style="display:none;">
+                              <table class="preview-table" id="previewTable-${index}"></table>
+                          </div>
+                          <div class="preview-hint" id="previewHint-${index}">
+                              <span>绿色表头 = 已被字段映射选中</span>
+                              <span>建议检查：表头是否正确、必填字段是否都能匹配</span>
+                          </div>
+                      </div>
                       <div class="mapping-grid">
                           <div class="mapping-subtitle">必填字段（至少选择一个）</div>
                           <div class="mapping-row">
@@ -1731,7 +2183,170 @@
                   </div>
               `;
               fileList.appendChild(fileItem);
+
+              // 重要：updateFileList 会重建 DOM，需恢复已打开文件的工作表/字段选择器交互
+              hydrateFileMappingUI(index);
           });
+
+          updateWorkflowStatus();
+        }
+
+        function hydrateFileMappingUI(index) {
+            const fileObj = salesFiles[index];
+            if (!fileObj || !fileObj.isMappingOpen) return;
+
+            const sheetSelect = document.getElementById(`sheetSelect-${index}`);
+            if (sheetSelect) {
+                if (fileObj.workbook && Array.isArray(fileObj.workbook.SheetNames)) {
+                    sheetSelect.innerHTML = '<option value="">请选择工作表</option>';
+                    fileObj.workbook.SheetNames.forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        sheetSelect.appendChild(option);
+                    });
+                    const selected = (fileObj.sheetName && fileObj.workbook.SheetNames.includes(fileObj.sheetName))
+                        ? fileObj.sheetName
+                        : (fileObj.workbook.SheetNames[0] || '');
+                    if (selected) sheetSelect.value = selected;
+                    sheetSelect.onchange = async function() {
+                        if (this.value) {
+                            await loadFileSheetHeaders(index, this.value);
+                        }
+                    };
+                } else {
+                    sheetSelect.innerHTML = '<option value="">请先读取文件</option>';
+                }
+            }
+
+            const headerRowSelect = document.getElementById(`headerRowSelect-${index}`);
+            if (headerRowSelect) {
+                headerRowSelect.value = (fileObj.headerRowIndex === null || fileObj.headerRowIndex === undefined)
+                    ? 'auto'
+                    : String(fileObj.headerRowIndex);
+            }
+
+            if (fileObj.headers && Array.isArray(fileObj.headers) && fileObj.headers.length > 0) {
+                const count = document.getElementById(`fieldCount-${index}`);
+                if (count) count.textContent = `(${fileObj.headers.length} 个字段)`;
+                populateFileFieldMapping(index, fileObj.headers);
+            }
+
+            renderFilePreview(index);
+        }
+
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        }
+
+        function setPolicyDetailsOpen(open) {
+            uiSectionState.policyOpen = !!open;
+            const details = document.getElementById('policyDetails');
+            const summary = document.getElementById('policySummary');
+            const toggleBtn = document.getElementById('policyToggleBtn');
+            if (details) details.style.display = uiSectionState.policyOpen ? 'block' : 'none';
+            if (summary) summary.style.display = 'flex';
+            if (toggleBtn) toggleBtn.textContent = uiSectionState.policyOpen ? '收起' : '展开';
+        }
+
+        function setStoreListDetailsOpen(open) {
+            uiSectionState.storeListOpen = !!open;
+            const details = document.getElementById('storeListDetails');
+            const summary = document.getElementById('storeListSummary');
+            const toggleBtn = document.getElementById('storeListToggleBtn');
+            if (details) details.style.display = uiSectionState.storeListOpen ? 'block' : 'none';
+            if (summary) summary.style.display = 'flex';
+            if (toggleBtn) toggleBtn.textContent = uiSectionState.storeListOpen ? '收起' : '展开';
+        }
+
+        function togglePolicyDetails() {
+            uiSectionState.userToggledPolicy = true;
+            setPolicyDetailsOpen(!uiSectionState.policyOpen);
+        }
+
+        function toggleStoreListDetails() {
+            uiSectionState.userToggledStoreList = true;
+            setStoreListDetailsOpen(!uiSectionState.storeListOpen);
+        }
+
+        function setPillState(el, state) {
+            if (!el) return;
+            el.classList.remove('done', 'warn');
+            if (state === 'done') el.classList.add('done');
+            if (state === 'warn') el.classList.add('warn');
+        }
+
+        function updateWorkflowStatus() {
+            const salesCountEl = document.getElementById('metaSalesCount');
+            const policyEl = document.getElementById('metaPolicy');
+            const storeListEl = document.getElementById('metaStoreList');
+            const readyEl = document.getElementById('metaReady');
+            const actionHint = document.getElementById('actionHint');
+
+            const salesCount = salesFiles.length;
+            const salesReady = salesFiles.length > 0 && salesFiles.every(f => f.fieldMapping && f.mappingStatus && f.mappingStatus.complete);
+            const policyReady = !!(policyData && document.getElementById('policyModelField')?.value !== '' && document.getElementById('commissionField')?.value !== '');
+            const storeListReady = !!(storeListData && storeListData.headers && storeListData.headers.length > 0);
+            const calcReady = salesReady && policyReady;
+
+            if (salesCountEl) salesCountEl.textContent = String(salesCount);
+            if (policyEl) policyEl.textContent = policyReady ? '已就绪' : '未就绪';
+            if (storeListEl) storeListEl.textContent = storeListReady ? '已就绪' : '未就绪';
+            if (readyEl) readyEl.textContent = calcReady ? '可开始计算' : '未满足计算条件';
+
+            setPillState(document.getElementById('stepSales'), salesCount > 0 ? (salesReady ? 'done' : 'warn') : '');
+            setPillState(document.getElementById('stepPolicy'), policyReady ? 'done' : 'warn');
+            setPillState(document.getElementById('stepStoreList'), storeListReady ? 'done' : '');
+            setPillState(document.getElementById('stepCalc'), calcReady ? 'done' : 'warn');
+
+            if (actionHint) {
+                if (calcReady) {
+                    actionHint.textContent = '已满足计算条件，可以开始计算';
+                } else if (!policyReady) {
+                    actionHint.textContent = '请先配置政策表字段映射（规格型号/单台提成）';
+                } else if (!salesReady) {
+                    actionHint.textContent = '请完成所有销售文件的必填字段映射';
+                } else {
+                    actionHint.textContent = '请先上传并完成字段映射';
+                }
+            }
+
+            const policySummaryText = document.getElementById('policySummaryText');
+            const hasPolicyWorkbook = !!policyWorkbook;
+            const policySheet = policyData?.sheetName || persistedPolicyState?.sheetName || '';
+            if (policySummaryText) {
+                if (hasPolicyWorkbook) {
+                    const name = persistedPolicyState?.name ? `📄 ${persistedPolicyState.name}` : '📄 已加载政策表';
+                    const readyText = policyReady ? '✅ 已就绪' : '⚠️ 未完成字段映射';
+                    policySummaryText.innerHTML = `${name} <span>工作表：${policySheet || '未选择'} · ${readyText}</span>`;
+                } else {
+                    policySummaryText.textContent = '未上传政策表';
+                }
+            }
+            if (hasPolicyWorkbook && !uiSectionState.userToggledPolicy && uiSectionState.policyOpen) {
+                setPolicyDetailsOpen(false);
+            }
+            if (!hasPolicyWorkbook && !uiSectionState.userToggledPolicy) {
+                setPolicyDetailsOpen(true);
+            }
+
+            const storeListSummaryText = document.getElementById('storeListSummaryText');
+            const hasStoreListWorkbook = !!storeListWorkbook;
+            const storeListSheet = storeListData?.sheetName || persistedStoreListState?.sheetName || '';
+            if (storeListSummaryText) {
+                if (hasStoreListWorkbook) {
+                    const name = persistedStoreListState?.name ? `📄 ${persistedStoreListState.name}` : '📄 已加载渠道名单';
+                    const readyText = storeListReady ? '✅ 已就绪' : '⚠️ 未选择工作表';
+                    storeListSummaryText.innerHTML = `${name} <span>工作表：${storeListSheet || '未选择'} · ${readyText}</span>`;
+                } else {
+                    storeListSummaryText.textContent = '未上传渠道名单（可选）';
+                }
+            }
+            if (hasStoreListWorkbook && !uiSectionState.userToggledStoreList && uiSectionState.storeListOpen) {
+                setStoreListDetailsOpen(false);
+            }
         }
         
         // 获取状态文本
@@ -1938,6 +2553,368 @@
                 reader.readAsBinaryString(file);
             });
         }
+
+        function getFileUniqueKey(file) {
+            if (!file) return '';
+            return `${file.name}__${file.size}__${file.lastModified || ''}`;
+        }
+
+        function escapeHtml(value) {
+            return (value ?? '').toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function clampNumber(value, min, max) {
+            const n = Number(value);
+            if (!Number.isFinite(n)) return min;
+            return Math.min(max, Math.max(min, n));
+        }
+
+        function getWorksheetDimensions(worksheet) {
+            if (!worksheet || !worksheet['!ref']) return { rows: 0, cols: 0, range: null };
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            return { rows: range.e.r - range.s.r + 1, cols: range.e.c - range.s.c + 1, range };
+        }
+
+        function getEffectiveRangeFromCells(worksheet) {
+            if (!worksheet) return { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
+            const base = worksheet['!ref']
+                ? XLSX.utils.decode_range(worksheet['!ref'])
+                : { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
+            let maxR = -1;
+            let maxC = -1;
+            for (const addr in worksheet) {
+                if (!Object.prototype.hasOwnProperty.call(worksheet, addr)) continue;
+                if (addr[0] === '!') continue;
+                if (!/^[A-Z]+[0-9]+$/.test(addr)) continue;
+                const cell = XLSX.utils.decode_cell(addr);
+                if (cell.r > maxR) maxR = cell.r;
+                if (cell.c > maxC) maxC = cell.c;
+            }
+            if (maxR < 0 || maxC < 0) return base;
+            return { s: base.s, e: { r: maxR, c: maxC } };
+        }
+
+        function readWorksheetAOA(worksheet, maxRows = 60) {
+            if (!worksheet || !worksheet['!ref']) return [];
+            const range = getEffectiveRangeFromCells(worksheet);
+            const limited = {
+                s: range.s,
+                e: { r: Math.min(range.s.r + maxRows - 1, range.e.r), c: range.e.c }
+            };
+            return XLSX.utils.sheet_to_json(worksheet, { header: 1, range: limited, defval: '', blankrows: false });
+        }
+
+        const persistedKeys = {
+            policy: 'multiTable.persisted.policy.v1',
+            storeList: 'multiTable.persisted.storeList.v1'
+        };
+        let persistedPolicyState = null;
+        let persistedStoreListState = null;
+        const uiSectionState = {
+            policyOpen: true,
+            storeListOpen: true,
+            userToggledPolicy: false,
+            userToggledStoreList: false
+        };
+
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            const chunkSize = 0x8000;
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+            }
+            return btoa(binary);
+        }
+
+        function safeLocalStorageSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (error) {
+                console.warn('localStorage 写入失败:', key, error);
+                return false;
+            }
+        }
+
+        function safeLocalStorageGet(key) {
+            try {
+                return localStorage.getItem(key);
+            } catch (error) {
+                console.warn('localStorage 读取失败:', key, error);
+                return null;
+            }
+        }
+
+        function persistPolicyWorkbook(file, base64) {
+            const payload = {
+                name: file?.name || '',
+                lastModified: file?.lastModified || 0,
+                size: file?.size || 0,
+                base64,
+                sheetName: policyData?.sheetName || '',
+                mapping: {
+                    policyModelField: document.getElementById('policyModelField')?.value ?? '',
+                    commissionField: document.getElementById('commissionField')?.value ?? ''
+                }
+            };
+            persistedPolicyState = payload;
+            safeLocalStorageSet(persistedKeys.policy, JSON.stringify(payload));
+        }
+
+        function persistPolicySheetAndMapping() {
+            const raw = safeLocalStorageGet(persistedKeys.policy);
+            if (!raw) return;
+            try {
+                const payload = JSON.parse(raw);
+                payload.sheetName = policyData?.sheetName || payload.sheetName || '';
+                payload.mapping = {
+                    policyModelField: document.getElementById('policyModelField')?.value ?? '',
+                    commissionField: document.getElementById('commissionField')?.value ?? ''
+                };
+                persistedPolicyState = payload;
+                safeLocalStorageSet(persistedKeys.policy, JSON.stringify(payload));
+            } catch (_) {}
+        }
+
+        function applyPersistedPolicyMapping() {
+            const payload = persistedPolicyState;
+            if (!payload || !payload.mapping) return;
+            const m = payload.mapping;
+            const a = document.getElementById('policyModelField');
+            const b = document.getElementById('commissionField');
+            if (a && m.policyModelField !== '') a.value = m.policyModelField;
+            if (b && m.commissionField !== '') b.value = m.commissionField;
+        }
+
+        function persistStoreListWorkbook(file, base64) {
+            const payload = {
+                name: file?.name || '',
+                lastModified: file?.lastModified || 0,
+                size: file?.size || 0,
+                base64,
+                sheetName: storeListData?.sheetName || '',
+                mapping: {}
+            };
+            const storeListFields = ['departmentField', 'storeNameField', 'employeeNameField', 'employeeName2Field', 'employeeName1JoinDateField', 'employeeName2JoinDateField', 'employeeName1LeaveDateField', 'employeeName2LeaveDateField'];
+            storeListFields.forEach(id => payload.mapping[id] = document.getElementById(id)?.value ?? '');
+            persistedStoreListState = payload;
+            safeLocalStorageSet(persistedKeys.storeList, JSON.stringify(payload));
+        }
+
+        function persistStoreListSheetAndMapping() {
+            const raw = safeLocalStorageGet(persistedKeys.storeList);
+            if (!raw) return;
+            try {
+                const payload = JSON.parse(raw);
+                payload.sheetName = storeListData?.sheetName || payload.sheetName || '';
+                const storeListFields = ['departmentField', 'storeNameField', 'employeeNameField', 'employeeName2Field', 'employeeName1JoinDateField', 'employeeName2JoinDateField', 'employeeName1LeaveDateField', 'employeeName2LeaveDateField'];
+                payload.mapping = payload.mapping || {};
+                storeListFields.forEach(id => payload.mapping[id] = document.getElementById(id)?.value ?? '');
+                persistedStoreListState = payload;
+                safeLocalStorageSet(persistedKeys.storeList, JSON.stringify(payload));
+            } catch (_) {}
+        }
+
+        function applyPersistedStoreListMapping() {
+            const payload = persistedStoreListState;
+            if (!payload || !payload.mapping) return;
+            Object.entries(payload.mapping).forEach(([id, value]) => {
+                const el = document.getElementById(id);
+                if (el && value !== '') el.value = value;
+            });
+        }
+
+        function restorePersistedWorkbook(type) {
+            const key = type === 'policy' ? persistedKeys.policy : persistedKeys.storeList;
+            const raw = safeLocalStorageGet(key);
+            if (!raw) return;
+            try {
+                const payload = JSON.parse(raw);
+                if (!payload || !payload.base64) return;
+                const workbook = XLSX.read(payload.base64, { type: 'base64' });
+                if (type === 'policy') {
+                    persistedPolicyState = payload;
+                    policyWorkbook = workbook;
+                    populateSheetSelector('policySheetSelect', workbook, 'policy');
+                    document.getElementById('policySheetSelector').style.display = 'block';
+                    const select = document.getElementById('policySheetSelect');
+                    const sheet = payload.sheetName && workbook.SheetNames.includes(payload.sheetName) ? payload.sheetName : workbook.SheetNames[0];
+                    if (select && sheet) select.value = sheet;
+                    if (sheet) loadPolicySheetHeaders(workbook, sheet);
+                    updateWorkflowStatus();
+                    if (!uiSectionState.userToggledPolicy) setPolicyDetailsOpen(false);
+                } else {
+                    persistedStoreListState = payload;
+                    storeListWorkbook = workbook;
+                    populateSheetSelector('storeListSheetSelect', workbook, 'storeList');
+                    document.getElementById('storeListSheetSelector').style.display = 'block';
+                    const select = document.getElementById('storeListSheetSelect');
+                    const sheet = payload.sheetName && workbook.SheetNames.includes(payload.sheetName) ? payload.sheetName : workbook.SheetNames[0];
+                    if (select && sheet) select.value = sheet;
+                    if (sheet) loadStoreListSheetHeaders(workbook, sheet);
+                    updateWorkflowStatus();
+                    if (!uiSectionState.userToggledStoreList) setStoreListDetailsOpen(false);
+                }
+            } catch (error) {
+                console.warn('恢复缓存失败:', type, error);
+            }
+        }
+
+        function bindPersistMappingListeners() {
+            const policyFields = ['policyModelField', 'commissionField'];
+            policyFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', persistPolicySheetAndMapping);
+            });
+
+            const storeListFields = ['departmentField', 'storeNameField', 'employeeNameField', 'employeeName2Field', 'employeeName1JoinDateField', 'employeeName2JoinDateField', 'employeeName1LeaveDateField', 'employeeName2LeaveDateField'];
+            storeListFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', persistStoreListSheetAndMapping);
+            });
+
+            const policySheetSelect = document.getElementById('policySheetSelect');
+            if (policySheetSelect) policySheetSelect.addEventListener('change', persistPolicySheetAndMapping);
+            const storeListSheetSelect = document.getElementById('storeListSheetSelect');
+            if (storeListSheetSelect) storeListSheetSelect.addEventListener('change', persistStoreListSheetAndMapping);
+        }
+
+        function detectHeaderRowIndex(aoa, maxScanRows = 20) {
+            const scan = aoa.slice(0, maxScanRows);
+            let bestRow = 0;
+            let bestScore = -1;
+            scan.forEach((row, idx) => {
+                if (!Array.isArray(row)) return;
+                let nonEmpty = 0;
+                let stringish = 0;
+                row.forEach(cell => {
+                    const v = (cell ?? '').toString().trim();
+                    if (v !== '') {
+                        nonEmpty++;
+                        if (/[A-Z\u4e00-\u9fa5]/i.test(v)) stringish++;
+                    }
+                });
+                const score = nonEmpty * 2 + stringish - idx * 0.05;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestRow = idx;
+                }
+            });
+            return bestRow;
+        }
+
+        function buildPreviewInfo(worksheet, headerRowIndexOverride) {
+            const effectiveRange = getEffectiveRangeFromCells(worksheet);
+            const totalRows = effectiveRange.e.r - effectiveRange.s.r + 1;
+            const totalCols = effectiveRange.e.c - effectiveRange.s.c + 1;
+            const aoa = readWorksheetAOA(worksheet, 80);
+            const detectedHeaderRow = detectHeaderRowIndex(aoa, 20);
+            const headerRowIndex = headerRowIndexOverride === null || headerRowIndexOverride === undefined
+                ? detectedHeaderRow
+                : clampNumber(headerRowIndexOverride, 0, Math.max(0, aoa.length - 1));
+            const headers = (aoa[headerRowIndex] || []).map(h => (h ?? '').toString().trim());
+            const sampleRows = aoa.slice(headerRowIndex + 1, headerRowIndex + 6);
+            return { totalRows, totalCols, headerRowIndex, detectedHeaderRow, headers, sampleRows };
+        }
+
+        function getMatchedColumnIndexes(fileObj) {
+            const matched = new Set();
+            if (!fileObj || !fileObj.fieldMapping) return matched;
+            Object.values(fileObj.fieldMapping).forEach(v => {
+                const n = Number(v);
+                if (Number.isFinite(n) && n >= 0) matched.add(n);
+            });
+            return matched;
+        }
+
+        function renderFilePreview(index) {
+            const fileObj = salesFiles[index];
+            if (!fileObj) return;
+            const metaEl = document.getElementById(`importMeta-${index}`);
+            const tableEl = document.getElementById(`previewTable-${index}`);
+            const wrapEl = document.getElementById(`previewWrap-${index}`);
+            if (!metaEl || !tableEl || !wrapEl) return;
+
+            const preview = fileObj.preview;
+            if (!preview || !fileObj.workbook || !fileObj.sheetName) {
+                metaEl.innerHTML = `<span class="chip warn">未解析</span><span style="color:#64748b;">请先选择工作表</span>`;
+                wrapEl.style.display = 'none';
+                tableEl.innerHTML = '';
+                return;
+            }
+
+            const requiredMissing = (fileObj.mappingStatus && fileObj.mappingStatus.missingFields) ? fileObj.mappingStatus.missingFields : [];
+            const isMappingOk = !!(fileObj.mappingStatus && fileObj.mappingStatus.complete);
+            const headers = preview.headers || [];
+            const hasHeaders = headers.some(h => (h ?? '').toString().trim() !== '');
+            const chipClass = !hasHeaders ? 'err' : (isMappingOk ? 'ok' : (requiredMissing.length > 0 ? 'err' : 'warn'));
+            const chipText = !hasHeaders ? '未检测到表头' : (isMappingOk ? '字段匹配完成' : (requiredMissing.length > 0 ? '字段缺失' : '待确认'));
+
+            const headerRowHuman = (preview.headerRowIndex ?? 0) + 1;
+            const detectedHint = (preview.detectedHeaderRow !== preview.headerRowIndex)
+                ? `（自动建议第 ${preview.detectedHeaderRow + 1} 行）`
+                : '';
+
+            metaEl.innerHTML = `
+                <span class="chip ${chipClass}">${chipText}</span>
+                <span class="chip">工作表：${escapeHtml(fileObj.sheetName)}</span>
+                <span class="chip">行数：${preview.totalRows}</span>
+                <span class="chip">列数：${preview.totalCols}</span>
+                <span class="chip">表头行：第 ${headerRowHuman} 行${escapeHtml(detectedHint)}</span>
+                ${requiredMissing.length ? `<span class="chip err" title="缺失字段">${escapeHtml(requiredMissing.join('、'))}</span>` : ''}
+            `;
+
+            const matchedCols = getMatchedColumnIndexes(fileObj);
+            const rows = preview.sampleRows || [];
+
+            if (!hasHeaders) {
+                wrapEl.style.display = 'none';
+                tableEl.innerHTML = '';
+                return;
+            }
+
+            const ths = headers.map((h, idx) => `<th class="${matchedCols.has(idx) ? 'matched' : ''}" title="${escapeHtml(h || `列${idx + 1}`)}">${escapeHtml(h || `列${idx + 1}`)}</th>`).join('');
+            const body = rows.map(r => {
+                const row = Array.isArray(r) ? r : [];
+                const tds = headers.map((_, idx) => `<td title="${escapeHtml(row[idx])}">${escapeHtml(row[idx])}</td>`).join('');
+                return `<tr>${tds}</tr>`;
+            }).join('');
+
+            tableEl.innerHTML = `<thead><tr>${ths}</tr></thead><tbody>${body || `<tr><td colspan="${Math.max(1, headers.length)}" style="color:#64748b;">（表头下没有可预览的数据行）</td></tr>`}</tbody>`;
+            wrapEl.style.display = 'block';
+        }
+
+        async function refreshFilePreviewFromWorksheet(index) {
+            const fileObj = salesFiles[index];
+            if (!fileObj || !fileObj.workbook || !fileObj.sheetName) return;
+            const worksheet = fileObj.workbook.Sheets[fileObj.sheetName];
+            if (!worksheet) return;
+            fileObj.preview = buildPreviewInfo(worksheet, fileObj.headerRowIndex);
+            fileObj.headers = fileObj.preview.headers;
+            renderFilePreview(index);
+        }
+
+        async function changeHeaderRow(index, value) {
+            const fileObj = salesFiles[index];
+            if (!fileObj) return;
+            if (value === 'auto') {
+                fileObj.headerRowIndex = null;
+            } else {
+                fileObj.headerRowIndex = clampNumber(value, 0, 9999);
+            }
+            await refreshFilePreviewFromWorksheet(index);
+            if (fileObj.headers) {
+                populateFileFieldMapping(index, fileObj.headers);
+                autoMatchFileFields(index, true);
+                updateFileFieldMapping(index);
+            }
+        }
         
       async function loadFileSheetHeaders(index, sheetName) {
           const fileObj = salesFiles[index];
@@ -1947,9 +2924,11 @@
           setTimeout(() => {
               try {
                   const worksheet = fileObj.workbook.Sheets[sheetName];
-                  const headers = getWorksheetHeaders(worksheet);
+                  const preview = buildPreviewInfo(worksheet, fileObj.headerRowIndex);
+                  const headers = preview.headers;
                   fileObj.sheetName = sheetName;
                   fileObj.headers = headers;
+                  fileObj.preview = preview;
                   const count = document.getElementById(`fieldCount-${index}`);
                   if (count) count.textContent = `(${headers.length} 个字段)`;
                   populateFileFieldMapping(index, headers);
@@ -1957,6 +2936,14 @@
                   
                   // 自动执行字段匹配
                   autoMatchFileFields(index, true);
+
+                  const headerRowSelect = document.getElementById(`headerRowSelect-${index}`);
+                  if (headerRowSelect) {
+                      headerRowSelect.value = (fileObj.headerRowIndex === null || fileObj.headerRowIndex === undefined)
+                          ? 'auto'
+                          : String(fileObj.headerRowIndex);
+                  }
+                  renderFilePreview(index);
                   
                   // 释放配置锁
                   isConfiguringFile = false;
@@ -2056,6 +3043,9 @@
                     statusSpan.title = '部分必填字段未配置';
                 }
             }
+
+            // 同步导入预览区域（表头高亮 + 缺失字段提示）
+            renderFilePreview(index);
         }
         
       function autoMatchFileFields(index, silent = false) {
@@ -2227,20 +3217,23 @@
             });
         }
         
-        // 处理政策文件
-        function handlePolicyFile(file) {
-            if (!file) return;
-            
-            showLoading('正在读取政策文件...');
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const workbook = XLSX.read(e.target.result, {type: 'binary'});
+      // 处理政策文件
+      function handlePolicyFile(file) {
+          if (!file) return;
+          
+          showLoading('正在读取政策文件...');
+          
+          const reader = new FileReader();
+          reader.onload = function(e) {
+              try {
+                    const base64 = arrayBufferToBase64(e.target.result);
+                    const workbook = XLSX.read(base64, { type: 'base64' });
                     policyWorkbook = workbook;
                     
                     populateSheetSelector('policySheetSelect', workbook, 'policy');
                     document.getElementById('policySheetSelector').style.display = 'block';
+                    persistPolicyWorkbook(file, base64);
+                    updateWorkflowStatus();
                     
                     showSuccess('政策表上传成功！');
                     hideLoading();
@@ -2250,7 +3243,7 @@
                     hideLoading();
                 }
             };
-            reader.readAsBinaryString(file);
+            reader.readAsArrayBuffer(file);
         }
         
       // 填充工作表选择器
@@ -2265,7 +3258,8 @@
               select.appendChild(option);
           });
           
-          select.addEventListener('change', function() {
+          // 避免重复绑定 change 事件（多次上传/恢复会导致回调叠加）
+          select.onchange = function() {
               if (this.value) {
                   if (type === 'policy') {
                       loadPolicySheetHeaders(workbook, this.value);
@@ -2273,7 +3267,7 @@
                       loadStoreListSheetHeaders(workbook, this.value);
                   }
               }
-          });
+          };
       }
         
       // 加载政策表表头
@@ -2316,9 +3310,14 @@
                   
                   // 自动执行字段匹配
                   autoMatchFields('policy', true);
+
+                  // 恢复上次字段映射（如果存在）
+                  applyPersistedPolicyMapping();
+                  persistPolicySheetAndMapping();
                   
                   showSuccess('已加载政策表表头并完成自动匹配');
                   checkCalculateReady();
+                  updateWorkflowStatus();
                   
               } catch (error) {
                   showError('工作表数据加载失败：' + error.message);
@@ -2460,11 +3459,14 @@
           const reader = new FileReader();
           reader.onload = function(e) {
               try {
-                  const workbook = XLSX.read(e.target.result, {type: 'binary'});
+                  const base64 = arrayBufferToBase64(e.target.result);
+                  const workbook = XLSX.read(base64, { type: 'base64' });
                   storeListWorkbook = workbook;
                   
                   populateSheetSelector('storeListSheetSelect', workbook, 'storeList');
                   document.getElementById('storeListSheetSelector').style.display = 'block';
+                  persistStoreListWorkbook(file, base64);
+                  updateWorkflowStatus();
                   
                   showSuccess('渠道名单上传成功！');
                   hideLoading();
@@ -2474,7 +3476,7 @@
                   hideLoading();
               }
           };
-          reader.readAsBinaryString(file);
+          reader.readAsArrayBuffer(file);
       }
       
       // 加载渠道名单表头
@@ -2517,9 +3519,14 @@
                   
                   // 自动执行字段匹配
                   autoMatchFields('storeList', true);
+
+                  // 恢复上次字段映射（如果存在）
+                  applyPersistedStoreListMapping();
+                  persistStoreListSheetAndMapping();
                   
                   showSuccess('已加载渠道名单表头并完成自动匹配');
                   checkCalculateReady();
+                  updateWorkflowStatus();
                   
               } catch (error) {
                   showError('工作表数据加载失败：' + error.message);
@@ -2675,60 +3682,75 @@
           }
         }
         
-        // 检查是否可以开始计算
-        function checkCalculateReady() {
-            const salesReady = salesFiles.length > 0 && salesFiles.every(f => f.fieldMapping && f.mappingStatus && f.mappingStatus.complete);
-            const policyReady = policyData && 
-                document.getElementById('policyModelField').value !== '' && 
-                document.getElementById('commissionField').value !== '';
-            document.getElementById('calculateBtn').disabled = !(salesReady && policyReady);
-        }
+      // 检查是否可以开始计算
+      function checkCalculateReady() {
+          const salesReady = salesFiles.length > 0 && salesFiles.every(f => f.fieldMapping && f.mappingStatus && f.mappingStatus.complete);
+          const policyReady = policyData && 
+              document.getElementById('policyModelField').value !== '' && 
+              document.getElementById('commissionField').value !== '';
+          document.getElementById('calculateBtn').disabled = !(salesReady && policyReady);
+          updateWorkflowStatus();
+      }
         
         // 批量计算所有文件的提成
         async function calculateAllCommissions() {
-            if (salesFiles.length === 0) {
-                showError('请上传销售数据文件');
-                return;
-            }
-            
-            // 仅保存政策表字段映射
-            fieldMapping = {
-                policy: {
-                    model: parseInt(document.getElementById('policyModelField').value),
-                    commission: parseInt(document.getElementById('commissionField').value)
+            const calculateBtn = document.getElementById('calculateBtn');
+            try {
+                if (salesFiles.length === 0) {
+                    showError('请上传销售数据文件');
+                    return;
                 }
-            };
-            
-            document.getElementById('progressContainer').style.display = 'block';
-            showLoading('正在读取政策数据...');
-            const policyMap = await readPolicyData();
-            
-            for (let i = 0; i < salesFiles.length; i++) {
-                const fileObj = salesFiles[i];
-                fileObj.status = 'processing';
-                updateFileList();
-                updateProgress(i, salesFiles.length);
-                try {
-                    await processFile(fileObj, policyMap, i);
-                    fileObj.status = 'completed';
-                } catch (error) {
-                    fileObj.status = 'error';
-                    console.error(`处理文件 ${fileObj.name} 时出错:`, error);
+
+                if (calculateBtn) calculateBtn.disabled = true;
+                
+                // 仅保存政策表字段映射
+                fieldMapping = {
+                    policy: {
+                        model: parseInt(document.getElementById('policyModelField').value),
+                        commission: parseInt(document.getElementById('commissionField').value)
+                    }
+                };
+                
+                document.getElementById('progressContainer').style.display = 'block';
+                showLoading('正在读取政策数据...');
+                const policyMap = await readPolicyData();
+                
+                for (let i = 0; i < salesFiles.length; i++) {
+                    const fileObj = salesFiles[i];
+                    fileObj.status = 'processing';
+                    updateFileList();
+                    updateProgress(i, salesFiles.length);
+                    try {
+                        await processFile(fileObj, policyMap, i);
+                        fileObj.status = 'completed';
+                    } catch (error) {
+                        fileObj.status = 'error';
+                        console.error(`处理文件 ${fileObj.name} 时出错:`, error);
+                    }
+                    updateFileList();
+                    // 让 UI 有机会刷新，避免长任务“像卡死”
+                    await new Promise(r => setTimeout(r, 0));
                 }
-                updateFileList();
+                
+                updateProgress(salesFiles.length, salesFiles.length);
+                showSuccess('所有文件处理完成！');
+                displayAllResults();
+            } catch (error) {
+                console.error('批量计算发生未捕获错误:', error);
+                showError(`计算失败：${error && error.message ? error.message : error}`);
+            } finally {
+                hideLoading();
+                checkCalculateReady();
+                updateWorkflowStatus();
             }
-            
-            updateProgress(salesFiles.length, salesFiles.length);
-            hideLoading();
-            showSuccess('所有文件处理完成！');
-            displayAllResults();
         }
         
         // 修改：读取政策数据，使用大小写不敏感匹配
         async function readPolicyData() {
             return new Promise((resolve) => {
                 const worksheet = policyData.worksheet;
-                const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                const effectiveRange = getEffectiveRangeFromCells(worksheet);
+                const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: effectiveRange, blankrows: false, defval: '' });
                 
                 const policyMap = new Map();
                 const modelCol = fieldMapping.policy.model;
@@ -2806,7 +3828,8 @@
                 const employeeName1LeaveDateCol = parseInt(document.getElementById('employeeName1LeaveDateField').value);
                 const employeeName2LeaveDateCol = parseInt(document.getElementById('employeeName2LeaveDateField').value);
                     
-                    const storeData = XLSX.utils.sheet_to_json(storeListData.worksheet, { header: 1 });
+                    const effectiveRange = getEffectiveRangeFromCells(storeListData.worksheet);
+                    const storeData = XLSX.utils.sheet_to_json(storeListData.worksheet, { header: 1, range: effectiveRange, blankrows: false, defval: '' });
                     for (let i = 1; i < storeData.length; i++) {
                         const storeRow = storeData[i];
                         const storeName = storeRow[storeNameCol];
@@ -2896,7 +3919,8 @@
                 
                 function processWorkbook() {
                     const worksheet = fileObj.workbook.Sheets[fileObj.sheetName];
-                    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    const effectiveRange = getEffectiveRangeFromCells(worksheet);
+                    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: effectiveRange, blankrows: false, defval: '' });
                     
                     const results = [];
                     let totalCommission = 0;
@@ -2924,31 +3948,6 @@
                         
                         fileDebugInfo.processedRecords++;
                         
-                        // 优先使用规格型号，如果没有则从物料名称中提取
-                        let originalModel = '';
-                        let extractedFrom = '';
-                        
-                        if (modelCol !== undefined && row[modelCol]) {
-                            originalModel = row[modelCol];
-                            extractedFrom = 'model';
-                        } else if (materialCol !== undefined && row[materialCol]) {
-                            originalModel = extractModelFromMaterialName(row[materialCol]);
-                            extractedFrom = 'material';
-                        }
-                        
-                        const normalizedModel = normalizeModel(originalModel);
-                        const unitCommission = policyMap.get(normalizedModel) || 0;
-                        const totalItemCommission = unitCommission * quantity;
-                        totalCommission += totalItemCommission;
-                        
-                        const isMatched = unitCommission > 0;
-                        if (isMatched) {
-                            fileDebugInfo.matchedRecords++;
-                        } else {
-                            fileDebugInfo.unmatchedRecords++;
-                            if (originalModel) fileDebugInfo.unmatchedModels.add(originalModel);
-                        }
-                        
                         // 获取促销员和门店信息
                         let salesPerson = salesMap.salesPersonField !== undefined ? (row[salesMap.salesPersonField] || '') : '';
                         let store = salesMap.storeField !== undefined ? (row[salesMap.storeField] || '') : '';
@@ -2966,26 +3965,25 @@
                         matchSource = 'shengdu_special';
                     } else if (isHuzhouFile) {
                         // ===== 特殊处理：湖州天猫店文件直接设置为湖州天猫店的陈春艳 =====
-                        // 湖州天猫表特殊过滤：读取原始数据进行条件判断
-                        const originalStore = salesMap.storeField !== undefined ? (row[salesMap.storeField] || '') : '';
-                        const region = salesMap.regionField !== undefined ? (row[salesMap.regionField] || '') : '';
-                        const settlement = salesMap.settlementField !== undefined ? (row[salesMap.settlementField] || '') : '';
+                        // 兼容不同版本表结构：若用户有映射到筛选字段且字段有值，则按条件过滤；否则默认不过滤
+                        const rawStore = salesMap.storeField !== undefined ? (row[salesMap.storeField] || '') : '';
+                        const rawRegion = salesMap.regionField !== undefined ? (row[salesMap.regionField] || '') : '';
+                        const rawSettlement = salesMap.settlementField !== undefined ? (row[salesMap.settlementField] || '') : '';
+                        const shouldApplyFilter = !!(rawStore || rawRegion || rawSettlement);
                         
-                        // 定义允许的门店名称
-                        const allowedStores = [
-                            '湖州天猫优品优悠家生活馆',
-                            '湖州天猫优品优悠家城市旗舰店',
-                            '湖州天猫优品优悠家超级旗舰店'
-                        ];
-                        
-                        // 检查是否满足所有条件
-                        if (!allowedStores.includes(originalStore) || region !== '湖州' || settlement !== '是') {
-                            // 不满足条件，跳过该记录
-                            fileDebugInfo.processedRecords--;
-                            continue;
+                        if (shouldApplyFilter) {
+                            const allowedStores = [
+                                '湖州天猫优品优悠家生活馆',
+                                '湖州天猫优品优悠家城市旗舰店',
+                                '湖州天猫优品优悠家超级旗舰店',
+                                '湖州金蝶零售'
+                            ];
+                            if ((rawStore && !allowedStores.includes(rawStore)) || (rawRegion && rawRegion !== '湖州') || (rawSettlement && rawSettlement !== '是')) {
+                                fileDebugInfo.processedRecords--;
+                                continue;
+                            }
                         }
-                        
-                        // 满足条件，执行原有逻辑
+
                         store = '湖州天猫店';
                         salesPerson = '陈春艳';
                         matchSource = 'huzhou_special';
@@ -3038,10 +4036,35 @@
                             }
                         }
                         
-                    // 过滤掉无效记录：销售数量=0的记录，或者有销售数量但提成为0的记录
-                    if (quantity === 0 || (quantity !== 0 && totalItemCommission === 0)) {
+                    // 过滤掉无效记录：销售数量=0
+                    if (quantity === 0) {
                         fileDebugInfo.processedRecords--; // 减少计数
                         continue;
+                    }
+
+                    // 优先使用规格型号，如果没有则从物料名称中提取
+                    let originalModel = '';
+                    let extractedFrom = '';
+                    
+                    if (modelCol !== undefined && row[modelCol]) {
+                        originalModel = row[modelCol];
+                        extractedFrom = 'model';
+                    } else if (materialCol !== undefined && row[materialCol]) {
+                        originalModel = extractModelFromMaterialName(row[materialCol]);
+                        extractedFrom = 'material';
+                    }
+                    
+                    const normalizedModel = normalizeModel(originalModel);
+                    const unitCommission = policyMap.get(normalizedModel) || 0;
+                    const totalItemCommission = unitCommission * quantity;
+                    totalCommission += totalItemCommission;
+                    
+                    const isMatched = unitCommission > 0;
+                    if (isMatched) {
+                        fileDebugInfo.matchedRecords++;
+                    } else {
+                        fileDebugInfo.unmatchedRecords++;
+                        if (originalModel) fileDebugInfo.unmatchedModels.add(originalModel);
                     }
                     
                     // 检查在职期间过滤
@@ -3182,7 +4205,7 @@
                 }
             });
             
-            const matchRate = totalRecords > 0 ? ((totalMatched / totalRecords) * 100).toFixed(1) : 0;
+            const matchRate = totalRecords > 0 ? ((totalMatched / totalRecords) * 100).toFixed(1) : '0.0';
             
             summaryContent.innerHTML = `
                 <div class="summary">
@@ -3206,7 +4229,7 @@
                     <tbody>
                         ${Object.entries(allResults).map(([fileName, result]) => {
                             const fileMatchRate = result.debugInfo ? 
-                                ((result.debugInfo.matchedRecords / result.debugInfo.processedRecords) * 100).toFixed(1) : 0;
+                                (result.debugInfo.processedRecords > 0 ? ((result.debugInfo.matchedRecords / result.debugInfo.processedRecords) * 100).toFixed(1) : '0.0') : '0.0';
                             return `
                                 <tr>
                                     <td>${fileName}</td>
@@ -4570,11 +5593,28 @@
         
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
+            window.addEventListener('error', function(event) {
+                try { hideLoading(); } catch (_) {}
+                const msg = (event && event.error && event.error.message) ? event.error.message : (event && event.message ? event.message : '发生未知错误');
+                showError(`页面错误：${msg}（可打开控制台查看详情）`);
+                console.error('页面错误:', event && event.error ? event.error : event);
+            });
+            
+            window.addEventListener('unhandledrejection', function(event) {
+                try { hideLoading(); } catch (_) {}
+                const reason = event && event.reason;
+                const msg = reason && reason.message ? reason.message : (typeof reason === 'string' ? reason : 'Promise 未处理异常');
+                showError(`页面错误：${msg}（可打开控制台查看详情）`);
+                console.error('Promise 未处理异常:', reason);
+            });
+
             setupFileUpload();
+            bindPersistMappingListeners();
+            restorePersistedWorkbook('policy');
+            restorePersistedWorkbook('storeList');
+            updateWorkflowStatus();
         });
     </script>
     
     </body>
     </html>
-
-
