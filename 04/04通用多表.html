@@ -1510,8 +1510,8 @@
                   // 销售数量必填
                   quantityField: { label: '销售数量', keywords: ['销售数量', '数量', '销量', '自定义规格值', 'quantity', 'qty', '件数', '销售商品数量'] },
                   // 规格型号和物料名称二选一，优先规格型号
-                  modelField: { label: '规格型号', keywords: ['规格型号', '型号', '规格', '款式', 'model', 'spec'], allowEmpty: true },
-                  materialNameField: { label: '物料名称', keywords: ['物料名称', '商品名称', '产品名称', '物料', '商品', '产品', 'material', 'product'], allowEmpty: true }
+                  modelField: { label: '规格型号', keywords: ['规格型号', '型号', '规格', '款式', 'model', 'spec', '具体型号', '存货编码', '存货编号', '存货代码'], allowEmpty: true },
+                  materialNameField: { label: '物料名称', keywords: ['物料名称', '商品名称', '产品名称', '物料', '商品', '产品', 'material', 'product', '存货名称'], allowEmpty: true }
               },
           optional: {
               dateField: { label: '日期', keywords: ['日期', 'date', '时间', '开单日期', '销售日期', '单据日期'] },
@@ -1534,8 +1534,8 @@
           sales: {
               salesPersonField: ['促销员', '销售员', '业务员', '销售人员', '下单人', '采购员', 'sales', 'salesperson', '业 务 员'],
               quantityField: ['销售数量', '数量', '销量', '自定义规格值', 'quantity', 'qty', '件数', '销售商品数量', '实发数量'],
-              modelField: ['规格型号', '型号', '规格', '款式', 'model', 'spec', '具体型号'],
-              materialNameField: ['物料名称', '商品名称', '产品名称', '物料', '商品', '产品', 'material', 'product'],
+              modelField: ['规格型号', '型号', '规格', '款式', 'model', 'spec', '具体型号', '存货编码', '存货编号'],
+              materialNameField: ['物料名称', '商品名称', '产品名称', '物料', '商品', '产品', 'material', 'product', '存货名称'],
               storeField: ['门店', '店铺', '门店名称', '店铺名称', 'store', '客户'],
               dateField: ['日期', 'date', '时间', '开单日期', '销售日期', '单据日期'],
               orderNoField: ['单据编号', '订单号', '单号', '编号', '单据号', 'order', 'orderNo'],
@@ -1562,6 +1562,7 @@
       // 文件类型检测配置（按优先级排序）
       const fileTypeConfig = {
           patterns: [
+              { keyword: '杭州外围', type: 'hangzhouOuter' },
               { keyword: '浙北', type: 'zheibei' },
               { keyword: '金华五星', type: 'jinhua' },
               { keyword: '圣都', type: 'shengdu' },
@@ -1570,6 +1571,18 @@
           ],
           // 每种文件类型允许匹配的字段
           allowedFields: {
+              hangzhouOuter: {
+                  salesPersonField: true,
+                  materialNameField: true,
+                  quantityField: true,
+                  // 以下字段不自动匹配（避免误把客户简称当门店）
+                  storeField: false,
+                  modelField: false,
+                  // 可选字段
+                  dateField: true,
+                  orderNoField: true,
+                  userNameField: true
+              },
               xingda: {
                   salesPersonField: true,    // 匹配促销员
                   modelField: true,           // 匹配规格型号
@@ -1935,9 +1948,11 @@
           const startIndex = salesFiles.length;
           const existingKeys = new Set(salesFiles.map(f => getFileUniqueKey(f.file)));
           let skipped = 0;
+          let rejected = 0;
           
           files.forEach(file => {
-              if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+              const lowerName = (file.name || '').toLowerCase();
+              if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) {
                   const key = getFileUniqueKey(file);
                   if (existingKeys.has(key)) {
                       skipped++;
@@ -1961,6 +1976,8 @@
                       isMappingOpen: false
                   };
                   salesFiles.push(fileObj);
+              } else {
+                  rejected++;
               }
           });
           
@@ -1995,7 +2012,11 @@
         if (skipped > 0) {
             showError(`已跳过 ${skipped} 个重复文件（同名/大小/修改时间一致）`);
         }
-        
+
+        if (rejected > 0) {
+            showError(`有 ${rejected} 个文件格式不支持（仅支持 .xls / .xlsx）`);
+        }
+         
         checkCalculateReady();
       }
       
@@ -2066,7 +2087,8 @@
                   shengdu: '圣都', 
                   zheibei: '浙北',
                   jinhua: '金华五星',
-                  huzhou: '湖州天猫'
+                  huzhou: '湖州天猫',
+                  hangzhouOuter: '杭州外围'
               };
               const typeLabel = typeLabels[fileType] || '';
               
