@@ -3,8 +3,8 @@ let sourceFileData = null;
 let employeeFileData = null;
 let resultWorkbook = null;
 
-// 月份列表
-const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月'];
+// 月份列表（用于识别表头并汇总月份列）
+const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
 // 销售组织
 const salesOrg = "杭州中冠电器有限公司";
@@ -187,8 +187,8 @@ async function processData() {
             '8月': monthlyData['8月'] || 0,
             '9月': monthlyData['9月'] || 0,
             '10月': monthlyData['10月'] || 0,
-            '11月': 0,
-            '12月': 0,
+            '11月': monthlyData['11月'] || 0,
+            '12月': monthlyData['12月'] || 0,
             '参考总额': total,
             '填写说明': '请将总额分配到各月,确保各月之和等于总额'
         };
@@ -251,15 +251,16 @@ async function processData() {
 
 // 处理地区工作表
 function processRegionSheet(workbook, sheetName, salesmanData) {
-    console.log(`\n处理【${sheetName.trim()}】工作表...`);
+    const normalizedSheetName = (sheetName || '').trim();
+    console.log(`\n处理【${normalizedSheetName}】工作表...`);
     
     // 检查工作表是否存在
-    if (!workbook.Sheets[sheetName]) {
-        console.warn(`工作表 ${sheetName} 不存在，跳过`);
+    if (!workbook.Sheets[normalizedSheetName]) {
+        console.warn(`工作表 ${normalizedSheetName} 不存在，跳过`);
         return;
     }
     
-    const sheet = workbook.Sheets[sheetName];
+    const sheet = workbook.Sheets[normalizedSheetName];
     
     // 将工作表转换为二维数组（保留原始格式）
     const range = XLSX.utils.decode_range(sheet['!ref']);
@@ -375,9 +376,8 @@ downloadBtn.addEventListener('click', () => {
     // 生成文件名（包含当前日期）
     const date = new Date();
     const dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-    const fileName = `销售员回款汇总表_1-10月_2025年数据_${dateStr}.xlsx`;
+    const fileName = `销售员回款汇总表_1-12月_2025年数据_${dateStr}.xlsx`;
     
     // 导出文件
     XLSX.writeFile(resultWorkbook, fileName);
 });
-
