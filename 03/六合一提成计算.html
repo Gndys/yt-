@@ -599,17 +599,24 @@
       const date = new Date(normalized);
       return isNaN(date.getTime()) ? null : date;
     }
-    function determineRegion(row){
-      let region = normalizeString(row["所属地区"] || row["地区"]);
-      if (region.includes("杭州")) region = "杭州";
-      else if (region.includes("金华")) region = "金华";
-      if (!region){
-        const store = normalizeString(row["客户店名"] || row["客户"]);
-        if (store.includes("杭州")) region = "杭州";
-        else if (store.includes("金华")) region = "金华";
-      }
-      return region;
-    }
+	    function determineRegion(row){
+	      let region = normalizeString(row["所属地区"] || row["地区"]);
+	      if (region.includes("杭州")) region = "杭州";
+	      else if (region.includes("金华")) region = "金华";
+	      if (!region){
+	        const store = normalizeString(row["客户店名"] || row["客户"]);
+	        if (store.includes("杭州")) region = "杭州";
+	        else if (store.includes("金华")) region = "金华";
+	      }
+	      return region;
+	    }
+	    function isHangzhouSpecialStore(storeName){
+	      const name = normalizeString(storeName);
+	      if (!name) return false;
+	      return name === "杭州红星美凯龙一号店" ||
+	             name === "杭州恒大建材超级旗舰店" ||
+	             name === "滨江六空8090店";
+	    }
     function getOilHoodThreshold(date){
       const result = { threshold: 0.7, note: "" };
       if (!date) return result;
@@ -1381,9 +1388,9 @@
       refreshStats();
     }
 
-    function calculateDiscount(){
-      log("开始执行模块：discount（含 activity_package 跳过，支持新旧规则自动切换）");
-      let count = 0;
+	    function calculateDiscount(){
+	      log("开始执行模块：discount（含 activity_package 跳过，支持新旧规则自动切换）");
+	      let count = 0;
       let oldRuleCount = 0;
       let newRuleCount = 0;
       const ruleStats = {
@@ -1429,13 +1436,14 @@
         r["折扣机提成"] = 0;
         r["折扣机提成说明"] = "";
         const amountTax = normalizeNumber(r["价税合计"]);
-        const paymentAmount = normalizeNumber(r["回款收款金额"]);
-        const leadFee = normalizeNumber(r["带单费"]) || normalizeNumber(r["支付带单提成点位"]) || 0;
-        const baseAmount = paymentAmount !== null ? paymentAmount : null;
-        const energyCode = normalizeEnergyCode(r["能效标识"]);
-        const region = determineRegion(r);
-        const orderDate = parseOrderDate(r);
-        const allZero = (c_special === 0 && c_boiler === 0 && c_policy === 0 && c_policy_extra === 0 && c_smoke === 0 && c_national === 0);
+	        const paymentAmount = normalizeNumber(r["回款收款金额"]);
+	        const leadFee = normalizeNumber(r["带单费"]) || normalizeNumber(r["支付带单提成点位"]) || 0;
+	        const baseAmount = paymentAmount !== null ? paymentAmount : null;
+	        const energyCode = normalizeEnergyCode(r["能效标识"]);
+	        const region = determineRegion(r);
+	        const orderDate = parseOrderDate(r);
+	        const allZero = (c_special === 0 && c_boiler === 0 && c_policy === 0 && c_policy_extra === 0 && c_smoke === 0 && c_national === 0);
+	        const isHzSpecial = isHangzhouSpecialStore(r["客户店名"]);
 
         if (!allZero){
           r["折扣机提成说明"] = "前五模块提成不全为0，不符合折扣机条件，折扣机提成=0";
@@ -1476,27 +1484,29 @@
             ruleStats[`${region}-旧规则`]++;
           }
           
-          if (!rule){
-            r["折扣机提成说明"] = "未匹配到地区对应的折扣机规则，折扣机提成=0";
-          } else if (baseAmount === null){
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】：缺少回款收款金额，折扣机提成=0`;
-          } else if (finalDiscount < rule.min){
-            // 低于区间下限，提成为0
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】：卖出的实际折扣${fmtPercent(finalDiscount)}低于${fmtPercent(rule.min)}，折扣机提成=0`;
-          } else if (rule.directRate){
-            // 能效1、2或金华地区：超过阈值直接给4.5%
-            r["折扣机提成"] = 0.045 * baseAmount;
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}）：卖出的实际折扣${fmtPercent(finalDiscount)} ≥ ${fmtPercent(rule.min)}，直接给予4.5%提成 = 0.045 × 回款${fmtCurrency(paymentAmount)} = ${fmtCurrency(r["折扣机提成"])}`;
-          } else if (finalDiscount >= rule.min && finalDiscount <= rule.max){
-            // 在区间内，按差值计算（仅适用于杭州其他能效）
-            r["折扣机提成"] = (finalDiscount - rule.base) * baseAmount;
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}，区间${fmtPercent(rule.min)}-${fmtPercent(rule.max)}）：(${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × 回款${fmtCurrency(paymentAmount)} = (${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × ${fmtCurrency(baseAmount)} = ${fmtCurrency(r["折扣机提成"])}`;
-          } else {
-            // 超过区间上限，给固定4.5%
-            r["折扣机提成"] = 0.045 * baseAmount;
-            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}）：卖出的实际折扣${fmtPercent(finalDiscount)}超过${fmtPercent(rule.max)}，给予固定4.5%提成 = 0.045 × 回款${fmtCurrency(paymentAmount)} = 0.045 × ${fmtCurrency(baseAmount)} = ${fmtCurrency(r["折扣机提成"])}`;
-          }
-        }
+	          if (!rule){
+	            r["折扣机提成说明"] = "未匹配到地区对应的折扣机规则，折扣机提成=0";
+	          } else if (baseAmount === null){
+	            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】：缺少回款收款金额，折扣机提成=0`;
+	          } else if (finalDiscount < rule.min){
+	            // 低于区间下限，提成为0
+	            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】：卖出的实际折扣${fmtPercent(finalDiscount)}低于${fmtPercent(rule.min)}，折扣机提成=0`;
+	          } else if (rule.directRate){
+	            // 能效1/2（杭州）或金华新规则：超过阈值直接给固定比例（杭州特殊门店为6.5%，否则4.5%）
+	            const rate = (useNewRule && region === "杭州" && isHzSpecial) ? 0.065 : 0.045;
+	            r["折扣机提成"] = rate * baseAmount;
+	            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}）：卖出的实际折扣${fmtPercent(finalDiscount)} ≥ ${fmtPercent(rule.min)}，直接给予${(rate*100).toFixed(1)}%提成 = ${rate} × 回款${fmtCurrency(paymentAmount)} = ${fmtCurrency(r["折扣机提成"])}`;
+	          } else if (finalDiscount >= rule.min && finalDiscount <= rule.max){
+	            // 在区间内，按差值计算（仅适用于杭州其他能效）
+	            r["折扣机提成"] = (finalDiscount - rule.base) * baseAmount;
+	            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}，区间${fmtPercent(rule.min)}-${fmtPercent(rule.max)}）：(${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × 回款${fmtCurrency(paymentAmount)} = (${fmtPercent(finalDiscount)} - ${fmtPercent(rule.base)}) × ${fmtCurrency(baseAmount)} = ${fmtCurrency(r["折扣机提成"])}`;
+	          } else {
+	            // 超过区间上限，给固定比例（杭州特殊门店为6.5%，否则4.5%；旧规则不受影响因为 useNewRule=false）
+	            const rate = (useNewRule && region === "杭州" && isHzSpecial) ? 0.065 : 0.045;
+	            r["折扣机提成"] = rate * baseAmount;
+	            r["折扣机提成说明"] = `${rule.desc}【${rule.ruleType}】（${rule.label}）：卖出的实际折扣${fmtPercent(finalDiscount)}超过${fmtPercent(rule.max)}，给予固定${(rate*100).toFixed(1)}%提成 = ${rate} × 回款${fmtCurrency(paymentAmount)} = ${rate} × ${fmtCurrency(baseAmount)} = ${fmtCurrency(r["折扣机提成"])}`;
+	          }
+	        }
         // 新规则：折扣前小计=0、折扣机提成=0且卖出的实际折扣≥0.755时，最终总提成留空
         if (r["折扣前小计"] === 0 && ensureNumeric(r["折扣机提成"]) === 0 && finalDiscount !== null && finalDiscount >= 0.755){
           r["最终总提成"] = "";
